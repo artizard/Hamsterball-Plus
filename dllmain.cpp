@@ -1,6 +1,8 @@
-// dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
+#include <windows.h>
+#include "MinHook.h" // Include the MinHook library
 
+// --- YOUR EXPORTS HERE ---
 #pragma comment(linker, "/export:BASS_Apply3D=bass_real.BASS_Apply3D")
 #pragma comment(linker, "/export:BASS_ChannelBytes2Seconds=bass_real.BASS_ChannelBytes2Seconds")
 #pragma comment(linker, "/export:BASS_ChannelGet3DAttributes=bass_real.BASS_ChannelGet3DAttributes")
@@ -104,43 +106,71 @@
 #pragma comment(linker, "/export:_=bass_real._")
 
 
+// 1. Global variable to hold the stolen PLAYER pointer (No more LevelManager!)
+void* g_StolenPlayer = nullptr;
+
+// 2. Blueprint for the Break/Die function (0x00405190)
+typedef void(__fastcall* FindRespawnPointFunc)(void* ecx_playerObject, void* edx_dummy);
+FindRespawnPointFunc Original_FindRespawn = nullptr;
 
 
+// 3. Our custom detour hook FOR THE DEATH FUNCTION
+void __fastcall Hooked_FindRespawn(void* ecx_playerObject, void* edx_dummy) {
+
+    // The moment the player dies naturally, we steal their exact memory address!
+    g_StolenPlayer = ecx_playerObject;
+
+    // Pass execution back to the original game code so the hamster actually shatters
+    Original_FindRespawn(ecx_playerObject, edx_dummy);
+}
+
+
+// 4. The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
-    // This loop runs endlessly in the background
+
+    // Get the dynamic base address to defeat ASLR
+    DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
+
+    // The exact address of Find_Respawn_Point
+    LPVOID deathFuncAddr = (LPVOID)(baseAddr + 0x5190); // 0x00405190
+
+    MH_Initialize();
+
+    // Hook the death function
+    MH_CreateHook(deathFuncAddr, &Hooked_FindRespawn, (LPVOID*)&Original_FindRespawn);
+    MH_EnableHook(deathFuncAddr);
+
+    // Main Hotkey Loop
     while (true) {
+        if (GetAsyncKeyState('X') & 0x8000) {
 
-        // Check if the 'K' key is pressed
-        if (GetAsyncKeyState('K') & 1) {
-            // Your custom kill logic goes here!
-            // Example: writing a value to the player's health memory address
-            MessageBoxA(
-                NULL,                                     // Owner window (NULL means no owner)
-                "The DLL was injected and hotkey works!", // The message inside the popup
-                "Hamsterball Mod Test",                   // The title of the popup window
-                MB_OK | MB_ICONINFORMATION                // Buttons and icon type
-            );
+            if (g_StolenPlayer == nullptr) {
+                // We haven't stolen it yet!
+                MessageBoxA(NULL, "Pointer not stolen yet! Jump off a ledge normally first.", "Debug", MB_OK);
+            }
+            else {
+                // SUCCESS! Call the original death function using our stolen pointer.
+                // We use Original_FindRespawn instead of calling the hooked address so we don't trigger an endless loop
+                Original_FindRespawn(g_StolenPlayer, nullptr);
+            }
+
+            Sleep(500);
         }
-
-        // Pause the thread for 10 milliseconds to prevent CPU hogging
         Sleep(10);
     }
     return 0;
 }
 
-
-
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
     switch (ul_reason_for_call) {
     case DLL_PROCESS_ATTACH:
-        // Disable thread library calls for optimization
         DisableThreadLibraryCalls(hModule);
-
-        // Spawn our custom mod thread alongside the game
         CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)ModThread, hModule, 0, nullptr);
         break;
-
     case DLL_PROCESS_DETACH:
+        // Clean up MinHook when the game closes
+        MH_DisableHook(MH_ALL_HOOKS);
+        MH_Uninitialize();
         break;
     }
     return TRUE;
