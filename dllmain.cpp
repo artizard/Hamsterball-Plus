@@ -106,51 +106,48 @@
 #pragma comment(linker, "/export:_=bass_real._")
 
 
-// 1. Global variable to hold the stolen PLAYER pointer (No more LevelManager!)
+// The stolen player pointer
 void* g_StolenPlayer = nullptr;
 
-// 2. Blueprint for the Break/Die function (0x00405190)
+// Blueprint for the Break/Die function (0x00405190)
 typedef void(__fastcall* FindRespawnPointFunc)(void* ecx_playerObject, void* edx_dummy);
 FindRespawnPointFunc Original_FindRespawn = nullptr;
 
+// Blueprint for the Player Update Loop (0x00405e00)
+typedef void(__fastcall* PlayerUpdateFunc)(void* ecx_player, void* edx_dummy);
+PlayerUpdateFunc Original_PlayerUpdate = nullptr;
 
-// 3. Our custom detour hook FOR THE DEATH FUNCTION
-void __fastcall Hooked_FindRespawn(void* ecx_playerObject, void* edx_dummy) {
+// Our custom detour hook
+void __fastcall Hooked_PlayerUpdate(void* ecx_player, void* edx_dummy) {
+    // Passively steal the player pointer 60 times a second
+    g_StolenPlayer = ecx_player;
 
-    // The moment the player dies naturally, we steal their exact memory address!
-    g_StolenPlayer = ecx_playerObject;
-
-    // Pass execution back to the original game code so the hamster actually shatters
-    Original_FindRespawn(ecx_playerObject, edx_dummy);
+    // Resume normal game logic
+    Original_PlayerUpdate(ecx_player, edx_dummy);
 }
 
-
-// 4. The Mod Thread
+// The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
 
-    // Get the dynamic base address to defeat ASLR
+    // Defeat ASLR
     DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
 
-    // The exact address of Find_Respawn_Point
-    LPVOID deathFuncAddr = (LPVOID)(baseAddr + 0x5190); // 0x00405190
+    // The exact function addresses
+    LPVOID updateFuncAddr = (LPVOID)(baseAddr + 0x5E00); // FUN_00405e00
+    Original_FindRespawn = (FindRespawnPointFunc)(baseAddr + 0x5190);
 
     MH_Initialize();
 
-    // Hook the death function
-    MH_CreateHook(deathFuncAddr, &Hooked_FindRespawn, (LPVOID*)&Original_FindRespawn);
-    MH_EnableHook(deathFuncAddr);
+    // Hook the main update loop!
+    MH_CreateHook(updateFuncAddr, &Hooked_PlayerUpdate, (LPVOID*)&Original_PlayerUpdate);
+    MH_EnableHook(updateFuncAddr);
 
     // Main Hotkey Loop
     while (true) {
         if (GetAsyncKeyState('X') & 0x8000) {
 
-            if (g_StolenPlayer == nullptr) {
-                // We haven't stolen it yet!
-                MessageBoxA(NULL, "Pointer not stolen yet! Jump off a ledge normally first.", "Debug", MB_OK);
-            }
-            else {
-                // SUCCESS! Call the original death function using our stolen pointer.
-                // We use Original_FindRespawn instead of calling the hooked address so we don't trigger an endless loop
+            if (g_StolenPlayer != nullptr) {
+                // Call the original death function using our passively stolen pointer
                 Original_FindRespawn(g_StolenPlayer, nullptr);
             }
 
