@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <windows.h>
+#include <stdio.h>
 #include "MinHook.h" // Include the MinHook library
 
 // --- YOUR EXPORTS HERE ---
@@ -112,31 +113,31 @@ void* g_StolenPlayer = nullptr;
 // Mod's global state
 bool g_ModEnabled = true;
 
-// Blueprint for the Break/Die function (0x00405190)
+// Break/Die function (0x00405190)
 typedef void(__fastcall* FindRespawnPointFunc)(void* ecx_playerObject, void* edx_dummy);
 FindRespawnPointFunc Original_FindRespawn = nullptr;
 
-// Blueprint for the Player Update Loop (0x00405e00)
+// Player Update Loop (0x00405e00)
 typedef void(__fastcall* PlayerUpdateFunc)(void* ecx_player, void* edx_dummy);
 PlayerUpdateFunc Original_PlayerUpdate = nullptr;
 
-// Blueprint for the Options Menu function (0x00442ce0)
+// Options Menu function (0x00442ce0)
 typedef void* (__fastcall* OptionsMenuFunc)(void* this_ptr, void* edx_dummy, int param_1, int param_2);
 OptionsMenuFunc Original_OptionsMenu = nullptr;
 
-// Pointer to the AddMenuButton function
+// AddMenuButton function (0x004497f0)
 typedef void(__fastcall* AddMenuButtonFunc)(void* this_ptr, void* edx_dummy, const char* displayText, const char* id, DWORD vtable, float r, float g, float b, const char* style, const char* unk);
 AddMenuButtonFunc Original_AddMenuButton = nullptr;
 
-// Pointer to the AddSpacer function
+// AddSpacer function (0x00449430)
 typedef void(__fastcall* AddSpacerFunc)(void* this_ptr, void* edx_dummy, int height);
 AddSpacerFunc Original_AddSpacer = nullptr;
 
-// Blueprint for the Options Click Handler (0x004434f0)
+// Options Click Handler (0x004434f0)
 typedef void(__fastcall* OptionsClickFunc)(void* this_ptr, void* edx_dummy, const char* clicked_id);
 OptionsClickFunc Original_OptionsClick = nullptr;
 
-// Blueprint for the Button Text Updater (0x0044a8b0)
+// Button Text Updater (0x0044a8b0)
 typedef void(__fastcall* UpdateButtonTextFunc)(void* this_ptr, void* edx_dummy, const char* newText, const char* id);
 UpdateButtonTextFunc Game_UpdateButtonText = nullptr;
 
@@ -176,20 +177,53 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
     // Check if the player clicked our custom button
     if (strcmp(clicked_id, "MOD_TOGGLE") == 0) {
 
-        // 1. Flip our mod state
+        // Flip state bool
         g_ModEnabled = !g_ModEnabled;
 
-        // 2. Determine what the button should say now
+        // Change text
         const char* newText = g_ModEnabled ? "MOD ENABLED: YES" : "MOD ENABLED: NO";
 
-        // 3. Force the game engine to redraw our button
+        // Redraw button
         Game_UpdateButtonText(this_ptr, nullptr, newText, "MOD_TOGGLE");
 
-        // Return immediately so the original function doesn't try to read it
+        // Return immediately
         return;
     }
 
-    // If it was any other button ("REZ", "FS", "BACK"), pass it to the original game logic
+    // New resolution button code to add new resolutions
+    if (strcmp(clicked_id, "REZ") == 0) {
+
+        // Get direct pointers to the width and height stored in the menu object
+        int* currentWidth = (int*)((DWORD)this_ptr + 0xCE4);
+        int* currentHeight = (int*)((DWORD)this_ptr + 0xCE8);
+
+        // Custom resolution cycle
+        if (*currentWidth == 800 && *currentHeight == 600) {
+            *currentWidth = 1024; *currentHeight = 768;
+        }
+        else if (*currentWidth == 1024 && *currentHeight == 768) {
+            *currentWidth = 1280; *currentHeight = 720; // Added 720p
+        }
+        else if (*currentWidth == 1280 && *currentHeight == 720) {
+            *currentWidth = 1920; *currentHeight = 1080; // Added 1080p
+        }
+        else {
+            // If it's 1080p (or anything else), loop back to 800x600
+            *currentWidth = 800; *currentHeight = 600;
+        }
+
+        // Format button text
+        char newResText[256];
+        sprintf_s(newResText, "RESOLUTION: %d X %d", *currentWidth, *currentHeight);
+
+        // Redraw button
+        Game_UpdateButtonText(this_ptr, nullptr, newResText, "REZ");
+
+        // Return immediately
+        return;
+    }
+
+    // If it was any other button, pass it to the original game logic
     Original_OptionsClick(this_ptr, edx_dummy, clicked_id);
 }
 
@@ -200,10 +234,10 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
 
     // The exact function addresses
-    LPVOID updateFuncAddr = (LPVOID)(baseAddr + 0x5E00); // FUN_00405e00
+    LPVOID updateFuncAddr = (LPVOID)(baseAddr + 0x5E00);
     Original_FindRespawn = (FindRespawnPointFunc)(baseAddr + 0x5190);
 
-    LPVOID optionsFuncAddr = (LPVOID)(baseAddr + 0x42ce0); // FUN_00442ce0
+    LPVOID optionsFuncAddr = (LPVOID)(baseAddr + 0x42ce0);
     Original_AddMenuButton = (AddMenuButtonFunc)(baseAddr + 0x497f0);
     Original_AddSpacer = (AddSpacerFunc)(baseAddr + 0x49430);
     LPVOID clickFuncAddr = (LPVOID)(baseAddr + 0x434F0);
