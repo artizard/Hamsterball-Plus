@@ -109,6 +109,9 @@
 // The stolen player pointer
 void* g_StolenPlayer = nullptr;
 
+// Mod's global state
+bool g_ModEnabled = true;
+
 // Blueprint for the Break/Die function (0x00405190)
 typedef void(__fastcall* FindRespawnPointFunc)(void* ecx_playerObject, void* edx_dummy);
 FindRespawnPointFunc Original_FindRespawn = nullptr;
@@ -117,13 +120,77 @@ FindRespawnPointFunc Original_FindRespawn = nullptr;
 typedef void(__fastcall* PlayerUpdateFunc)(void* ecx_player, void* edx_dummy);
 PlayerUpdateFunc Original_PlayerUpdate = nullptr;
 
-// Our custom detour hook
+// Blueprint for the Options Menu function (0x00442ce0)
+typedef void* (__fastcall* OptionsMenuFunc)(void* this_ptr, void* edx_dummy, int param_1, int param_2);
+OptionsMenuFunc Original_OptionsMenu = nullptr;
+
+// Pointer to the AddMenuButton function
+typedef void(__fastcall* AddMenuButtonFunc)(void* this_ptr, void* edx_dummy, const char* displayText, const char* id, DWORD vtable, float r, float g, float b, const char* style, const char* unk);
+AddMenuButtonFunc Original_AddMenuButton = nullptr;
+
+// Pointer to the AddSpacer function
+typedef void(__fastcall* AddSpacerFunc)(void* this_ptr, void* edx_dummy, int height);
+AddSpacerFunc Original_AddSpacer = nullptr;
+
+// Blueprint for the Options Click Handler (0x004434f0)
+typedef void(__fastcall* OptionsClickFunc)(void* this_ptr, void* edx_dummy, const char* clicked_id);
+OptionsClickFunc Original_OptionsClick = nullptr;
+
+// Blueprint for the Button Text Updater (0x0044a8b0)
+typedef void(__fastcall* UpdateButtonTextFunc)(void* this_ptr, void* edx_dummy, const char* newText, const char* id);
+UpdateButtonTextFunc Game_UpdateButtonText = nullptr;
+
+// Hooked Player Update Loop (for getting player object pointer)
 void __fastcall Hooked_PlayerUpdate(void* ecx_player, void* edx_dummy) {
     // Passively steal the player pointer 60 times a second
     g_StolenPlayer = ecx_player;
 
     // Resume normal game logic
     Original_PlayerUpdate(ecx_player, edx_dummy);
+}
+
+// Hooked Options Menu
+void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1, int param_2) {
+
+    // Call the original function, save the pointer that it returns
+    void* menuPointer = Original_OptionsMenu(this_ptr, edx_dummy, param_1, param_2);
+
+    DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
+
+    // Add spacer
+    Original_AddSpacer(this_ptr, nullptr, 10);
+
+    // Color Object vtable pointer
+    DWORD vtableAddr = baseAddr + 0xCF300;
+
+    // Add custom options button
+    const char* defaultText = g_ModEnabled ? "MOD ENABLED: YES" : "MOD ENABLED: NO";
+    Original_AddMenuButton(this_ptr, nullptr, defaultText, "MOD_TOGGLE", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
+
+    // Return the saved pointer
+    return menuPointer;
+}
+
+void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char* clicked_id) {
+
+    // Check if the player clicked our custom button
+    if (strcmp(clicked_id, "MOD_TOGGLE") == 0) {
+
+        // 1. Flip our mod state
+        g_ModEnabled = !g_ModEnabled;
+
+        // 2. Determine what the button should say now
+        const char* newText = g_ModEnabled ? "MOD ENABLED: YES" : "MOD ENABLED: NO";
+
+        // 3. Force the game engine to redraw our button
+        Game_UpdateButtonText(this_ptr, nullptr, newText, "MOD_TOGGLE");
+
+        // Return immediately so the original function doesn't try to read it
+        return;
+    }
+
+    // If it was any other button ("REZ", "FS", "BACK"), pass it to the original game logic
+    Original_OptionsClick(this_ptr, edx_dummy, clicked_id);
 }
 
 // The Mod Thread
@@ -136,11 +203,25 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID updateFuncAddr = (LPVOID)(baseAddr + 0x5E00); // FUN_00405e00
     Original_FindRespawn = (FindRespawnPointFunc)(baseAddr + 0x5190);
 
+    LPVOID optionsFuncAddr = (LPVOID)(baseAddr + 0x42ce0); // FUN_00442ce0
+    Original_AddMenuButton = (AddMenuButtonFunc)(baseAddr + 0x497f0);
+    Original_AddSpacer = (AddSpacerFunc)(baseAddr + 0x49430);
+    LPVOID clickFuncAddr = (LPVOID)(baseAddr + 0x434F0);
+    Game_UpdateButtonText = (UpdateButtonTextFunc)(baseAddr + 0x4a8b0);
+
     MH_Initialize();
 
-    // Hook the main update loop!
+    // Hook the main update loop
     MH_CreateHook(updateFuncAddr, &Hooked_PlayerUpdate, (LPVOID*)&Original_PlayerUpdate);
     MH_EnableHook(updateFuncAddr);
+
+    // Hook the options menu function
+    MH_CreateHook(optionsFuncAddr, &Hooked_OptionsMenu, (LPVOID*)&Original_OptionsMenu);
+    MH_EnableHook(optionsFuncAddr);
+
+    // Hook the options click handler
+    MH_CreateHook(clickFuncAddr, &Hooked_OptionsClick, (LPVOID*)&Original_OptionsClick);
+    MH_EnableHook(clickFuncAddr);
 
     // Main Hotkey Loop
     while (true) {
