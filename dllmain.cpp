@@ -81,6 +81,8 @@ DWORD WINAPI ModThread(HMODULE hModule) {
 
     ReloadINI();
 
+    bool wasJumpKeyPressed = false;
+
     // Main Hotkey Loop
     while (true) {
         if (GetAsyncKeyState('X') & 0x8000) {
@@ -91,6 +93,35 @@ DWORD WINAPI ModThread(HMODULE hModule) {
             }
             Sleep(500);
         }
+
+        bool isJumpKeyPressed = (GetAsyncKeyState(VK_LSHIFT) & 0x8000);
+        if (isJumpKeyPressed && !wasJumpKeyPressed) {
+
+            if (g_StolenPlayer != nullptr) {
+
+                // Get the player's physics object
+                DWORD* physicsObjPtr = (DWORD*)((DWORD)g_StolenPlayer + 0x1a4);
+
+                if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
+
+                    DWORD physicsObj = *physicsObjPtr;
+
+                    // Read Y Velocity
+                    float* trueVelY = (float*)(physicsObj + 0xca8);
+
+                    // Ground Check
+                    float tolerance = 0.5f;
+
+                    if (*trueVelY > -tolerance && *trueVelY < tolerance) {
+
+                        // Apply the jump force!
+                        *trueVelY = 20.0f;
+                    }
+                }
+            }
+        }
+        wasJumpKeyPressed = isJumpKeyPressed;
+
         if (GetAsyncKeyState(VK_F5) & 0x8000) {
             ReloadINI();
             Sleep(500);
