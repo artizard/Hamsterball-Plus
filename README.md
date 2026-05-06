@@ -5,6 +5,7 @@ This is a mod which currently does the following things:
 - Custom option in the options menu (currently does nothing)
 - Add widescreen resolutions to resolution selector
 - Custom level name and text color support (defined in CustomLevels.ini)
+- Custom menu color support (CustomLevels.ini)
 
 ## How it works
 
