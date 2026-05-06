@@ -10,6 +10,14 @@ typedef void(__fastcall* AddSpacerFunc)(void* this_ptr, void* edx_dummy, int hei
 typedef void(__fastcall* OptionsClickFunc)(void* this_ptr, void* edx_dummy, const char* clicked_id);
 typedef void(__fastcall* UpdateButtonTextFunc)(void* this_ptr, void* edx_dummy, const char* newText, const char* id);
 typedef const char* (__fastcall* GetLevelNameFunc)(void* ecx_obj, void* edx_dummy);
+typedef void(__fastcall* DrawHUDTextFunc)(
+    void* this_ptr, void* edx_dummy,
+    const char* text,
+    int x, int y,
+    int shadowOffsetX, int shadowOffsetY,
+    DWORD c1_vtable, float c1_r, float c1_g, float c1_b, float c1_a,
+    DWORD c2_vtable, float c2_r, float c2_g, float c2_b, float c2_a
+    );
 
 // --- EXTERN GLOBALS ---
 extern bool g_ModEnabled;
@@ -24,3 +32,4 @@ extern AddSpacerFunc Original_AddSpacer;
 extern OptionsClickFunc Original_OptionsClick;
 extern UpdateButtonTextFunc Game_UpdateButtonText;
 extern GetLevelNameFunc Original_GetLevelName;
+extern DrawHUDTextFunc Original_DrawHUDText;

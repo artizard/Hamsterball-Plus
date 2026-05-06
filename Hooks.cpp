@@ -35,6 +35,73 @@ const char* NormalizeLevelID(const char* originalId, bool& outIsLocked) {
     return originalId; // If it's already a number like "14", just return it as-is
 }
 
+// Helper to convert HUD strings back to INI IDs AND determine the game mode
+const char* GetLevelIdFromHUDText(const char* text, bool& isArena) {
+    isArena = false; // Default to Race
+
+    // WARM-UP
+    if (_stricmp(text, "WARM-UP RACE") == 0) return "0";
+    if (_stricmp(text, "WARM-UP ARENA") == 0) { isArena = true; return "0"; }
+
+    // BEGINNER
+    if (_stricmp(text, "BEGINNER RACE") == 0) return "1";
+    if (_stricmp(text, "BEGINNER ARENA") == 0) { isArena = true; return "1"; }
+
+    // INTERMEDIATE
+    if (_stricmp(text, "INTERMEDIATE RACE") == 0) return "2";
+    if (_stricmp(text, "INTERMEDIATE ARENA") == 0) { isArena = true; return "2"; }
+
+    // DIZZY
+    if (_stricmp(text, "DIZZY RACE") == 0) return "3";
+    if (_stricmp(text, "DIZZY ARENA") == 0) { isArena = true; return "3"; }
+
+    // TOWER
+    if (_stricmp(text, "TOWER RACE") == 0) return "4";
+    if (_stricmp(text, "TOWER ARENA") == 0) { isArena = true; return "4"; }
+
+    // UP
+    if (_stricmp(text, "UP RACE") == 0) return "5";
+    if (_stricmp(text, "UP ARENA") == 0) { isArena = true; return "5"; }
+
+    // NEON
+    if (_stricmp(text, "NEON RACE") == 0) return "6";
+    if (_stricmp(text, "NEON ARENA") == 0) { isArena = true; return "6"; }
+
+    // EXPERT
+    if (_stricmp(text, "EXPERT RACE") == 0) return "7";
+    if (_stricmp(text, "EXPERT ARENA") == 0) { isArena = true; return "7"; }
+
+    // ODD
+    if (_stricmp(text, "ODD RACE") == 0) return "8";
+    if (_stricmp(text, "ODD ARENA") == 0) { isArena = true; return "8"; }
+
+    // TOOB
+    if (_stricmp(text, "TOOB RACE") == 0) return "9";
+    if (_stricmp(text, "TOOB ARENA") == 0) { isArena = true; return "9"; }
+
+    // WOBBLY
+    if (_stricmp(text, "WOBBLY RACE") == 0) return "10";
+    if (_stricmp(text, "WOBBLY ARENA") == 0) { isArena = true; return "10"; }
+
+    // GLASS
+    if (_stricmp(text, "GLASS RACE") == 0) return "11";
+    if (_stricmp(text, "GLASS ARENA") == 0) { isArena = true; return "11"; }
+
+    // SKY
+    if (_stricmp(text, "SKY RACE") == 0) return "12";
+    if (_stricmp(text, "SKY ARENA") == 0) { isArena = true; return "12"; }
+
+    // MASTER
+    if (_stricmp(text, "MASTER RACE") == 0) return "13";
+    if (_stricmp(text, "MASTER ARENA") == 0) { isArena = true; return "13"; }
+
+    // IMPOSSIBLE
+    if (_stricmp(text, "IMPOSSIBLE RACE") == 0) return "14";
+    if (_stricmp(text, "IMPOSSIBLE ARENA") == 0) { isArena = true; return "14"; }
+
+    return nullptr;
+}
+
 // --- HOOK IMPLEMENTATIONS ---
 
 // Hooked Player Update Loop (for getting player object pointer)
@@ -199,4 +266,40 @@ const char* __fastcall Hooked_GetLevelName(void* ecx_obj, void* edx_dummy) {
 
     // Otherwise, return the original game's string
     return Original_GetLevelName(ecx_obj, edx_dummy);
+}
+
+// Intercept when the game tries to draw the level name when you start a level
+void __fastcall Hooked_DrawHUDText(void* this_ptr, void* edx_dummy, const char* text, int x, int y, int shadowOffsetX, int shadowOffsetY, DWORD c1_vtable, float c1_r, float c1_g, float c1_b, float c1_a, DWORD c2_vtable, float c2_r, float c2_g, float c2_b, float c2_a) {
+
+    const char* finalDisplayText = text;
+    static char customHUDNames[16][256];
+
+    if (text != nullptr) {
+
+        // Let our helper figure out the ID and the Context
+        bool isArena = false;
+        const char* levelId = GetLevelIdFromHUDText(text, isArena);
+
+        if (levelId != nullptr) {
+            char iniPath[MAX_PATH];
+            GetCurrentDirectoryA(MAX_PATH, iniPath);
+            strcat_s(iniPath, "\\CustomLevels.ini");
+
+            int idInt = atoi(levelId);
+
+            // Dynamically select the INI key based on what the engine is trying to draw
+            const char* iniKey = isArena ? "ArenaName" : "RaceName";
+
+            // Get the custom name
+            GetPrivateProfileStringA(levelId, iniKey, "", customHUDNames[idInt], 256, iniPath);
+
+            // If a custom name exists, swap the pointer
+            if (customHUDNames[idInt][0] != '\0') {
+                finalDisplayText = customHUDNames[idInt];
+            }
+        }
+    }
+
+    // Pass everything back to the engine
+    Original_DrawHUDText(this_ptr, edx_dummy, finalDisplayText, x, y, shadowOffsetX, shadowOffsetY, c1_vtable, c1_r, c1_g, c1_b, c1_a, c2_vtable, c2_r, c2_g, c2_b, c2_a);
 }

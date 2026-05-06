@@ -19,6 +19,7 @@ AddSpacerFunc Original_AddSpacer = nullptr;
 OptionsClickFunc Original_OptionsClick = nullptr;
 UpdateButtonTextFunc Game_UpdateButtonText = nullptr;
 GetLevelNameFunc Original_GetLevelName = nullptr;
+DrawHUDTextFunc Original_DrawHUDText = nullptr;
 
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
@@ -35,6 +36,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID clickFuncAddr = (LPVOID)(baseAddr + 0x434F0);
     Game_UpdateButtonText = (UpdateButtonTextFunc)(baseAddr + 0x4a8b0);
     LPVOID getLevelNameFuncAddr = (GetLevelNameFunc)(baseAddr + 0x264a0);
+    LPVOID drawHUDTextAddr = (LPVOID)(baseAddr + 0x13a0);
 
     
     MH_Initialize();
@@ -58,6 +60,10 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     // Hook the level name getter
     MH_CreateHook(getLevelNameFuncAddr, &Hooked_GetLevelName, (LPVOID*)&Original_GetLevelName);
     MH_EnableHook(getLevelNameFuncAddr);
+
+    // Hook the hud text drawer
+    MH_CreateHook(drawHUDTextAddr, &Hooked_DrawHUDText, (LPVOID*)&Original_DrawHUDText);
+    MH_EnableHook(drawHUDTextAddr);
 
     // Main Hotkey Loop
     while (true) {
