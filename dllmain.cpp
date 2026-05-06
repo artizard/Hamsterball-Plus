@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <stdlib.h>
 #include <windows.h>
 #include <stdio.h>
 #include "MinHook.h" // Include the MinHook library
@@ -141,6 +142,35 @@ OptionsClickFunc Original_OptionsClick = nullptr;
 typedef void(__fastcall* UpdateButtonTextFunc)(void* this_ptr, void* edx_dummy, const char* newText, const char* id);
 UpdateButtonTextFunc Game_UpdateButtonText = nullptr;
 
+// Helper function to read a float from the INI file
+float ReadIniFloat(const char* section, const char* key, float defaultValue, const char* filePath) {
+    char buffer[64];
+    GetPrivateProfileStringA(section, key, "", buffer, sizeof(buffer), filePath);
+    if (buffer[0] == '\0') return defaultValue;
+    return (float)atof(buffer);
+}
+
+// Helper to convert "LOCKED" strings back to numeric IDs
+const char* NormalizeLevelID(const char* originalId, bool& outIsLocked) {
+    outIsLocked = false;
+
+    // Use _stricmp to ignore case, since the devs inconsistently capitalized "Glass"
+    if (_stricmp(originalId, "LOCKED DIZZY") == 0) { outIsLocked = true; return "3"; }
+    if (_stricmp(originalId, "LOCKED TOWER") == 0) { outIsLocked = true; return "4"; }
+    if (_stricmp(originalId, "LOCKED UP") == 0) { outIsLocked = true; return "5"; }
+    if (_stricmp(originalId, "LOCKED NEON") == 0) { outIsLocked = true; return "6"; }
+    if (_stricmp(originalId, "LOCKED EXPERT") == 0) { outIsLocked = true; return "7"; }
+    if (_stricmp(originalId, "LOCKED ODD") == 0) { outIsLocked = true; return "8"; }
+    if (_stricmp(originalId, "LOCKED TOOB") == 0) { outIsLocked = true; return "9"; }
+    if (_stricmp(originalId, "LOCKED WOBBLY") == 0) { outIsLocked = true; return "10"; }
+    if (_stricmp(originalId, "LOCKED GLASS") == 0) { outIsLocked = true; return "11"; }
+    if (_stricmp(originalId, "LOCKED SKY") == 0) { outIsLocked = true; return "12"; }
+    if (_stricmp(originalId, "LOCKED MASTER") == 0) { outIsLocked = true; return "13"; }
+    if (_stricmp(originalId, "LOCKED IMPOSSIBLE") == 0) { outIsLocked = true; return "14"; }
+
+    return originalId; // If it's already a number like "14", just return it as-is
+}
+
 // Hooked Player Update Loop (for getting player object pointer)
 void __fastcall Hooked_PlayerUpdate(void* ecx_player, void* edx_dummy) {
     // Passively steal the player pointer 60 times a second
@@ -228,28 +258,48 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
     Original_OptionsClick(this_ptr, edx_dummy, clicked_id);
 }
 
-// Fix Impossible Arena Button Text Color
+// Allow custom level names and colors
 void __fastcall Hooked_AddMenuButton(void* this_ptr, void* edx_dummy, const char* displayText, const char* id, DWORD vtable, float r, float g, float b, const char* style, const char* unk) {
 
-    // Safety check: Ensure the strings actually exist before we compare them
+    char iniPath[MAX_PATH];
+    GetCurrentDirectoryA(MAX_PATH, iniPath);
+    strcat_s(iniPath, "\\CustomLevels.ini");
+
+    char customName[256];
+    const char* finalDisplayText = displayText;
+
     if (displayText != nullptr && id != nullptr) {
 
-        // Is the engine trying to draw the Impossible Arena button?
-        if (strcmp(displayText, "IMPOSSIBLE ARENA") == 0) {
+        // Normalize the ID (Converts "LOCKED IMPOSSIBLE" to "14")
+        bool isLocked = false;
+        const char* lookupId = NormalizeLevelID(id, isLocked);
 
-            // Is it the unlocked version? (We don't want to turn the locked gray text red)
-            if (strcmp(id, "14") == 0) {
+        // Check the context to pull the right name from the INI
+        if (strstr(displayText, "ARENA") != nullptr) {
+            GetPrivateProfileStringA(lookupId, "ArenaName", "", customName, sizeof(customName), iniPath);
+        }
+        else if (strstr(displayText, "RACE") != nullptr) {
+            GetPrivateProfileStringA(lookupId, "RaceName", "", customName, sizeof(customName), iniPath);
+        }
+        else {
+            // Fallback for normal buttons
+            GetPrivateProfileStringA(lookupId, "Name", "", customName, sizeof(customName), iniPath);
+        }
 
-                // force the color to pure red (like it is in the other menus)
-                r = 1.0f;
-                g = 0.0f;
-                b = 0.0f;
-            }
+        if (customName[0] != '\0') {
+            finalDisplayText = customName;
+        }
+
+        // Only apply custom colors if the level is actually unlocked
+        if (!isLocked) {
+            r = ReadIniFloat(lookupId, "ColorR", r, iniPath);
+            g = ReadIniFloat(lookupId, "ColorG", g, iniPath);
+            b = ReadIniFloat(lookupId, "ColorB", b, iniPath);
         }
     }
 
-    // Pass the parameters to the real game engine
-    Original_AddMenuButton(this_ptr, edx_dummy, displayText, id, vtable, r, g, b, style, unk);
+    // Pass everything to the engine
+    Original_AddMenuButton(this_ptr, edx_dummy, finalDisplayText, id, vtable, r, g, b, style, unk);
 }
 
 // The Mod Thread
