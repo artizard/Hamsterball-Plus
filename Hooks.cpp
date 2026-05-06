@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+ThemeConfig g_Theme;
+
 // --- HELPER FUNCTIONS ---
 
 // Helper function to read a float from the INI file
@@ -12,6 +14,25 @@ float ReadIniFloat(const char* section, const char* key, float defaultValue, con
     GetPrivateProfileStringA(section, key, "", buffer, sizeof(buffer), filePath);
     if (buffer[0] == '\0') return defaultValue;
     return (float)atof(buffer);
+}
+
+// Helper function to read ini file and store in theme
+void ReloadINI() {
+    char iniPath[MAX_PATH];
+    GetCurrentDirectoryA(MAX_PATH, iniPath);
+    strcat_s(iniPath, "\\CustomLevels.ini");
+
+    g_Theme.MenuBodyR = ReadIniFloat("GlobalTheme", "MenuBodyR", 0.0f, iniPath);
+    g_Theme.MenuBodyG = ReadIniFloat("GlobalTheme", "MenuBodyG", 0.0f, iniPath);
+    g_Theme.MenuBodyB = ReadIniFloat("GlobalTheme", "MenuBodyB", 1.0f, iniPath);
+    g_Theme.MenuBodyA = ReadIniFloat("GlobalTheme", "MenuBodyA", 0.75f, iniPath);
+
+    g_Theme.MenuHeaderR = ReadIniFloat("GlobalTheme", "MenuHeaderR", 0.0f, iniPath);
+    g_Theme.MenuHeaderG = ReadIniFloat("GlobalTheme", "MenuHeaderG", 1.0f, iniPath);
+    g_Theme.MenuHeaderB = ReadIniFloat("GlobalTheme", "MenuHeaderB", 1.0f, iniPath);
+    g_Theme.MenuHeaderA = ReadIniFloat("GlobalTheme", "MenuHeaderA", 0.75f, iniPath);
+
+    // (You can move your custom level string reading here later too!)
 }
 
 // Helper to convert "LOCKED" strings back to numeric IDs
@@ -101,6 +122,8 @@ const char* GetLevelIdFromHUDText(const char* text, bool& isArena) {
 
     return nullptr;
 }
+
+
 
 // --- HOOK IMPLEMENTATIONS ---
 
@@ -314,22 +337,22 @@ void* __fastcall Hooked_CreateColor(void* colorStruct, void* edx_dummy, float r,
     GetCurrentDirectoryA(MAX_PATH, iniPath);
     strcat_s(iniPath, "\\CustomLevels.ini");
 
-    // Intercept the "Menu Body" Color (Pure Blue: 0.0, 0.0, 1.0)
+    // Intercept the "Menu Body" Color
     if (r == 0.0f && g == 0.0f && b == 1.0f && a == 0.75f) {
         
-        r = ReadIniFloat("GlobalTheme", "MenuBodyR", 0.0f, iniPath);
-        g = ReadIniFloat("GlobalTheme", "MenuBodyG", 0.0f, iniPath);
-        b = ReadIniFloat("GlobalTheme", "MenuBodyB", 1.0f, iniPath);
-        a = ReadIniFloat("GlobalTheme", "MenuBodyA", 0.75f, iniPath);
+        r = g_Theme.MenuBodyR;
+        g = g_Theme.MenuBodyG;
+        b = g_Theme.MenuBodyB;
+        a = g_Theme.MenuBodyA;
     }
 
-    // Intercept the "Menu Header" Color (Cyan: 0.0, 1.0, 1.0)
+    // Intercept the "Menu Header" Color
     else if (r == 0.5f && g == 0.5f && b == 1.0f && a == 0.75f) {
 
-        r = ReadIniFloat("GlobalTheme", "MenuHeaderR", 0.5f, iniPath);
-        g = ReadIniFloat("GlobalTheme", "MenuHeaderG", 0.5f, iniPath);
-        b = ReadIniFloat("GlobalTheme", "MenuHeaderB", 1.0f, iniPath);
-        a = ReadIniFloat("GlobalTheme", "MenuHeaderA", 0.75f, iniPath);
+        r = g_Theme.MenuHeaderR;
+        g = g_Theme.MenuHeaderG;
+        b = g_Theme.MenuHeaderB;
+        a = g_Theme.MenuHeaderA;
     }
 
     // Pass the filtered color to the actual engine

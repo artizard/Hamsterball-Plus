@@ -24,6 +24,14 @@ typedef void* (__fastcall* CreateColorFunc)(void* colorStruct, void* edx_dummy, 
 extern bool g_ModEnabled;
 extern void* g_StolenPlayer;
 
+struct ThemeConfig {
+    float MenuBodyR, MenuBodyG, MenuBodyB, MenuBodyA;
+    float MenuHeaderR, MenuHeaderG, MenuHeaderB, MenuHeaderA;
+};
+
+// The promise that this cache exists
+extern ThemeConfig g_Theme;
+
 // Function Pointers
 extern FindRespawnPointFunc Original_FindRespawn;
 extern PlayerUpdateFunc Original_PlayerUpdate;

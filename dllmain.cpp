@@ -7,6 +7,8 @@
 #include "GameEngine.h"
 #include "Hooks.h"
 
+extern void ReloadINI();
+
 // Fullfilling Extern Promises
 void* g_StolenPlayer = nullptr;
 bool g_ModEnabled = true;
@@ -77,6 +79,8 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     MH_CreateHook(createColorAddr, &Hooked_CreateColor, (LPVOID*)&Original_CreateColor);
     MH_EnableHook(createColorAddr);
 
+    ReloadINI();
+
     // Main Hotkey Loop
     while (true) {
         if (GetAsyncKeyState('X') & 0x8000) {
@@ -85,9 +89,13 @@ DWORD WINAPI ModThread(HMODULE hModule) {
                 // Call the original death function using our passively stolen pointer
                 Original_FindRespawn(g_StolenPlayer, nullptr);
             }
-
             Sleep(500);
         }
+        if (GetAsyncKeyState(VK_F5) & 0x8000) {
+            ReloadINI();
+            Sleep(500);
+        }
+
         Sleep(10);
     }
     return 0;
