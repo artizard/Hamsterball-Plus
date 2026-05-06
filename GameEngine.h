@@ -18,6 +18,7 @@ typedef void(__fastcall* DrawHUDTextFunc)(
     DWORD c1_vtable, float c1_r, float c1_g, float c1_b, float c1_a,
     DWORD c2_vtable, float c2_r, float c2_g, float c2_b, float c2_a
     );
+typedef void* (__fastcall* CreateColorFunc)(void* colorStruct, void* edx_dummy, float r, float g, float b, float a);
 
 // --- EXTERN GLOBALS ---
 extern bool g_ModEnabled;
@@ -33,3 +34,4 @@ extern OptionsClickFunc Original_OptionsClick;
 extern UpdateButtonTextFunc Game_UpdateButtonText;
 extern GetLevelNameFunc Original_GetLevelName;
 extern DrawHUDTextFunc Original_DrawHUDText;
+extern CreateColorFunc Original_CreateColor;

@@ -303,3 +303,35 @@ void __fastcall Hooked_DrawHUDText(void* this_ptr, void* edx_dummy, const char* 
     // Pass everything back to the engine
     Original_DrawHUDText(this_ptr, edx_dummy, finalDisplayText, x, y, shadowOffsetX, shadowOffsetY, c1_vtable, c1_r, c1_g, c1_b, c1_a, c2_vtable, c2_r, c2_g, c2_b, c2_a);
 }
+
+void* __fastcall Hooked_CreateColor(void* colorStruct, void* edx_dummy, float r, float g, float b, float a) {
+
+    //if (r == 0.0f && g == 0.0f && b == 1.0f) {
+    //    printf("Found UI Color -> R: %f, G: %f, B: %f, A: %f\n", r, g, b, a);
+    //}
+
+    char iniPath[MAX_PATH];
+    GetCurrentDirectoryA(MAX_PATH, iniPath);
+    strcat_s(iniPath, "\\CustomLevels.ini");
+
+    // Intercept the "Menu Body" Color (Pure Blue: 0.0, 0.0, 1.0)
+    if (r == 0.0f && g == 0.0f && b == 1.0f && a == 0.75f) {
+        
+        r = ReadIniFloat("GlobalTheme", "MenuBodyR", 0.0f, iniPath);
+        g = ReadIniFloat("GlobalTheme", "MenuBodyG", 0.0f, iniPath);
+        b = ReadIniFloat("GlobalTheme", "MenuBodyB", 1.0f, iniPath);
+        a = ReadIniFloat("GlobalTheme", "MenuBodyA", 0.75f, iniPath);
+    }
+
+    // Intercept the "Menu Header" Color (Cyan: 0.0, 1.0, 1.0)
+    else if (r == 0.5f && g == 0.5f && b == 1.0f && a == 0.75f) {
+
+        r = ReadIniFloat("GlobalTheme", "MenuHeaderR", 0.5f, iniPath);
+        g = ReadIniFloat("GlobalTheme", "MenuHeaderG", 0.5f, iniPath);
+        b = ReadIniFloat("GlobalTheme", "MenuHeaderB", 1.0f, iniPath);
+        a = ReadIniFloat("GlobalTheme", "MenuHeaderA", 0.75f, iniPath);
+    }
+
+    // Pass the filtered color to the actual engine
+    return Original_CreateColor(colorStruct, edx_dummy, r, g, b, a);
+}

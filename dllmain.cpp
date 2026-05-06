@@ -20,9 +20,16 @@ OptionsClickFunc Original_OptionsClick = nullptr;
 UpdateButtonTextFunc Game_UpdateButtonText = nullptr;
 GetLevelNameFunc Original_GetLevelName = nullptr;
 DrawHUDTextFunc Original_DrawHUDText = nullptr;
+CreateColorFunc Original_CreateColor = nullptr;
 
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
+
+    // Spawn command prompt window
+    AllocConsole();
+    FILE* f;
+    freopen_s(&f, "CONOUT$", "w", stdout);
+    printf("Hamsterball Mod Debug Console\n");
 
     // Get base address
     DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
@@ -37,6 +44,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     Game_UpdateButtonText = (UpdateButtonTextFunc)(baseAddr + 0x4a8b0);
     LPVOID getLevelNameFuncAddr = (GetLevelNameFunc)(baseAddr + 0x264a0);
     LPVOID drawHUDTextAddr = (LPVOID)(baseAddr + 0x13a0);
+    LPVOID createColorAddr = (LPVOID)(baseAddr + 0x53150);
 
     
     MH_Initialize();
@@ -64,6 +72,10 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     // Hook the hud text drawer
     MH_CreateHook(drawHUDTextAddr, &Hooked_DrawHUDText, (LPVOID*)&Original_DrawHUDText);
     MH_EnableHook(drawHUDTextAddr);
+
+    // Hook the color creator
+    MH_CreateHook(createColorAddr, &Hooked_CreateColor, (LPVOID*)&Original_CreateColor);
+    MH_EnableHook(createColorAddr);
 
     // Main Hotkey Loop
     while (true) {
