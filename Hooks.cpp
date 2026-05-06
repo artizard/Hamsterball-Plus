@@ -129,10 +129,16 @@ const char* GetLevelIdFromHUDText(const char* text, bool& isArena) {
 
 // Hooked Player Update Loop (for getting player object pointer)
 void __fastcall Hooked_PlayerUpdate(void* ecx_player, void* edx_dummy) {
-    // Passively steal the player pointer 60 times a second
-    g_StolenPlayer = ecx_player;
 
-    // Resume normal game logic
+    // Look at offset 0x18 to check the "Controller ID"
+    int* controllerID = (int*)((DWORD)ecx_player + 0x18);
+
+    // ONLY steal the pointer if it is Player 1 (ID = 0)
+    // This will safely ignore the 8-Ball (which is likely -1)
+    if (*controllerID == 0) {
+        g_StolenPlayer = ecx_player;
+    }
+
     Original_PlayerUpdate(ecx_player, edx_dummy);
 }
 
