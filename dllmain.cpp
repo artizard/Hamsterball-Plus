@@ -150,7 +150,7 @@ void __fastcall Hooked_PlayerUpdate(void* ecx_player, void* edx_dummy) {
     Original_PlayerUpdate(ecx_player, edx_dummy);
 }
 
-// Hooked Options Menu
+// Adding custom option
 void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1, int param_2) {
 
     // Call the original function, save the pointer that it returns
@@ -172,6 +172,7 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
     return menuPointer;
 }
 
+// Logic for clicking options menu buttons
 void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char* clicked_id) {
 
     // Check if the player clicked our custom button
@@ -227,6 +228,30 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
     Original_OptionsClick(this_ptr, edx_dummy, clicked_id);
 }
 
+// Fix Impossible Arena Button Text Color
+void __fastcall Hooked_AddMenuButton(void* this_ptr, void* edx_dummy, const char* displayText, const char* id, DWORD vtable, float r, float g, float b, const char* style, const char* unk) {
+
+    // Safety check: Ensure the strings actually exist before we compare them
+    if (displayText != nullptr && id != nullptr) {
+
+        // Is the engine trying to draw the Impossible Arena button?
+        if (strcmp(displayText, "IMPOSSIBLE ARENA") == 0) {
+
+            // Is it the unlocked version? (We don't want to turn the locked gray text red)
+            if (strcmp(id, "14") == 0) {
+
+                // force the color to pure red (like it is in the other menus)
+                r = 1.0f;
+                g = 0.0f;
+                b = 0.0f;
+            }
+        }
+    }
+
+    // Pass the parameters to the real game engine
+    Original_AddMenuButton(this_ptr, edx_dummy, displayText, id, vtable, r, g, b, style, unk);
+}
+
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
 
@@ -238,11 +263,11 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     Original_FindRespawn = (FindRespawnPointFunc)(baseAddr + 0x5190);
 
     LPVOID optionsFuncAddr = (LPVOID)(baseAddr + 0x42ce0);
-    Original_AddMenuButton = (AddMenuButtonFunc)(baseAddr + 0x497f0);
+    LPVOID addMenuButtonAddr = (LPVOID)(baseAddr + 0x497f0);
     Original_AddSpacer = (AddSpacerFunc)(baseAddr + 0x49430);
     LPVOID clickFuncAddr = (LPVOID)(baseAddr + 0x434F0);
     Game_UpdateButtonText = (UpdateButtonTextFunc)(baseAddr + 0x4a8b0);
-
+    
     MH_Initialize();
 
     // Hook the main update loop
@@ -256,6 +281,10 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     // Hook the options click handler
     MH_CreateHook(clickFuncAddr, &Hooked_OptionsClick, (LPVOID*)&Original_OptionsClick);
     MH_EnableHook(clickFuncAddr);
+
+    // Hook the button creator
+    MH_CreateHook(addMenuButtonAddr, &Hooked_AddMenuButton, (LPVOID*)&Original_AddMenuButton);
+    MH_EnableHook(addMenuButtonAddr);
 
     // Main Hotkey Loop
     while (true) {
