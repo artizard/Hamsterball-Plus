@@ -2,6 +2,9 @@
 
 This is a mod which currently does the following things:
 - Press X to die instantly
+- Custom option in the options menu (currently does nothing)
+- Add widescreen resolutions to resolution selector
+- Fix Impossible Arena button text color
 
 ## How it works
 
