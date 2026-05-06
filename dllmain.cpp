@@ -18,6 +18,7 @@ AddMenuButtonFunc Original_AddMenuButton = nullptr;
 AddSpacerFunc Original_AddSpacer = nullptr;
 OptionsClickFunc Original_OptionsClick = nullptr;
 UpdateButtonTextFunc Game_UpdateButtonText = nullptr;
+GetLevelNameFunc Original_GetLevelName = nullptr;
 
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
@@ -33,6 +34,8 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     Original_AddSpacer = (AddSpacerFunc)(baseAddr + 0x49430);
     LPVOID clickFuncAddr = (LPVOID)(baseAddr + 0x434F0);
     Game_UpdateButtonText = (UpdateButtonTextFunc)(baseAddr + 0x4a8b0);
+    LPVOID getLevelNameFuncAddr = (GetLevelNameFunc)(baseAddr + 0x264a0);
+
     
     MH_Initialize();
 
@@ -51,6 +54,10 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     // Hook the button creator
     MH_CreateHook(addMenuButtonAddr, &Hooked_AddMenuButton, (LPVOID*)&Original_AddMenuButton);
     MH_EnableHook(addMenuButtonAddr);
+
+    // Hook the level name getter
+    MH_CreateHook(getLevelNameFuncAddr, &Hooked_GetLevelName, (LPVOID*)&Original_GetLevelName);
+    MH_EnableHook(getLevelNameFuncAddr);
 
     // Main Hotkey Loop
     while (true) {

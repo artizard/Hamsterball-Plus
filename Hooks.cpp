@@ -167,3 +167,36 @@ void __fastcall Hooked_AddMenuButton(void* this_ptr, void* edx_dummy, const char
     // Pass everything to the engine
     Original_AddMenuButton(this_ptr, edx_dummy, finalDisplayText, id, vtable, r, g, b, style, unk);
 }
+
+const char* __fastcall Hooked_GetLevelName(void* ecx_obj, void* edx_dummy) {
+
+    // The engine stores the Level ID at offset + 8
+    int levelID = *(int*)((DWORD)ecx_obj + 8);
+
+    // Safety check: ensure the ID is valid (0 to 15)
+    if (levelID < 0 || levelID > 15) {
+        return Original_GetLevelName(ecx_obj, edx_dummy);
+    }
+
+    char idStr[16];
+    sprintf_s(idStr, "%d", levelID);
+
+    // STATIC 2D Array: 16 slots, 256 characters each. 
+    // This ensures the pointers we return never get destroyed
+    static char customNames[16][256];
+
+    char iniPath[MAX_PATH];
+    GetCurrentDirectoryA(MAX_PATH, iniPath);
+    strcat_s(iniPath, "\\CustomLevels.ini");
+
+    // Try to read the custom name
+    GetPrivateProfileStringA(idStr, "RaceName", "", customNames[levelID], 256, iniPath);
+
+    // If we found one, return our custom permanent pointer
+    if (customNames[levelID][0] != '\0') {
+        return customNames[levelID]; // Return our custom string
+    }
+
+    // Otherwise, return the original game's string
+    return Original_GetLevelName(ecx_obj, edx_dummy);
+}
