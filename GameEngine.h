@@ -21,7 +21,7 @@ typedef void(__fastcall* DrawHUDTextFunc)(
 typedef void* (__fastcall* CreateColorFunc)(void* colorStruct, void* edx_dummy, float r, float g, float b, float a);
 
 // --- EXTERN GLOBALS ---
-extern bool g_ModEnabled;
+extern bool g_SpeedUncap;
 extern void* g_StolenPlayer;
 
 struct ThemeConfig {

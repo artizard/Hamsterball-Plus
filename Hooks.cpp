@@ -137,6 +137,30 @@ void __fastcall Hooked_PlayerUpdate(void* ecx_player, void* edx_dummy) {
     // This will safely ignore the 8-Ball (which is likely -1)
     if (*controllerID == 0) {
         g_StolenPlayer = ecx_player;
+
+        //float* gravity = (float*)((DWORD)ecx_player + 0x2a4);
+        //// normal is around 5
+        //*gravity = 10.f; 
+
+        // --- THE SPEED LIMIT BREAKER ---
+        if (g_SpeedUncap) {
+            // Break moving speed limit
+            float* masterSpeed = (float*)((DWORD)ecx_player + 0x188);
+            *masterSpeed = 500.0f;
+
+            DWORD* physicsObjPtr = (DWORD*)((DWORD)ecx_player + 0x1a4);
+            if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
+                DWORD physicsObj = *physicsObjPtr;
+
+                // Break the global physics speed cap
+                float* maxSpeed = (float*)(physicsObj + 0xc70);
+                *maxSpeed = 9999.0f;
+
+                // Turn off air resistance
+                float* drag = (float*)(physicsObj + 0xc68);
+                *drag = 0.0f;
+            }
+        }
     }
 
     Original_PlayerUpdate(ecx_player, edx_dummy);
@@ -157,8 +181,8 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
     DWORD vtableAddr = baseAddr + 0xCF300;
 
     // Add custom options button
-    const char* defaultText = g_ModEnabled ? "MOD ENABLED: YES" : "MOD ENABLED: NO";
-    Original_AddMenuButton(this_ptr, nullptr, defaultText, "MOD_TOGGLE", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
+    const char* defaultText = g_SpeedUncap ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
+    Original_AddMenuButton(this_ptr, nullptr, defaultText, "UNCAP_TOGGLE", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
 
     // Return the saved pointer
     return menuPointer;
@@ -168,16 +192,16 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
 void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char* clicked_id) {
 
     // Check if the player clicked our custom button
-    if (strcmp(clicked_id, "MOD_TOGGLE") == 0) {
+    if (strcmp(clicked_id, "UNCAP_TOGGLE") == 0) {
 
         // Flip state bool
-        g_ModEnabled = !g_ModEnabled;
+        g_SpeedUncap = !g_SpeedUncap;
 
         // Change text
-        const char* newText = g_ModEnabled ? "MOD ENABLED: YES" : "MOD ENABLED: NO";
+        const char* newText = g_SpeedUncap ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
 
         // Redraw button
-        Game_UpdateButtonText(this_ptr, nullptr, newText, "MOD_TOGGLE");
+        Game_UpdateButtonText(this_ptr, nullptr, newText, "UNCAP_TOGGLE");
 
         // Return immediately
         return;

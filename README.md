@@ -2,7 +2,8 @@
 
 This is a mod which currently does the following things:
 - Press X to die instantly
-- Custom option in the options menu (currently does nothing)
+- Press Left Shift to jump
+- Uncap Speed Hack (Toggled in Options Menu)
 - Add widescreen resolutions to resolution selector
 - Custom level name and text color support (defined in CustomLevels.ini)
 - Custom menu color support (CustomLevels.ini)

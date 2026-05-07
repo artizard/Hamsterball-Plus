@@ -11,7 +11,7 @@ extern void ReloadINI();
 
 // Fullfilling Extern Promises
 void* g_StolenPlayer = nullptr;
-bool g_ModEnabled = true;
+bool g_SpeedUncap = false;
 
 FindRespawnPointFunc Original_FindRespawn = nullptr;
 PlayerUpdateFunc Original_PlayerUpdate = nullptr;
