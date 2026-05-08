@@ -3,10 +3,28 @@
 #include "GameEngine.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 
 ThemeConfig g_Theme;
+std::vector<LevelConfig> g_LevelConfigs = {};
+bool g_ShowCheats = true;
+bool g_ShowConsole = false;
 
 // --- HELPER FUNCTIONS ---
+
+const char* GetModIniPath() {
+    static std::string iniPath = "";
+
+    if (iniPath.empty()) {
+        char exePath[MAX_PATH];
+        GetModuleFileNameA(NULL, exePath, MAX_PATH);
+        std::string pathStr = exePath;
+        size_t lastSlash = pathStr.find_last_of('\\');
+        iniPath = pathStr.substr(0, lastSlash) + "\\ModConfig.ini";
+    }
+
+    return iniPath.c_str();
+}
 
 // Helper function to read a float from the INI file
 float ReadIniFloat(const char* section, const char* key, float defaultValue, const char* filePath) {
@@ -16,113 +34,140 @@ float ReadIniFloat(const char* section, const char* key, float defaultValue, con
     return (float)atof(buffer);
 }
 
-// Helper function to read ini file and store in theme
+// Helper function to read ini file
 void ReloadINI() {
-    char iniPath[MAX_PATH];
-    GetCurrentDirectoryA(MAX_PATH, iniPath);
-    strcat_s(iniPath, "\\CustomLevels.ini");
+    const char* path = GetModIniPath();
 
-    g_Theme.MenuBodyR = ReadIniFloat("GlobalTheme", "MenuBodyR", 0.0f, iniPath);
-    g_Theme.MenuBodyG = ReadIniFloat("GlobalTheme", "MenuBodyG", 0.0f, iniPath);
-    g_Theme.MenuBodyB = ReadIniFloat("GlobalTheme", "MenuBodyB", 1.0f, iniPath);
-    g_Theme.MenuBodyA = ReadIniFloat("GlobalTheme", "MenuBodyA", 0.75f, iniPath);
+    // Read Values
+    g_Theme.MenuBodyR = ReadIniFloat("Theme", "MenuBodyR", 0.0f, path);
+    g_Theme.MenuBodyG = ReadIniFloat("Theme", "MenuBodyG", 0.0f, path);
+    g_Theme.MenuBodyB = ReadIniFloat("Theme", "MenuBodyB", 1.0f, path);
+    g_Theme.MenuBodyA = ReadIniFloat("Theme", "MenuBodyA", 0.75f, path);
 
-    g_Theme.MenuHeaderR = ReadIniFloat("GlobalTheme", "MenuHeaderR", 0.0f, iniPath);
-    g_Theme.MenuHeaderG = ReadIniFloat("GlobalTheme", "MenuHeaderG", 1.0f, iniPath);
-    g_Theme.MenuHeaderB = ReadIniFloat("GlobalTheme", "MenuHeaderB", 1.0f, iniPath);
-    g_Theme.MenuHeaderA = ReadIniFloat("GlobalTheme", "MenuHeaderA", 0.75f, iniPath);
+    g_Theme.MenuHeaderR = ReadIniFloat("Theme", "MenuHeaderR", 0.0f, path);
+    g_Theme.MenuHeaderG = ReadIniFloat("Theme", "MenuHeaderG", 1.0f, path);
+    g_Theme.MenuHeaderB = ReadIniFloat("Theme", "MenuHeaderB", 1.0f, path);
+    g_Theme.MenuHeaderA = ReadIniFloat("Theme", "MenuHeaderA", 0.75f, path);
 
-    // (You can move your custom level string reading here later too!)
+    g_ShowCheats = GetPrivateProfileIntA("Config", "ShowCheats", 1, path) != 0;
+    g_ShowConsole = GetPrivateProfileIntA("Config", "ShowConsole", 0, path) != 0;
+
+    g_LevelConfigs.clear();
+    for (int i = 0; i < 15; i++) {
+        LevelConfig config;
+        std::string s = std::to_string(i);
+        const char* iStr = s.c_str();
+
+        config.ColorR = ReadIniFloat(iStr, "ColorR", -1.f, path);
+        config.ColorG = ReadIniFloat(iStr, "ColorG", -1.f, path);
+        config.ColorB = ReadIniFloat(iStr, "ColorB", -1.f, path);
+
+        // Use temporary local buffers, let std::string safely copy the data
+        char tempRace[256], tempArena[256];
+        GetPrivateProfileStringA(iStr, "RaceName", "", tempRace, sizeof(tempRace), path);
+        GetPrivateProfileStringA(iStr, "ArenaName", "", tempArena, sizeof(tempArena), path);
+
+        // This makes a permanent, safe copy of the string in memory
+        config.RaceName = tempRace;
+        config.ArenaName = tempArena;
+
+        g_LevelConfigs.push_back(config);
+    }
 }
 
 // Helper to convert "LOCKED" strings back to numeric IDs
-const char* NormalizeLevelID(const char* originalId, bool& outIsLocked) {
+const int NormalizeLevelID(const char* originalId, bool& outIsLocked) {
     outIsLocked = false;
 
     // Use _stricmp to ignore case, since the devs inconsistently capitalized "Glass"
-    if (_stricmp(originalId, "LOCKED DIZZY") == 0) { outIsLocked = true; return "3"; }
-    if (_stricmp(originalId, "LOCKED TOWER") == 0) { outIsLocked = true; return "4"; }
-    if (_stricmp(originalId, "LOCKED UP") == 0) { outIsLocked = true; return "5"; }
-    if (_stricmp(originalId, "LOCKED NEON") == 0) { outIsLocked = true; return "6"; }
-    if (_stricmp(originalId, "LOCKED EXPERT") == 0) { outIsLocked = true; return "7"; }
-    if (_stricmp(originalId, "LOCKED ODD") == 0) { outIsLocked = true; return "8"; }
-    if (_stricmp(originalId, "LOCKED TOOB") == 0) { outIsLocked = true; return "9"; }
-    if (_stricmp(originalId, "LOCKED WOBBLY") == 0) { outIsLocked = true; return "10"; }
-    if (_stricmp(originalId, "LOCKED GLASS") == 0) { outIsLocked = true; return "11"; }
-    if (_stricmp(originalId, "LOCKED SKY") == 0) { outIsLocked = true; return "12"; }
-    if (_stricmp(originalId, "LOCKED MASTER") == 0) { outIsLocked = true; return "13"; }
-    if (_stricmp(originalId, "LOCKED IMPOSSIBLE") == 0) { outIsLocked = true; return "14"; }
+    if (_stricmp(originalId, "LOCKED DIZZY") == 0) { outIsLocked = true; return 3; }
+    if (_stricmp(originalId, "LOCKED TOWER") == 0) { outIsLocked = true; return 4; }
+    if (_stricmp(originalId, "LOCKED UP") == 0) { outIsLocked = true; return 5; }
+    if (_stricmp(originalId, "LOCKED NEON") == 0) { outIsLocked = true; return 6; }
+    if (_stricmp(originalId, "LOCKED EXPERT") == 0) { outIsLocked = true; return 7; }
+    if (_stricmp(originalId, "LOCKED ODD") == 0) { outIsLocked = true; return 8; }
+    if (_stricmp(originalId, "LOCKED TOOB") == 0) { outIsLocked = true; return 9; }
+    if (_stricmp(originalId, "LOCKED WOBBLY") == 0) { outIsLocked = true; return 10; }
+    if (_stricmp(originalId, "LOCKED GLASS") == 0) { outIsLocked = true; return 11; }
+    if (_stricmp(originalId, "LOCKED SKY") == 0) { outIsLocked = true; return 12; }
+    if (_stricmp(originalId, "LOCKED MASTER") == 0) { outIsLocked = true; return 13; }
+    if (_stricmp(originalId, "LOCKED IMPOSSIBLE") == 0) { outIsLocked = true; return 14; }
 
-    return originalId; // If it's already a number like "14", just return it as-is
+    try {
+        return std::stoi(originalId);
+    }
+    catch (...) {
+        // If it's a string like "OPTIONS" or "CHEAT_SPEED", ignore it
+        return -1;
+    }
 }
 
 // Helper to convert HUD strings back to INI IDs AND determine the game mode
-const char* GetLevelIdFromHUDText(const char* text, bool& isArena) {
+const int GetLevelIdFromHUDText(const char* text, bool& isArena) {
     isArena = false; // Default to Race
 
     // WARM-UP
-    if (_stricmp(text, "WARM-UP RACE") == 0) return "0";
-    if (_stricmp(text, "WARM-UP ARENA") == 0) { isArena = true; return "0"; }
+    if (_stricmp(text, "WARM-UP RACE") == 0) return 0;
+    if (_stricmp(text, "WARM-UP ARENA") == 0) { isArena = true; return 0; }
 
     // BEGINNER
-    if (_stricmp(text, "BEGINNER RACE") == 0) return "1";
-    if (_stricmp(text, "BEGINNER ARENA") == 0) { isArena = true; return "1"; }
+    if (_stricmp(text, "BEGINNER RACE") == 0) return 1;
+    if (_stricmp(text, "BEGINNER ARENA") == 0) { isArena = true; return 1; }
 
     // INTERMEDIATE
-    if (_stricmp(text, "INTERMEDIATE RACE") == 0) return "2";
-    if (_stricmp(text, "INTERMEDIATE ARENA") == 0) { isArena = true; return "2"; }
+    if (_stricmp(text, "INTERMEDIATE RACE") == 0) return 2;
+    if (_stricmp(text, "INTERMEDIATE ARENA") == 0) { isArena = true; return 2; }
 
     // DIZZY
-    if (_stricmp(text, "DIZZY RACE") == 0) return "3";
-    if (_stricmp(text, "DIZZY ARENA") == 0) { isArena = true; return "3"; }
+    if (_stricmp(text, "DIZZY RACE") == 0) return 3;
+    if (_stricmp(text, "DIZZY ARENA") == 0) { isArena = true; return 3; }
 
     // TOWER
-    if (_stricmp(text, "TOWER RACE") == 0) return "4";
-    if (_stricmp(text, "TOWER ARENA") == 0) { isArena = true; return "4"; }
+    if (_stricmp(text, "TOWER RACE") == 0) return 4;
+    if (_stricmp(text, "TOWER ARENA") == 0) { isArena = true; return 4; }
 
     // UP
-    if (_stricmp(text, "UP RACE") == 0) return "5";
-    if (_stricmp(text, "UP ARENA") == 0) { isArena = true; return "5"; }
+    if (_stricmp(text, "UP RACE") == 0) return 5;
+    if (_stricmp(text, "UP ARENA") == 0) { isArena = true; return 5; }
 
     // NEON
-    if (_stricmp(text, "NEON RACE") == 0) return "6";
-    if (_stricmp(text, "NEON ARENA") == 0) { isArena = true; return "6"; }
+    if (_stricmp(text, "NEON RACE") == 0) return 6;
+    if (_stricmp(text, "NEON ARENA") == 0) { isArena = true; return 6; }
 
     // EXPERT
-    if (_stricmp(text, "EXPERT RACE") == 0) return "7";
-    if (_stricmp(text, "EXPERT ARENA") == 0) { isArena = true; return "7"; }
+    if (_stricmp(text, "EXPERT RACE") == 0) return 7;
+    if (_stricmp(text, "EXPERT ARENA") == 0) { isArena = true; return 7; }
 
     // ODD
-    if (_stricmp(text, "ODD RACE") == 0) return "8";
-    if (_stricmp(text, "ODD ARENA") == 0) { isArena = true; return "8"; }
+    if (_stricmp(text, "ODD RACE") == 0) return 8;
+    if (_stricmp(text, "ODD ARENA") == 0) { isArena = true; return 8; }
 
     // TOOB
-    if (_stricmp(text, "TOOB RACE") == 0) return "9";
-    if (_stricmp(text, "TOOB ARENA") == 0) { isArena = true; return "9"; }
+    if (_stricmp(text, "TOOB RACE") == 0) return 9;
+    if (_stricmp(text, "TOOB ARENA") == 0) { isArena = true; return 9; }
 
     // WOBBLY
-    if (_stricmp(text, "WOBBLY RACE") == 0) return "10";
-    if (_stricmp(text, "WOBBLY ARENA") == 0) { isArena = true; return "10"; }
+    if (_stricmp(text, "WOBBLY RACE") == 0) return 10;
+    if (_stricmp(text, "WOBBLY ARENA") == 0) { isArena = true; return 10; }
 
     // GLASS
-    if (_stricmp(text, "GLASS RACE") == 0) return "11";
-    if (_stricmp(text, "GLASS ARENA") == 0) { isArena = true; return "11"; }
+    if (_stricmp(text, "GLASS RACE") == 0) return 11;
+    if (_stricmp(text, "GLASS ARENA") == 0) { isArena = true; return 11; }
 
     // SKY
-    if (_stricmp(text, "SKY RACE") == 0) return "12";
-    if (_stricmp(text, "SKY ARENA") == 0) { isArena = true; return "12"; }
+    if (_stricmp(text, "SKY RACE") == 0) return 12;
+    if (_stricmp(text, "SKY ARENA") == 0) { isArena = true; return 12; }
 
     // MASTER
-    if (_stricmp(text, "MASTER RACE") == 0) return "13";
-    if (_stricmp(text, "MASTER ARENA") == 0) { isArena = true; return "13"; }
+    if (_stricmp(text, "MASTER RACE") == 0) return 13;
+    if (_stricmp(text, "MASTER ARENA") == 0) { isArena = true; return 13; }
 
     // IMPOSSIBLE
-    if (_stricmp(text, "IMPOSSIBLE RACE") == 0) return "14";
-    if (_stricmp(text, "IMPOSSIBLE ARENA") == 0) { isArena = true; return "14"; }
+    if (_stricmp(text, "IMPOSSIBLE RACE") == 0) return 14;
+    if (_stricmp(text, "IMPOSSIBLE ARENA") == 0) { isArena = true; return 14; }
 
-    return nullptr;
+    return -1;
 }
-
 
 
 // --- HOOK IMPLEMENTATIONS ---
@@ -143,7 +188,7 @@ void __fastcall Hooked_PlayerUpdate(void* ecx_player, void* edx_dummy) {
         //*gravity = 10.f; 
 
         // --- THE SPEED LIMIT BREAKER ---
-        if (g_SpeedUncap) {
+        if (g_CheatSpeed) {
             // Break moving speed limit
             float* masterSpeed = (float*)((DWORD)ecx_player + 0x188);
             *masterSpeed = 500.0f;
@@ -172,17 +217,22 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
     // Call the original function, save the pointer that it returns
     void* menuPointer = Original_OptionsMenu(this_ptr, edx_dummy, param_1, param_2);
 
-    DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
+    if (g_ShowCheats) {
+        DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
+        
+        // Add spacer
+        Original_AddSpacer(this_ptr, nullptr, 10);
 
-    // Add spacer
-    Original_AddSpacer(this_ptr, nullptr, 10);
+        // Color Object vtable pointer
+        DWORD vtableAddr = baseAddr + 0xCF300;
 
-    // Color Object vtable pointer
-    DWORD vtableAddr = baseAddr + 0xCF300;
+        // Add custom options
+        const char* speedText = g_CheatSpeed ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
+        Original_AddMenuButton(this_ptr, nullptr, speedText, "CHEAT_SPEED", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
 
-    // Add custom options button
-    const char* defaultText = g_SpeedUncap ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
-    Original_AddMenuButton(this_ptr, nullptr, defaultText, "UNCAP_TOGGLE", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
+        const char* jumpText = g_CheatJump ? "JUMPING: YES" : "JUMPING: NO";
+        Original_AddMenuButton(this_ptr, nullptr, jumpText, "CHEAT_JUMP", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
+    }
 
     // Return the saved pointer
     return menuPointer;
@@ -191,19 +241,21 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
 // Logic for clicking options menu buttons
 void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char* clicked_id) {
 
-    // Check if the player clicked our custom button
-    if (strcmp(clicked_id, "UNCAP_TOGGLE") == 0) {
-
-        // Flip state bool
-        g_SpeedUncap = !g_SpeedUncap;
-
-        // Change text
-        const char* newText = g_SpeedUncap ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
-
+    // Speed Cheat
+    if (strcmp(clicked_id, "CHEAT_SPEED") == 0) {
+        g_CheatSpeed = !g_CheatSpeed;
+        const char* newText = g_CheatSpeed ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
         // Redraw button
-        Game_UpdateButtonText(this_ptr, nullptr, newText, "UNCAP_TOGGLE");
+        Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_SPEED");
+        return;
+    }
 
-        // Return immediately
+    // Jump Cheat
+    if (strcmp(clicked_id, "CHEAT_JUMP") == 0) {
+        g_CheatJump = !g_CheatJump;
+        const char* newText = g_CheatJump ? "JUMPING: YES" : "JUMPING: NO";
+        // Redraw button
+        Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_JUMP");
         return;
     }
 
@@ -246,41 +298,36 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
 
 // Allow custom level names and colors
 void __fastcall Hooked_AddMenuButton(void* this_ptr, void* edx_dummy, const char* displayText, const char* id, DWORD vtable, float r, float g, float b, const char* style, const char* unk) {
-
-    char iniPath[MAX_PATH];
-    GetCurrentDirectoryA(MAX_PATH, iniPath);
-    strcat_s(iniPath, "\\CustomLevels.ini");
-
-    char customName[256];
+    char* customName = nullptr;
     const char* finalDisplayText = displayText;
 
     if (displayText != nullptr && id != nullptr) {
 
         // Normalize the ID (Converts "LOCKED IMPOSSIBLE" to "14")
         bool isLocked = false;
-        const char* lookupId = NormalizeLevelID(id, isLocked);
+        const int lookupId = NormalizeLevelID(id, isLocked);
 
-        // Check the context to pull the right name from the INI
-        if (strstr(displayText, "ARENA") != nullptr) {
-            GetPrivateProfileStringA(lookupId, "ArenaName", "", customName, sizeof(customName), iniPath);
-        }
-        else if (strstr(displayText, "RACE") != nullptr) {
-            GetPrivateProfileStringA(lookupId, "RaceName", "", customName, sizeof(customName), iniPath);
-        }
-        else {
-            // Fallback for normal buttons
-            GetPrivateProfileStringA(lookupId, "Name", "", customName, sizeof(customName), iniPath);
-        }
+        if (lookupId >= 0 && lookupId < (int)g_LevelConfigs.size()) {
 
-        if (customName[0] != '\0') {
-            finalDisplayText = customName;
-        }
+            const char* customName = nullptr;
 
-        // Only apply custom colors if the level is actually unlocked
-        if (!isLocked) {
-            r = ReadIniFloat(lookupId, "ColorR", r, iniPath);
-            g = ReadIniFloat(lookupId, "ColorG", g, iniPath);
-            b = ReadIniFloat(lookupId, "ColorB", b, iniPath);
+            if (strstr(displayText, "ARENA") != nullptr) {
+                customName = g_LevelConfigs[lookupId].ArenaName.c_str();
+            }
+            else if (strstr(displayText, "RACE") != nullptr) {
+                customName = g_LevelConfigs[lookupId].RaceName.c_str();
+            }
+
+            if (customName != nullptr && customName[0] != '\0') {
+                finalDisplayText = customName;
+            }
+
+            // Don't change colors if level is locked
+            if (!isLocked) {
+                if (g_LevelConfigs[lookupId].ColorR != -1.f) r = g_LevelConfigs[lookupId].ColorR;
+                if (g_LevelConfigs[lookupId].ColorG != -1.f) g = g_LevelConfigs[lookupId].ColorG;
+                if (g_LevelConfigs[lookupId].ColorB != -1.f) b = g_LevelConfigs[lookupId].ColorB;
+            }
         }
     }
 
@@ -293,28 +340,17 @@ const char* __fastcall Hooked_GetLevelName(void* ecx_obj, void* edx_dummy) {
     // The engine stores the Level ID at offset + 8
     int levelID = *(int*)((DWORD)ecx_obj + 8);
 
-    // Safety check: ensure the ID is valid (0 to 15)
-    if (levelID < 0 || levelID > 15) {
-        return Original_GetLevelName(ecx_obj, edx_dummy);
-    }
+    // Safety check: ensure the ID is valid
+    if (levelID >= 0 && levelID < g_LevelConfigs.size()) {
+        const char* customName = nullptr;
 
-    char idStr[16];
-    sprintf_s(idStr, "%d", levelID);
+        // Try to read the custom name
+        customName = g_LevelConfigs[levelID].RaceName.c_str();
 
-    // STATIC 2D Array: 16 slots, 256 characters each. 
-    // This ensures the pointers we return never get destroyed
-    static char customNames[16][256];
-
-    char iniPath[MAX_PATH];
-    GetCurrentDirectoryA(MAX_PATH, iniPath);
-    strcat_s(iniPath, "\\CustomLevels.ini");
-
-    // Try to read the custom name
-    GetPrivateProfileStringA(idStr, "RaceName", "", customNames[levelID], 256, iniPath);
-
-    // If we found one, return our custom permanent pointer
-    if (customNames[levelID][0] != '\0') {
-        return customNames[levelID]; // Return our custom string
+        // If we found one, return our custom permanent pointer
+        if (customName[0] != '\0') {
+            return customName; // Return our custom string
+        }
     }
 
     // Otherwise, return the original game's string
@@ -325,30 +361,21 @@ const char* __fastcall Hooked_GetLevelName(void* ecx_obj, void* edx_dummy) {
 void __fastcall Hooked_DrawHUDText(void* this_ptr, void* edx_dummy, const char* text, int x, int y, int shadowOffsetX, int shadowOffsetY, DWORD c1_vtable, float c1_r, float c1_g, float c1_b, float c1_a, DWORD c2_vtable, float c2_r, float c2_g, float c2_b, float c2_a) {
 
     const char* finalDisplayText = text;
-    static char customHUDNames[16][256];
 
     if (text != nullptr) {
 
         // Let our helper figure out the ID and the Context
         bool isArena = false;
-        const char* levelId = GetLevelIdFromHUDText(text, isArena);
+        const int levelId = GetLevelIdFromHUDText(text, isArena);
 
-        if (levelId != nullptr) {
-            char iniPath[MAX_PATH];
-            GetCurrentDirectoryA(MAX_PATH, iniPath);
-            strcat_s(iniPath, "\\CustomLevels.ini");
+        if (levelId >= 0 && levelId < g_LevelConfigs.size()) {
 
-            int idInt = atoi(levelId);
+            // Dynamically select the correct string from the struct
+            const std::string& customStr = isArena ? g_LevelConfigs[levelId].ArenaName : g_LevelConfigs[levelId].RaceName;
 
-            // Dynamically select the INI key based on what the engine is trying to draw
-            const char* iniKey = isArena ? "ArenaName" : "RaceName";
-
-            // Get the custom name
-            GetPrivateProfileStringA(levelId, iniKey, "", customHUDNames[idInt], 256, iniPath);
-
-            // If a custom name exists, swap the pointer
-            if (customHUDNames[idInt][0] != '\0') {
-                finalDisplayText = customHUDNames[idInt];
+            // If the string isn't empty, safely grab its pointer
+            if (!customStr.empty()) {
+                finalDisplayText = customStr.c_str();
             }
         }
     }
@@ -362,10 +389,6 @@ void* __fastcall Hooked_CreateColor(void* colorStruct, void* edx_dummy, float r,
     //if (r == 0.0f && g == 0.0f && b == 1.0f) {
     //    printf("Found UI Color -> R: %f, G: %f, B: %f, A: %f\n", r, g, b, a);
     //}
-
-    char iniPath[MAX_PATH];
-    GetCurrentDirectoryA(MAX_PATH, iniPath);
-    strcat_s(iniPath, "\\CustomLevels.ini");
 
     // Intercept the "Menu Body" Color
     if (r == 0.0f && g == 0.0f && b == 1.0f && a == 0.75f) {

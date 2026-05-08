@@ -1,5 +1,7 @@
 #pragma once
 #include <windows.h>
+#include <vector>
+#include <string>
 
 // --- TYPEDEFS ---
 typedef void(__fastcall* FindRespawnPointFunc)(void* ecx_playerObject, void* edx_dummy);
@@ -21,16 +23,25 @@ typedef void(__fastcall* DrawHUDTextFunc)(
 typedef void* (__fastcall* CreateColorFunc)(void* colorStruct, void* edx_dummy, float r, float g, float b, float a);
 
 // --- EXTERN GLOBALS ---
-extern bool g_SpeedUncap;
+extern bool g_CheatSpeed;
+extern bool g_CheatJump;
 extern void* g_StolenPlayer;
 
 struct ThemeConfig {
     float MenuBodyR, MenuBodyG, MenuBodyB, MenuBodyA;
     float MenuHeaderR, MenuHeaderG, MenuHeaderB, MenuHeaderA;
 };
+struct LevelConfig {
+    float ColorR, ColorG, ColorB;
+    std::string RaceName;
+    std::string ArenaName;
+};
 
-// The promise that this cache exists
 extern ThemeConfig g_Theme;
+extern std::vector<LevelConfig> g_LevelConfigs;
+extern bool g_ShowCheats;
+extern bool g_ShowConsole;
+
 
 // Function Pointers
 extern FindRespawnPointFunc Original_FindRespawn;

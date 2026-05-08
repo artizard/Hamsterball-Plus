@@ -11,7 +11,8 @@ extern void ReloadINI();
 
 // Fullfilling Extern Promises
 void* g_StolenPlayer = nullptr;
-bool g_SpeedUncap = false;
+bool g_CheatSpeed = false;
+bool g_CheatJump = false;
 
 FindRespawnPointFunc Original_FindRespawn = nullptr;
 PlayerUpdateFunc Original_PlayerUpdate = nullptr;
@@ -27,11 +28,15 @@ CreateColorFunc Original_CreateColor = nullptr;
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
 
-    // Spawn command prompt window
-    AllocConsole();
-    FILE* f;
-    freopen_s(&f, "CONOUT$", "w", stdout);
-    printf("Hamsterball Mod Debug Console\n");
+    ReloadINI();
+
+    if (g_ShowConsole) {
+        // Spawn command prompt window
+        AllocConsole();
+        FILE* f;
+        freopen_s(&f, "CONOUT$", "w", stdout);
+        printf("Hamsterball Mod Debug Console\n");
+    }
 
     // Get base address
     DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
@@ -79,8 +84,6 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     MH_CreateHook(createColorAddr, &Hooked_CreateColor, (LPVOID*)&Original_CreateColor);
     MH_EnableHook(createColorAddr);
 
-    ReloadINI();
-
     bool wasJumpKeyPressed = false;
 
     // Main Hotkey Loop
@@ -94,33 +97,35 @@ DWORD WINAPI ModThread(HMODULE hModule) {
             Sleep(500);
         }
 
-        bool isJumpKeyPressed = (GetAsyncKeyState(VK_LSHIFT) & 0x8000);
-        if (isJumpKeyPressed && !wasJumpKeyPressed) {
+        if (g_CheatJump) {
+            bool isJumpKeyPressed = (GetAsyncKeyState(VK_LSHIFT) & 0x8000);
+            if (isJumpKeyPressed && !wasJumpKeyPressed) {
 
-            if (g_StolenPlayer != nullptr) {
+                if (g_StolenPlayer != nullptr) {
 
-                // Get the player's physics object
-                DWORD* physicsObjPtr = (DWORD*)((DWORD)g_StolenPlayer + 0x1a4);
+                    // Get the player's physics object
+                    DWORD* physicsObjPtr = (DWORD*)((DWORD)g_StolenPlayer + 0x1a4);
 
-                if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
+                    if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
 
-                    DWORD physicsObj = *physicsObjPtr;
+                        DWORD physicsObj = *physicsObjPtr;
 
-                    // Read Y Velocity
-                    float* trueVelY = (float*)(physicsObj + 0xca8);
+                        // Read Y Velocity
+                        float* trueVelY = (float*)(physicsObj + 0xca8);
 
-                    // Ground Check
-                    float tolerance = 0.5f;
+                        // Ground Check
+                        float tolerance = 0.5f;
 
-                    if (*trueVelY > -tolerance && *trueVelY < tolerance) {
+                        if (*trueVelY > -tolerance && *trueVelY < tolerance) {
 
-                        // Apply the jump force!
-                        *trueVelY = 20.0f;
+                            // Apply the jump force!
+                            *trueVelY = 20.0f;
+                        }
                     }
                 }
             }
+            wasJumpKeyPressed = isJumpKeyPressed;
         }
-        wasJumpKeyPressed = isJumpKeyPressed;
 
         if (GetAsyncKeyState(VK_F5) & 0x8000) {
             ReloadINI();
