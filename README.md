@@ -2,11 +2,17 @@
 
 This is a mod which currently does the following things:
 - Press X to die instantly
-- Press Left Shift to jump
-- Uncap Speed Hack (Toggled in Options Menu)
+- Cheats (Uncap speed, no break, jump button), toggled in Options Menu
 - Add widescreen resolutions to resolution selector
 - Custom level name and text color support (defined in CustomLevels.ini)
 - Custom menu color support (CustomLevels.ini)
+
+## INSTALLATION INSTRUCTIONS
+
+1. Download the files for the latest version in the Releases section on the right
+2. Go in your Hamsterball installation folder and rename "bass.dll" to "bass_real.dll"
+3. Place the "hb-mod.dll" file in your installation folder and rename it to "bass.dll"
+4. Place the "ModConfig.ini" file in your installation folder. You can open it in a text editor to change it however you want.
 
 ## How it works
 
