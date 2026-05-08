@@ -12,7 +12,11 @@ This is a mod which currently does the following things:
 1. Download the files for the latest version in the Releases section on the right
 2. Go in your Hamsterball installation folder and rename "bass.dll" to "bass_real.dll"
 3. Place the "hb-mod.dll" file in your installation folder and rename it to "bass.dll"
-4. Place the "ModConfig.ini" file in your installation folder. You can open it in a text editor to change it however you want.
+4. Place the "ModConfig.ini" file in your installation folder. 
+
+## Use Instructions
+- You can customize certain parts of the game like the level names and menu colors, as well as hide the cheats, by editing the "ModConfig.ini" file in a text editor. You can reload the file in-game by pressing F5.
+- Cheats are toggled in the Options Menu.
 
 ## How it works
 
