@@ -25,6 +25,8 @@ typedef void* (__fastcall* CreateColorFunc)(void* colorStruct, void* edx_dummy, 
 // --- EXTERN GLOBALS ---
 extern bool g_CheatSpeed;
 extern bool g_CheatJump;
+extern bool g_CheatNoBreak;
+
 extern void* g_StolenPlayer;
 
 struct ThemeConfig {

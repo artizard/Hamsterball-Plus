@@ -12,6 +12,20 @@ bool g_ShowConsole = false;
 
 // --- HELPER FUNCTIONS ---
 
+// Helper function to overwrite game code (Byte Patching)
+void PatchMemory(DWORD address, const char* bytes, size_t size) {
+    DWORD oldProtect;
+
+    // Unlock the memory so we can write to it
+    VirtualProtect((void*)address, size, PAGE_EXECUTE_READWRITE, &oldProtect);
+
+    // Copy our new bytes over the old ones
+    memcpy((void*)address, bytes, size);
+
+    // Lock it back up
+    VirtualProtect((void*)address, size, oldProtect, &oldProtect);
+}
+
 const char* GetModIniPath() {
     static std::string iniPath = "";
 
@@ -169,6 +183,31 @@ const int GetLevelIdFromHUDText(const char* text, bool& isArena) {
     return -1;
 }
 
+// --- BYTE PATCH FUNCTIONS ---
+
+// Toggles the No Fall Damage byte patches (originally by XRow)
+void ApplyNoFallDamage(bool enable) {
+
+    // Get the base address of Hamsterball.exe
+    DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
+
+    if (enable) {
+        // [ENABLE] - Overwrite with NOPs (0x90)
+        PatchMemory(baseAddr + 0xC767, "\x90\x90\x90\x90\x90\x90\x90", 7);
+        PatchMemory(baseAddr + 0xF22D, "\x90\x90\x90\x90\x90\x90\x90", 7);
+        PatchMemory(baseAddr + 0x75C9, "\x90\x90\x90\x90\x90\x90", 6);
+        PatchMemory(baseAddr + 0xC761, "\x90\x90\x90\x90\x90\x90", 6);
+        PatchMemory(baseAddr + 0xF226, "\x90\x90\x90\x90\x90\x90\x90", 7);
+    }
+    else {
+        // [DISABLE] - Restore original game code
+        PatchMemory(baseAddr + 0xC767, "\xC6\x85\xE9\x02\x00\x00\x01", 7);
+        PatchMemory(baseAddr + 0xF22D, "\xC6\x86\xE9\x02\x00\x00\x01", 7);
+        PatchMemory(baseAddr + 0x75C9, "\xFF\x86\xEC\x02\x00\x00", 6);
+        PatchMemory(baseAddr + 0xC761, "\x88\x85\x68\x07\x00\x00", 6);
+        PatchMemory(baseAddr + 0xF226, "\xC6\x86\x68\x07\x00\x00\x00", 7);
+    }
+}
 
 // --- HOOK IMPLEMENTATIONS ---
 
@@ -232,6 +271,9 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
 
         const char* jumpText = g_CheatJump ? "JUMPING: YES" : "JUMPING: NO";
         Original_AddMenuButton(this_ptr, nullptr, jumpText, "CHEAT_JUMP", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
+
+        const char* dmgText = g_CheatNoBreak ? "NO BREAK: YES" : "NO BREAK: NO";
+        Original_AddMenuButton(this_ptr, nullptr, dmgText, "CHEAT_NOBREAK", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
     }
 
     // Return the saved pointer
@@ -256,6 +298,18 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
         const char* newText = g_CheatJump ? "JUMPING: YES" : "JUMPING: NO";
         // Redraw button
         Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_JUMP");
+        return;
+    }
+
+    // No Break Cheat
+    if (strcmp(clicked_id, "CHEAT_NOBREAK") == 0) {
+        g_CheatNoBreak = !g_CheatNoBreak;
+
+        // Apply patch
+        ApplyNoFallDamage(g_CheatNoBreak);
+
+        const char* newText = g_CheatNoBreak ? "NO BREAK: YES" : "NO BREAK: NO";
+        Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_NOBREAK");
         return;
     }
 
