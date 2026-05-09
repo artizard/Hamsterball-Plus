@@ -76,6 +76,10 @@ void ReloadINI() {
         config.ColorG = ReadIniFloat(iStr, "ColorG", -1.f, path);
         config.ColorB = ReadIniFloat(iStr, "ColorB", -1.f, path);
 
+        config.BlotR = ReadIniFloat(iStr, "BlotR", -1.f, path);
+        config.BlotG = ReadIniFloat(iStr, "BlotG", -1.f, path);
+        config.BlotB = ReadIniFloat(iStr, "BlotB", -1.f, path);
+
         // Use temporary local buffers, let std::string safely copy the data
         char tempRace[256], tempArena[256];
         GetPrivateProfileStringA(iStr, "RaceName", "", tempRace, sizeof(tempRace), path);
@@ -464,4 +468,40 @@ void* __fastcall Hooked_CreateColor(void* colorStruct, void* edx_dummy, float r,
 
     // Pass the filtered color to the actual engine
     return Original_CreateColor(colorStruct, edx_dummy, r, g, b, a);
+}
+
+// Override timer blot color
+void __fastcall Hooked_HudManager(void* this_ptr, void* edx_dummy, void* param_1) {
+
+    // Grab the current level name string from the GameState object
+    char* levelNamePtr = *(char**)((DWORD)this_ptr + 0x29b4);
+
+    if (levelNamePtr != nullptr) {
+        // Convert to ID
+        bool isArena = false;
+        int levelID = GetLevelIdFromHUDText(levelNamePtr, isArena);
+
+        // Safety Check
+        if (levelID >= 0 && levelID < (int)g_LevelConfigs.size()) {
+
+            // Grab our custom blot colors from the INI
+            float customR = g_LevelConfigs[levelID].BlotR;
+            float customG = g_LevelConfigs[levelID].BlotG;
+            float customB = g_LevelConfigs[levelID].BlotB;
+
+            // If the INI actually has a custom color set (not -1), overwrite the game's memory
+            if (customR != -1.f) {
+                float* pBlotR = (float*)((DWORD)this_ptr + 0x1508);
+                float* pBlotG = (float*)((DWORD)this_ptr + 0x150c);
+                float* pBlotB = (float*)((DWORD)this_ptr + 0x1510);
+
+                *pBlotR = customR;
+                *pBlotG = customG;
+                *pBlotB = customB;
+            }
+        }
+    }
+
+    // Let the original engine draw the HUD using the colors we just forcefully injected
+    Original_HudManager(this_ptr, param_1);
 }

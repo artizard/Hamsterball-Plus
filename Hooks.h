@@ -8,3 +8,4 @@ void __fastcall Hooked_AddMenuButton(void* this_ptr, void* edx_dummy, const char
 const char* __fastcall Hooked_GetLevelName(void* ecx_obj, void* edx_dummy);
 void __fastcall Hooked_DrawHUDText(void* this_ptr, void* edx_dummy, const char* text, int x, int y, int shadowOffsetX, int shadowOffsetY, DWORD c1_vtable, float c1_r, float c1_g, float c1_b, float c1_a, DWORD c2_vtable, float c2_r, float c2_g, float c2_b, float c2_a);
 void* __fastcall Hooked_CreateColor(void* colorStruct, void* edx_dummy, float r, float g, float b, float a);
+void __fastcall Hooked_HudManager(void* this_ptr, void* edx_dummy, void* param_1);

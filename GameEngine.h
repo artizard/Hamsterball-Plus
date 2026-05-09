@@ -21,6 +21,7 @@ typedef void(__fastcall* DrawHUDTextFunc)(
     DWORD c2_vtable, float c2_r, float c2_g, float c2_b, float c2_a
     );
 typedef void* (__fastcall* CreateColorFunc)(void* colorStruct, void* edx_dummy, float r, float g, float b, float a);
+typedef void(__thiscall* HudManagerFunc)(void* this_ptr, void* param_1);
 
 // --- EXTERN GLOBALS ---
 extern bool g_CheatSpeed;
@@ -35,6 +36,7 @@ struct ThemeConfig {
 };
 struct LevelConfig {
     float ColorR, ColorG, ColorB;
+    float BlotR, BlotB, BlotG;
     std::string RaceName;
     std::string ArenaName;
 };
@@ -56,3 +58,4 @@ extern UpdateButtonTextFunc Game_UpdateButtonText;
 extern GetLevelNameFunc Original_GetLevelName;
 extern DrawHUDTextFunc Original_DrawHUDText;
 extern CreateColorFunc Original_CreateColor;
+extern HudManagerFunc Original_HudManager;

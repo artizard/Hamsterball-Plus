@@ -25,6 +25,7 @@ UpdateButtonTextFunc Game_UpdateButtonText = nullptr;
 GetLevelNameFunc Original_GetLevelName = nullptr;
 DrawHUDTextFunc Original_DrawHUDText = nullptr;
 CreateColorFunc Original_CreateColor = nullptr;
+HudManagerFunc Original_HudManager = nullptr;
 
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
@@ -53,7 +54,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID getLevelNameFuncAddr = (GetLevelNameFunc)(baseAddr + 0x264a0);
     LPVOID drawHUDTextAddr = (LPVOID)(baseAddr + 0x13a0);
     LPVOID createColorAddr = (LPVOID)(baseAddr + 0x53150);
-
+    LPVOID hudManagerAddr = (LPVOID)(baseAddr + 0x1b710);
     
     MH_Initialize();
 
@@ -84,6 +85,10 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     // Hook the color creator
     MH_CreateHook(createColorAddr, &Hooked_CreateColor, (LPVOID*)&Original_CreateColor);
     MH_EnableHook(createColorAddr);
+
+    // Hook the hud manager
+    MH_CreateHook(hudManagerAddr, &Hooked_HudManager, (LPVOID*)&Original_HudManager);
+    MH_EnableHook(hudManagerAddr);
 
     bool wasJumpKeyPressed = false;
 
