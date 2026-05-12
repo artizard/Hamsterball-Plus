@@ -16,13 +16,13 @@ bool g_ShowConsole = false;
 void PatchMemory(DWORD address, const char* bytes, size_t size) {
     DWORD oldProtect;
 
-    // Unlock the memory so we can write to it
+    // Unlock memory
     VirtualProtect((void*)address, size, PAGE_EXECUTE_READWRITE, &oldProtect);
 
-    // Copy our new bytes over the old ones
+    // Copy new bytes
     memcpy((void*)address, bytes, size);
 
-    // Lock it back up
+    // Lock up memory again
     VirtualProtect((void*)address, size, oldProtect, &oldProtect);
 }
 
@@ -58,8 +58,8 @@ void ReloadINI() {
     g_Theme.MenuBodyB = ReadIniFloat("Theme", "MenuBodyB", 1.0f, path);
     g_Theme.MenuBodyA = ReadIniFloat("Theme", "MenuBodyA", 0.75f, path);
 
-    g_Theme.MenuHeaderR = ReadIniFloat("Theme", "MenuHeaderR", 0.0f, path);
-    g_Theme.MenuHeaderG = ReadIniFloat("Theme", "MenuHeaderG", 1.0f, path);
+    g_Theme.MenuHeaderR = ReadIniFloat("Theme", "MenuHeaderR", 0.5f, path);
+    g_Theme.MenuHeaderG = ReadIniFloat("Theme", "MenuHeaderG", 0.5f, path);
     g_Theme.MenuHeaderB = ReadIniFloat("Theme", "MenuHeaderB", 1.0f, path);
     g_Theme.MenuHeaderA = ReadIniFloat("Theme", "MenuHeaderA", 0.75f, path);
 
@@ -192,11 +192,10 @@ const int GetLevelIdFromHUDText(const char* text, bool& isArena) {
 // Toggles the No Fall Damage byte patches (originally by XRow)
 void ApplyNoFallDamage(bool enable) {
 
-    // Get the base address of Hamsterball.exe
     DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
 
     if (enable) {
-        // [ENABLE] - Overwrite with NOPs (0x90)
+        // Overwrite with NOPs (0x90)
         PatchMemory(baseAddr + 0xC767, "\x90\x90\x90\x90\x90\x90\x90", 7);
         PatchMemory(baseAddr + 0xF22D, "\x90\x90\x90\x90\x90\x90\x90", 7);
         PatchMemory(baseAddr + 0x75C9, "\x90\x90\x90\x90\x90\x90", 6);
@@ -204,7 +203,7 @@ void ApplyNoFallDamage(bool enable) {
         PatchMemory(baseAddr + 0xF226, "\x90\x90\x90\x90\x90\x90\x90", 7);
     }
     else {
-        // [DISABLE] - Restore original game code
+        // Restore original game code
         PatchMemory(baseAddr + 0xC767, "\xC6\x85\xE9\x02\x00\x00\x01", 7);
         PatchMemory(baseAddr + 0xF22D, "\xC6\x86\xE9\x02\x00\x00\x01", 7);
         PatchMemory(baseAddr + 0x75C9, "\xFF\x86\xEC\x02\x00\x00", 6);
