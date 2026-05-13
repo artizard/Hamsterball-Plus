@@ -277,6 +277,9 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
 
         const char* dmgText = g_CheatNoBreak ? "NO BREAK: YES" : "NO BREAK: NO";
         Original_AddMenuButton(this_ptr, nullptr, dmgText, "CHEAT_NOBREAK", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
+
+        const char* topDownText = g_CheatTopDown ? "TOP-DOWN: YES" : "TOP-DOWN: NO";
+        Original_AddMenuButton(this_ptr, nullptr, topDownText, "CHEAT_TOPDOWN", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
     }
 
     // Return the saved pointer
@@ -290,7 +293,6 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
     if (strcmp(clicked_id, "CHEAT_SPEED") == 0) {
         g_CheatSpeed = !g_CheatSpeed;
         const char* newText = g_CheatSpeed ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
-        // Redraw button
         Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_SPEED");
         return;
     }
@@ -299,7 +301,6 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
     if (strcmp(clicked_id, "CHEAT_JUMP") == 0) {
         g_CheatJump = !g_CheatJump;
         const char* newText = g_CheatJump ? "JUMPING: YES" : "JUMPING: NO";
-        // Redraw button
         Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_JUMP");
         return;
     }
@@ -307,12 +308,17 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
     // No Break Cheat
     if (strcmp(clicked_id, "CHEAT_NOBREAK") == 0) {
         g_CheatNoBreak = !g_CheatNoBreak;
-
-        // Apply patch
         ApplyNoFallDamage(g_CheatNoBreak);
-
         const char* newText = g_CheatNoBreak ? "NO BREAK: YES" : "NO BREAK: NO";
         Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_NOBREAK");
+        return;
+    }
+
+    // Top-Down Camera Cheat
+    if (strcmp(clicked_id, "CHEAT_TOPDOWN") == 0) {
+        g_CheatTopDown = !g_CheatTopDown;
+        const char* newText = g_CheatTopDown ? "TOP-DOWN: YES" : "TOP-DOWN: NO";
+        Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_TOPDOWN");
         return;
     }
 
@@ -503,4 +509,31 @@ void __fastcall Hooked_HudManager(void* this_ptr, void* edx_dummy, void* param_1
 
     // Let the original engine draw the HUD using the colors we just forcefully injected
     Original_HudManager(this_ptr, param_1);
+}
+
+// Overrides the Camera Angle
+void __fastcall Hooked_RenderApply(void* this_ptr, void* edx_dummy, float* viewMatrix) {
+
+    if (g_StolenPlayer != nullptr && g_CheatTopDown) {
+
+        // Get Hamster pos
+        float pX = *(float*)((DWORD)g_StolenPlayer + 0x158);
+        float pY = *(float*)((DWORD)g_StolenPlayer + 0x15c);
+        float pZ = *(float*)((DWORD)g_StolenPlayer + 0x160);
+
+        // Build top-down camera angle
+        Vec3 target(pX, pY, pZ);
+        Vec3 eye(pX, pY + 800.0f, pZ);
+        Vec3 up(0.0f, 0.0f, 1.0f);
+
+        // Create a custom 16-float array and do the math
+        float customMatrix[16];
+        BuildCustomViewMatrix(customMatrix, eye, target, up);
+
+        // Pass our matrix into the engine instead of the original one
+        Original_RenderApply(this_ptr, edx_dummy, customMatrix);
+    }
+    else {
+        Original_RenderApply(this_ptr, edx_dummy, viewMatrix);
+    }
 }

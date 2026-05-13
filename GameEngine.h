@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <vector>
 #include <string>
+#include <math.h>
 
 // --- TYPEDEFS ---
 typedef void(__fastcall* FindRespawnPointFunc)(void* ecx_playerObject, void* edx_dummy);
@@ -22,11 +23,13 @@ typedef void(__fastcall* DrawHUDTextFunc)(
     );
 typedef void* (__fastcall* CreateColorFunc)(void* colorStruct, void* edx_dummy, float r, float g, float b, float a);
 typedef void(__thiscall* HudManagerFunc)(void* this_ptr, void* param_1);
+typedef void(__fastcall* RenderApplyFunc)(void* this_ptr, void* edx_dummy, float* viewMatrix);
 
 // --- EXTERN GLOBALS ---
 extern bool g_CheatSpeed;
 extern bool g_CheatJump;
 extern bool g_CheatNoBreak;
+extern bool g_CheatTopDown;
 
 extern void* g_StolenPlayer;
 
@@ -59,3 +62,37 @@ extern GetLevelNameFunc Original_GetLevelName;
 extern DrawHUDTextFunc Original_DrawHUDText;
 extern CreateColorFunc Original_CreateColor;
 extern HudManagerFunc Original_HudManager;
+extern RenderApplyFunc Original_RenderApply;
+
+// --- Vector3 ---
+
+// Simple 3D Vector struct
+struct Vec3 {
+    float x, y, z;
+    Vec3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
+};
+
+// Math Helpers
+inline Vec3 Subtract(Vec3 a, Vec3 b) { return Vec3(a.x - b.x, a.y - b.y, a.z - b.z); }
+inline Vec3 Cross(Vec3 a, Vec3 b) {
+    return Vec3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+}
+
+inline float Dot(Vec3 a, Vec3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+inline Vec3 Normalize(Vec3 v) {
+    float length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    if (length == 0.0f) return Vec3(0, 0, 0);
+    return Vec3(v.x / length, v.y / length, v.z / length);
+}
+
+// Builds a DirectX 8 compatible View Matrix (16 floats)
+inline void BuildCustomViewMatrix(float* outMatrix, Vec3 eye, Vec3 target, Vec3 up) {
+    Vec3 zaxis = Normalize(Subtract(target, eye));
+    Vec3 xaxis = Normalize(Cross(up, zaxis));
+    Vec3 yaxis = Cross(zaxis, xaxis);
+
+    outMatrix[0] = xaxis.x;           outMatrix[1] = yaxis.x;           outMatrix[2] = zaxis.x;           outMatrix[3] = 0.0f;
+    outMatrix[4] = xaxis.y;           outMatrix[5] = yaxis.y;           outMatrix[6] = zaxis.y;           outMatrix[7] = 0.0f;
+    outMatrix[8] = xaxis.z;           outMatrix[9] = yaxis.z;           outMatrix[10] = zaxis.z;          outMatrix[11] = 0.0f;
+    outMatrix[12] = -Dot(xaxis, eye); outMatrix[13] = -Dot(yaxis, eye); outMatrix[14] = -Dot(zaxis, eye); outMatrix[15] = 1.0f;
+}

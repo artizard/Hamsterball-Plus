@@ -14,6 +14,7 @@ void* g_StolenPlayer = nullptr;
 bool g_CheatSpeed = false;
 bool g_CheatJump = false;
 bool g_CheatNoBreak = false;
+bool g_CheatTopDown = false;
 
 FindRespawnPointFunc Original_FindRespawn = nullptr;
 PlayerUpdateFunc Original_PlayerUpdate = nullptr;
@@ -26,6 +27,7 @@ GetLevelNameFunc Original_GetLevelName = nullptr;
 DrawHUDTextFunc Original_DrawHUDText = nullptr;
 CreateColorFunc Original_CreateColor = nullptr;
 HudManagerFunc Original_HudManager = nullptr;
+RenderApplyFunc Original_RenderApply = nullptr;
 
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
@@ -55,6 +57,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID drawHUDTextAddr = (LPVOID)(baseAddr + 0x13a0);
     LPVOID createColorAddr = (LPVOID)(baseAddr + 0x53150);
     LPVOID hudManagerAddr = (LPVOID)(baseAddr + 0x1b710);
+    LPVOID renderApplyAddr = (LPVOID)(baseAddr + 0x54A30);
     
     MH_Initialize();
 
@@ -89,6 +92,9 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     // Hook the hud manager
     MH_CreateHook(hudManagerAddr, &Hooked_HudManager, (LPVOID*)&Original_HudManager);
     MH_EnableHook(hudManagerAddr);
+
+    MH_CreateHook(renderApplyAddr, &Hooked_RenderApply, (LPVOID*)&Original_RenderApply);
+    MH_EnableHook(renderApplyAddr);
 
     bool wasJumpKeyPressed = false;
 
