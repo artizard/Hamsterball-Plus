@@ -24,6 +24,9 @@ typedef void(__fastcall* DrawHUDTextFunc)(
 typedef void* (__fastcall* CreateColorFunc)(void* colorStruct, void* edx_dummy, float r, float g, float b, float a);
 typedef void(__thiscall* HudManagerFunc)(void* this_ptr, void* param_1);
 typedef void(__fastcall* RenderApplyFunc)(void* this_ptr, void* edx_dummy, float* viewMatrix);
+typedef void(__fastcall* BaseCollideCheckFunc)(void* this_ptr, void* edx, int* ballPhysics, int* collisionData);
+typedef void(__thiscall* GeometryBinderFunc)(void* meshWorld_this, const char* searchString, void* destStruct);
+typedef void(__fastcall* MasterLevelSetupFunc)(int* param_1);
 
 // --- EXTERN GLOBALS ---
 extern bool g_CheatSpeed;
@@ -63,6 +66,9 @@ extern DrawHUDTextFunc Original_DrawHUDText;
 extern CreateColorFunc Original_CreateColor;
 extern HudManagerFunc Original_HudManager;
 extern RenderApplyFunc Original_RenderApply;
+extern BaseCollideCheckFunc Original_BaseCollideCheck;
+extern GeometryBinderFunc Original_BindGeometry;
+extern MasterLevelSetupFunc Original_MasterLevelSetup;
 
 // --- Vector3 ---
 

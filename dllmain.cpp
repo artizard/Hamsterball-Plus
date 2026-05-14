@@ -5,6 +5,7 @@
 #include "MinHook.h"
 #include "BassProxy.h"
 #include "GameEngine.h"
+#include "UniversalObjects.h"
 #include "Hooks.h"
 
 extern void ReloadINI();
@@ -28,6 +29,9 @@ DrawHUDTextFunc Original_DrawHUDText = nullptr;
 CreateColorFunc Original_CreateColor = nullptr;
 HudManagerFunc Original_HudManager = nullptr;
 RenderApplyFunc Original_RenderApply = nullptr;
+BaseCollideCheckFunc Original_BaseCollideCheck = nullptr;
+GeometryBinderFunc Original_BindGeometry = nullptr;
+MasterLevelSetupFunc Original_MasterLevelSetup = nullptr;
 
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
@@ -58,43 +62,45 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID createColorAddr = (LPVOID)(baseAddr + 0x53150);
     LPVOID hudManagerAddr = (LPVOID)(baseAddr + 0x1b710);
     LPVOID renderApplyAddr = (LPVOID)(baseAddr + 0x54A30);
+    LPVOID baseCollideCheckAddr = (LPVOID)(baseAddr + 0xc5d0);
+    Original_BindGeometry = (GeometryBinderFunc)(baseAddr + 0x602f0);
+    LPVOID masterLevelSetupAddr = (LPVOID)(baseAddr + 0x1c5b0);
     
     MH_Initialize();
 
-    // Hook the main update loop
     MH_CreateHook(updateFuncAddr, &Hooked_PlayerUpdate, (LPVOID*)&Original_PlayerUpdate);
     MH_EnableHook(updateFuncAddr);
 
-    // Hook the options menu function
     MH_CreateHook(optionsFuncAddr, &Hooked_OptionsMenu, (LPVOID*)&Original_OptionsMenu);
     MH_EnableHook(optionsFuncAddr);
 
-    // Hook the options click handler
     MH_CreateHook(clickFuncAddr, &Hooked_OptionsClick, (LPVOID*)&Original_OptionsClick);
     MH_EnableHook(clickFuncAddr);
 
-    // Hook the button creator
     MH_CreateHook(addMenuButtonAddr, &Hooked_AddMenuButton, (LPVOID*)&Original_AddMenuButton);
     MH_EnableHook(addMenuButtonAddr);
 
-    // Hook the level name getter
     MH_CreateHook(getLevelNameFuncAddr, &Hooked_GetLevelName, (LPVOID*)&Original_GetLevelName);
     MH_EnableHook(getLevelNameFuncAddr);
 
-    // Hook the hud text drawer
     MH_CreateHook(drawHUDTextAddr, &Hooked_DrawHUDText, (LPVOID*)&Original_DrawHUDText);
     MH_EnableHook(drawHUDTextAddr);
 
-    // Hook the color creator
     MH_CreateHook(createColorAddr, &Hooked_CreateColor, (LPVOID*)&Original_CreateColor);
     MH_EnableHook(createColorAddr);
 
-    // Hook the hud manager
     MH_CreateHook(hudManagerAddr, &Hooked_HudManager, (LPVOID*)&Original_HudManager);
     MH_EnableHook(hudManagerAddr);
 
     MH_CreateHook(renderApplyAddr, &Hooked_RenderApply, (LPVOID*)&Original_RenderApply);
     MH_EnableHook(renderApplyAddr);
+
+    MH_CreateHook(baseCollideCheckAddr, &Hooked_BaseCollideCheck, (LPVOID*)&Original_BaseCollideCheck);
+    MH_EnableHook(baseCollideCheckAddr);
+
+    MH_CreateHook(masterLevelSetupAddr, &Hooked_MasterLevelSetup, (LPVOID*)&Original_MasterLevelSetup);
+    MH_EnableHook(masterLevelSetupAddr);
+
 
     bool wasJumpKeyPressed = false;
 
