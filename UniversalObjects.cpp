@@ -21,22 +21,24 @@ std::unordered_map<int, DWORD> g_BumperCooldowns;
 void __fastcall Hooked_MasterLevelSetup(int* param_1) {
     Original_MasterLevelSetup(param_1);
 
-    // Grab the specific Level Name string at offset 0x868
-    char* boardName = *(char**)((DWORD)param_1 + 0x868);
 
-    // Only awaken custom DLL bumpers if we are NOT in Beginner Race
-    if (boardName != nullptr && _stricmp(boardName, "Board (Beginner)") != 0) {
-
-        void* meshWorldPtr = (void*)param_1[0x22b];
-
-        if (meshWorldPtr != nullptr) {
-            for (int i = 0; i < MAX_CUSTOM_BUMPERS; i++) {
-                char bumperName[32];
-                sprintf_s(bumperName, "N:BUMPER%d", i + 1);
-                Original_BindGeometry(meshWorldPtr, bumperName, &g_CustomBumpers[i]);
-            }
-        }
-    }
+    // Turns out this isn't actually needed for bumpers to work. Uncomment if needed later
+//    // Grab the specific Level Name string at offset 0x868
+//    char* boardName = *(char**)((DWORD)param_1 + 0x868);
+//
+//    // Only awaken custom DLL bumpers if we are NOT in Beginner Race
+//    if (boardName != nullptr && _stricmp(boardName, "Board (Beginner)") != 0) {
+//
+//        void* meshWorldPtr = (void*)param_1[0x22b];
+//
+//        if (meshWorldPtr != nullptr) {
+//            for (int i = 0; i < MAX_CUSTOM_BUMPERS; i++) {
+//                char bumperName[32];
+//                sprintf_s(bumperName, "N:BUMPER%d", i + 1);
+//                Original_BindGeometry(meshWorldPtr, bumperName, &g_CustomBumpers[i]);
+//            }
+//        }
+//    }
 }
 
 void __fastcall Hooked_BaseCollideCheck(void* this_ptr, void* edx, int* ballPhysics, int* collisionData) {

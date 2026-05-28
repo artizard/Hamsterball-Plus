@@ -196,11 +196,18 @@ void ApplyNoFallDamage(bool enable) {
 
     if (enable) {
         // Overwrite with NOPs (0x90)
-        PatchMemory(baseAddr + 0xC767, "\x90\x90\x90\x90\x90\x90\x90", 7);
-        PatchMemory(baseAddr + 0xF22D, "\x90\x90\x90\x90\x90\x90\x90", 7);
-        PatchMemory(baseAddr + 0x75C9, "\x90\x90\x90\x90\x90\x90", 6);
+
+        // Regular E:LIMIT check
         PatchMemory(baseAddr + 0xC761, "\x90\x90\x90\x90\x90\x90", 6);
+        PatchMemory(baseAddr + 0xC767, "\x90\x90\x90\x90\x90\x90\x90", 7);
+
+        // Odd Race's E:LIMIT check
         PatchMemory(baseAddr + 0xF226, "\x90\x90\x90\x90\x90\x90\x90", 7);
+        PatchMemory(baseAddr + 0xF22D, "\x90\x90\x90\x90\x90\x90\x90", 7);
+
+        // Unknown, inside ballupdate
+        PatchMemory(baseAddr + 0x75C9, "\x90\x90\x90\x90\x90\x90", 6);
+        
     }
     else {
         // Restore original game code
@@ -536,4 +543,25 @@ void __fastcall Hooked_RenderApply(void* this_ptr, void* edx_dummy, float* viewM
     else {
         Original_RenderApply(this_ptr, edx_dummy, viewMatrix);
     }
+}
+
+void __fastcall Hooked_Shatter1(void* this_ptr, void* edx_dummy, int param_1) {
+
+    if (g_CheatNoBreak && this_ptr == g_StolenPlayer) return;
+
+    Original_Shatter1(this_ptr, param_1);
+}
+
+void __fastcall Hooked_Shatter2(void* param_1, void* edx_dummy) {
+
+    if (g_CheatNoBreak && param_1 == g_StolenPlayer) return;
+
+    Original_Shatter2(param_1);
+}
+
+void __fastcall Hooked_Shatter3(void* param_1, void* edx_dummy) {
+
+    if (g_CheatNoBreak && param_1 == g_StolenPlayer) return;
+
+    Original_Shatter3(param_1);
 }

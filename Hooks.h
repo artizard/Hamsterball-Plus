@@ -10,3 +10,7 @@ void __fastcall Hooked_DrawHUDText(void* this_ptr, void* edx_dummy, const char* 
 void* __fastcall Hooked_CreateColor(void* colorStruct, void* edx_dummy, float r, float g, float b, float a);
 void __fastcall Hooked_HudManager(void* this_ptr, void* edx_dummy, void* param_1);
 void __fastcall Hooked_RenderApply(void* this_ptr, void* edx_dummy, float* viewMatrix);
+void __fastcall Hooked_RenderDynamic(void* this_ptr, void* edx_dummy, void* param_1);
+void __fastcall Hooked_Shatter1(void* this_ptr, void* edx_dummy, int param_1);
+void __fastcall Hooked_Shatter2(void* param_1, void* edx_dummy);
+void __fastcall Hooked_Shatter3(void* param_1, void* edx_dummy);

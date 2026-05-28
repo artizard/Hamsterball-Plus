@@ -27,6 +27,10 @@ typedef void(__fastcall* RenderApplyFunc)(void* this_ptr, void* edx_dummy, float
 typedef void(__fastcall* BaseCollideCheckFunc)(void* this_ptr, void* edx, int* ballPhysics, int* collisionData);
 typedef void(__thiscall* GeometryBinderFunc)(void* meshWorld_this, const char* searchString, void* destStruct);
 typedef void(__fastcall* MasterLevelSetupFunc)(int* param_1);
+typedef void(__thiscall* RenderDynamic_t)(void* this_ptr, void* param_1);
+typedef void(__thiscall* Shatter1_t)(void* this_ptr, int param_1);
+typedef void(__fastcall* Shatter2_t)(void* param_1);
+typedef void(__fastcall* Shatter3_t)(void* param_1);
 
 // --- EXTERN GLOBALS ---
 extern bool g_CheatSpeed;
@@ -69,6 +73,10 @@ extern RenderApplyFunc Original_RenderApply;
 extern BaseCollideCheckFunc Original_BaseCollideCheck;
 extern GeometryBinderFunc Original_BindGeometry;
 extern MasterLevelSetupFunc Original_MasterLevelSetup;
+extern RenderDynamic_t Original_RenderDynamic;
+extern Shatter1_t Original_Shatter1;
+extern Shatter2_t Original_Shatter2;
+extern Shatter3_t Original_Shatter3;
 
 // --- Vector3 ---
 

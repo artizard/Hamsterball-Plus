@@ -32,6 +32,11 @@ RenderApplyFunc Original_RenderApply = nullptr;
 BaseCollideCheckFunc Original_BaseCollideCheck = nullptr;
 GeometryBinderFunc Original_BindGeometry = nullptr;
 MasterLevelSetupFunc Original_MasterLevelSetup = nullptr;
+RenderDynamic_t Original_RenderDynamic = nullptr;
+Shatter1_t Original_Shatter1 = nullptr;
+Shatter2_t Original_Shatter2 = nullptr;
+Shatter3_t Original_Shatter3 = nullptr;
+
 
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
@@ -65,6 +70,9 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID baseCollideCheckAddr = (LPVOID)(baseAddr + 0xc5d0);
     Original_BindGeometry = (GeometryBinderFunc)(baseAddr + 0x602f0);
     LPVOID masterLevelSetupAddr = (LPVOID)(baseAddr + 0x1c5b0);
+    //LPVOID renderDynamicAddr = (LPVOID)(baseAddr + 0xb570);
+    LPVOID shatterHamsterAddr = (LPVOID)(baseAddr + 0x8d70);
+
     
     MH_Initialize();
 
@@ -100,6 +108,19 @@ DWORD WINAPI ModThread(HMODULE hModule) {
 
     MH_CreateHook(masterLevelSetupAddr, &Hooked_MasterLevelSetup, (LPVOID*)&Original_MasterLevelSetup);
     MH_EnableHook(masterLevelSetupAddr);
+
+    //MH_CreateHook(renderDynamicAddr, &Hooked_RenderDynamic, (LPVOID*)&Original_RenderDynamic);
+    //MH_EnableHook(renderDynamicAddr);
+
+    LPVOID shatter1Addr = (LPVOID)(baseAddr + 0x8D70);
+    MH_CreateHook(shatter1Addr, &Hooked_Shatter1, (LPVOID*)&Original_Shatter1);
+    MH_EnableHook(shatter1Addr);
+    LPVOID shatter2Addr = (LPVOID)(baseAddr + 0x9050);
+    MH_CreateHook(shatter2Addr, &Hooked_Shatter2, (LPVOID*)&Original_Shatter2);
+    MH_EnableHook(shatter2Addr);
+    LPVOID shatter3Addr = (LPVOID)(baseAddr + 0x9480);
+    MH_CreateHook(shatter3Addr, &Hooked_Shatter3, (LPVOID*)&Original_Shatter3);
+    MH_EnableHook(shatter3Addr);
 
 
     bool wasJumpKeyPressed = false;
