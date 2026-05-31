@@ -7,8 +7,13 @@
 #include "GameEngine.h"
 #include "UniversalObjects.h"
 #include "Hooks.h"
+#include "HamsterballAPI.h"
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 extern void ReloadINI();
+void loadMods();
 
 // Fullfilling Extern Promises
 void* g_StolenPlayer = nullptr;
@@ -42,6 +47,7 @@ Shatter3_t Original_Shatter3 = nullptr;
 DWORD WINAPI ModThread(HMODULE hModule) {
 
     ReloadINI();
+    loadMods(); 
 
     if (g_ShowConsole) {
         // Spawn command prompt window
@@ -189,4 +195,24 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
         break;
     }
     return TRUE;
+}
+
+void loadMods() {
+    std::string modFolderPath = "Mods";
+
+    for (const auto& entry : fs::directory_iterator(modFolderPath)) {
+        // ignore non mods 
+        if (entry.path().extension() == ".dll") {
+            HMODULE modDLL = LoadLibraryA(entry.path().string().c_str());
+            if (modDLL) {
+                CreateModFunct factory = (CreateModFunct)GetProcAddress(modDLL, "CreateModInstance");
+                if (factory) {
+                    HamsterballAPI* newMod = factory();
+                    if (newMod) {
+                        g_Mods.push_back(newMod);
+                    }
+                }
+            }
+        }
+    }
 }

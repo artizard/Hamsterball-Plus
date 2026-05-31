@@ -237,23 +237,26 @@ void __fastcall Hooked_PlayerUpdate(void* ecx_player, void* edx_dummy) {
         //*gravity = 10.f; 
 
         // --- THE SPEED LIMIT BREAKER ---
-        if (g_CheatSpeed) {
-            // Break moving speed limit
-            float* masterSpeed = (float*)((DWORD)ecx_player + 0x188);
-            *masterSpeed = 500.0f;
+        //if (g_CheatSpeed) {
+        //    // Break moving speed limit
+        //    float* masterSpeed = (float*)((DWORD)ecx_player + 0x188);
+        //    *masterSpeed = 500.0f;
 
-            DWORD* physicsObjPtr = (DWORD*)((DWORD)ecx_player + 0x1a4);
-            if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
-                DWORD physicsObj = *physicsObjPtr;
+        //    DWORD* physicsObjPtr = (DWORD*)((DWORD)ecx_player + 0x1a4);
+        //    if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
+        //        DWORD physicsObj = *physicsObjPtr;
 
-                // Break the global physics speed cap
-                float* maxSpeed = (float*)(physicsObj + 0xc70);
-                *maxSpeed = 9999.0f;
+        //        // Break the global physics speed cap
+        //        float* maxSpeed = (float*)(physicsObj + 0xc70);
+        //        *maxSpeed = 9999.0f;
 
-                // Turn off air resistance
-                float* drag = (float*)(physicsObj + 0xc68);
-                *drag = 0.0f;
-            }
+        //        // Turn off air resistance
+        //        float* drag = (float*)(physicsObj + 0xc68);
+        //        *drag = 0.0f;
+        //    }
+        //}
+        for (HamsterballAPI* mod : g_Mods) {
+            mod->onPlayerUpdate(ecx_player);
         }
     }
 

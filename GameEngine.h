@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <math.h>
+#include "HamsterballAPI.h"
 
 // --- TYPEDEFS ---
 typedef void(__fastcall* FindRespawnPointFunc)(void* ecx_playerObject, void* edx_dummy);
@@ -39,6 +40,8 @@ extern bool g_CheatNoBreak;
 extern bool g_CheatTopDown;
 
 extern void* g_StolenPlayer;
+
+inline std::vector<HamsterballAPI*> g_Mods; 
 
 struct ThemeConfig {
     float MenuBodyR, MenuBodyG, MenuBodyB, MenuBodyA;
