@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string>
 
+#include <fstream>
+
 ThemeConfig g_Theme;
 std::vector<LevelConfig> g_LevelConfigs = {};
 bool g_ShowCheats = true;
@@ -280,16 +282,16 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
 
         // Add custom options
         const char* speedText = g_CheatSpeed ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
-        Original_AddMenuButton(this_ptr, nullptr, speedText, "CHEAT_SPEED", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
+        Original_AddMenuButton(this_ptr, nullptr, speedText, "CHEAT_SPEED", vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
 
         const char* jumpText = g_CheatJump ? "JUMPING: YES" : "JUMPING: NO";
-        Original_AddMenuButton(this_ptr, nullptr, jumpText, "CHEAT_JUMP", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
+        Original_AddMenuButton(this_ptr, nullptr, jumpText, "CHEAT_JUMP", vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
 
         const char* dmgText = g_CheatNoBreak ? "NO BREAK: YES" : "NO BREAK: NO";
-        Original_AddMenuButton(this_ptr, nullptr, dmgText, "CHEAT_NOBREAK", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
+        Original_AddMenuButton(this_ptr, nullptr, dmgText, "CHEAT_NOBREAK", vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
 
         const char* topDownText = g_CheatTopDown ? "TOP-DOWN: YES" : "TOP-DOWN: NO";
-        Original_AddMenuButton(this_ptr, nullptr, topDownText, "CHEAT_TOPDOWN", vtableAddr, 1.0f, 1.0f, 1.0f, "j", nullptr);
+        Original_AddMenuButton(this_ptr, nullptr, topDownText, "CHEAT_TOPDOWN", vtableAddr, 1.0f, 1.0f, 1.0, 1.0f, nullptr);
     }
 
     // Return the saved pointer
@@ -370,7 +372,20 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
 }
 
 // Allow custom level names and colors
-void __fastcall Hooked_AddMenuButton(void* this_ptr, void* edx_dummy, const char* displayText, const char* id, DWORD vtable, float r, float g, float b, const char* style, const char* unk) {
+void __fastcall Hooked_AddMenuButton(void* this_ptr, void* edx_dummy, const char* displayText, const char* id, DWORD vtable, float r, float g, float b, float a, const void* img) {
+    /*std::ofstream logFile("C:\\Users\\artiz\\Documents\\loader_log.txt", std::ios::app);
+    if (logFile.is_open()) {
+        logFile << "Button Text: " << (displayText ? displayText : "[NULL]") << "\n";
+        logFile << "Image hex:     0x" << std::hex << (DWORD)img << std::dec << "\n";
+        logFile << "Vtable hex:     0x" << std::hex << (DWORD)vtable << std::dec << "\n";
+        logFile << "r:" << r << std::dec << "\n";
+        logFile << "g:" << g << std::dec << "\n";
+        logFile << "b:" << b << std::dec << "\n";
+        logFile << "a:" << a << std::dec << "\n";
+        logFile << "-----------------------------------------\n";
+        logFile.close();
+    }*/
+
     char* customName = nullptr;
     const char* finalDisplayText = displayText;
 
@@ -405,7 +420,7 @@ void __fastcall Hooked_AddMenuButton(void* this_ptr, void* edx_dummy, const char
     }
 
     // Pass everything to the engine
-    Original_AddMenuButton(this_ptr, edx_dummy, finalDisplayText, id, vtable, r, g, b, style, unk);
+    Original_AddMenuButton(this_ptr, edx_dummy, finalDisplayText, id, vtable, r, g, b, a, img);
 }
 
 const char* __fastcall Hooked_GetLevelName(void* ecx_obj, void* edx_dummy) {
