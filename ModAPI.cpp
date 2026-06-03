@@ -8,8 +8,9 @@ DWORD ModAPI::GetGameBaseAddress() {
 	return (DWORD)GetModuleHandle(NULL);
 }
 
-bool ModAPI::RegisterDynamicHook(DWORD targetAddres, void* detour, void** original) {
-	return true;
+void ModAPI::RegisterCustomHook(DWORD targetAddress, void* hookFunction, void** original) {
+	MH_CreateHook((LPVOID)targetAddress, hookFunction, original);
+	MH_EnableHook((LPVOID)targetAddress);
 }
 
 bool ModAPI::IsKeyDown(int dik) {
@@ -41,3 +42,15 @@ void* ModAPI::GetPlayer() {
 	return g_StolenPlayer; 
 }
 
+void ModAPI::PatchMemory(DWORD address, const char* bytes, size_t size) {
+	DWORD oldProtect;
+
+	// Unlock memory
+	VirtualProtect((void*)address, size, PAGE_EXECUTE_READWRITE, &oldProtect);
+
+	// Copy new bytes
+	memcpy((void*)address, bytes, size);
+
+	// Lock up memory again
+	VirtualProtect((void*)address, size, oldProtect, &oldProtect);
+}

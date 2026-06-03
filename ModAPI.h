@@ -13,13 +13,14 @@ public:
 	std::map<std::string, ButtonData> optionButtons; 
 
 	DWORD GetGameBaseAddress() override;
-	bool RegisterDynamicHook(DWORD targetAddres, void* detour, void** original) override;
+	void RegisterCustomHook(DWORD targetAddress, void* hookFunction, void** original) override;
 	bool IsKeyDown(int dik) override;
 	bool WasKeyPressed(int dik) override;
 	bool WasKeyReleased(int dik) override;
 	void CreateToggleButton(const char* id, const char* displayText, bool defaultState) override;
 	bool GetButtonState(const char* id) override;
 	void* GetPlayer() override;
+	void PatchMemory(DWORD address, const char* bytes, size_t size) override;
 };
 
 extern ModAPI g_ModApiInstance;

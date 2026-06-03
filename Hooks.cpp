@@ -15,20 +15,6 @@ bool g_ShowConsole = false;
 
 // --- HELPER FUNCTIONS ---
 
-// Helper function to overwrite game code (Byte Patching)
-void PatchMemory(DWORD address, const char* bytes, size_t size) {
-    DWORD oldProtect;
-
-    // Unlock memory
-    VirtualProtect((void*)address, size, PAGE_EXECUTE_READWRITE, &oldProtect);
-
-    // Copy new bytes
-    memcpy((void*)address, bytes, size);
-
-    // Lock up memory again
-    VirtualProtect((void*)address, size, oldProtect, &oldProtect);
-}
-
 const char* GetModIniPath() {
     static std::string iniPath = "";
 
@@ -190,38 +176,6 @@ const int GetLevelIdFromHUDText(const char* text, bool& isArena) {
     return -1;
 }
 
-// --- BYTE PATCH FUNCTIONS ---
-
-// Toggles the No Fall Damage byte patches (originally by XRow)
-void ApplyNoFallDamage(bool enable) {
-
-    DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
-
-    if (enable) {
-        // Overwrite with NOPs (0x90)
-
-        // Regular E:LIMIT check
-        PatchMemory(baseAddr + 0xC761, "\x90\x90\x90\x90\x90\x90", 6);
-        PatchMemory(baseAddr + 0xC767, "\x90\x90\x90\x90\x90\x90\x90", 7);
-
-        // Odd Race's E:LIMIT check
-        PatchMemory(baseAddr + 0xF226, "\x90\x90\x90\x90\x90\x90\x90", 7);
-        PatchMemory(baseAddr + 0xF22D, "\x90\x90\x90\x90\x90\x90\x90", 7);
-
-        // Unknown, inside ballupdate
-        PatchMemory(baseAddr + 0x75C9, "\x90\x90\x90\x90\x90\x90", 6);
-        
-    }
-    else {
-        // Restore original game code
-        PatchMemory(baseAddr + 0xC767, "\xC6\x85\xE9\x02\x00\x00\x01", 7);
-        PatchMemory(baseAddr + 0xF22D, "\xC6\x86\xE9\x02\x00\x00\x01", 7);
-        PatchMemory(baseAddr + 0x75C9, "\xFF\x86\xEC\x02\x00\x00", 6);
-        PatchMemory(baseAddr + 0xC761, "\x88\x85\x68\x07\x00\x00", 6);
-        PatchMemory(baseAddr + 0xF226, "\xC6\x86\x68\x07\x00\x00\x00", 7);
-    }
-}
-
 // --- HOOK IMPLEMENTATIONS ---
 
 // Hooked Player Update Loop (for getting player object pointer)
@@ -258,9 +212,6 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
         // Color Object vtable pointer
         DWORD vtableAddr = baseAddr + 0xCF300;
 
-        const char* dmgText = g_CheatNoBreak ? "NO BREAK: YES" : "NO BREAK: NO";
-        Original_AddMenuButton(this_ptr, nullptr, dmgText, "CHEAT_NOBREAK", vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
-
         for (const auto& [id, data] : g_ModApiInstance.optionButtons) {
             std::string displayText = data.displayText + (data.isOn ? ": YES" : ": NO");
             Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
@@ -280,17 +231,14 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
         g_ModApiInstance.optionButtons[id].isOn = newState;
         std::string displayText = g_ModApiInstance.optionButtons[id].displayText + (newState ? ": YES" : ": NO");
         Game_UpdateButtonText(this_ptr, nullptr, displayText.c_str(), clicked_id);
-        return; 
-    }
-
-    // No Break Cheat
-    if (strcmp(clicked_id, "CHEAT_NOBREAK") == 0) {
-        g_CheatNoBreak = !g_CheatNoBreak;
-        ApplyNoFallDamage(g_CheatNoBreak);
-        const char* newText = g_CheatNoBreak ? "NO BREAK: YES" : "NO BREAK: NO";
-        Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_NOBREAK");
+        
+        for (HamsterballAPI* mod : g_Mods) {
+            mod->onButtonToggle(id.c_str(), newState);
+        }
         return;
     }
+
+    
 
     // New resolution button code to add new resolutions
     if (strcmp(clicked_id, "REZ") == 0) {
@@ -502,27 +450,6 @@ void __fastcall Hooked_RenderApply(void* this_ptr, void* edx_dummy, float* viewM
     }
 
     Original_RenderApply(this_ptr, edx_dummy, viewMatrix);
-}
-
-void __fastcall Hooked_Shatter1(void* this_ptr, void* edx_dummy, int param_1) {
-
-    if (g_CheatNoBreak && this_ptr == g_StolenPlayer) return;
-
-    Original_Shatter1(this_ptr, param_1);
-}
-
-void __fastcall Hooked_Shatter2(void* param_1, void* edx_dummy) {
-
-    if (g_CheatNoBreak && param_1 == g_StolenPlayer) return;
-
-    Original_Shatter2(param_1);
-}
-
-void __fastcall Hooked_Shatter3(void* param_1, void* edx_dummy) {
-
-    if (g_CheatNoBreak && param_1 == g_StolenPlayer) return;
-
-    Original_Shatter3(param_1);
 }
 
 void __fastcall Hooked_PollInputs(void* self) {

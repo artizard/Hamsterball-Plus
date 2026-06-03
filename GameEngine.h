@@ -35,8 +35,6 @@ typedef void(__fastcall* Shatter3_t)(void* param_1);
 typedef void(__fastcall* PollInputsFunc)(void* self);
 
 // --- EXTERN GLOBALS ---
-extern bool g_CheatNoBreak;
-
 extern void* g_StolenPlayer;
 
 inline std::vector<HamsterballAPI*> g_Mods; 
@@ -75,9 +73,7 @@ extern BaseCollideCheckFunc Original_BaseCollideCheck;
 extern GeometryBinderFunc Original_BindGeometry;
 extern MasterLevelSetupFunc Original_MasterLevelSetup;
 extern RenderDynamic_t Original_RenderDynamic;
-extern Shatter1_t Original_Shatter1;
-extern Shatter2_t Original_Shatter2;
-extern Shatter3_t Original_Shatter3;
+
 
 extern PollInputsFunc Original_PollInputs;
 

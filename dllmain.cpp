@@ -19,7 +19,6 @@ void loadMods();
 
 // Fullfilling Extern Promises
 void* g_StolenPlayer = nullptr;
-bool g_CheatNoBreak = false;
 
 FindRespawnPointFunc Original_FindRespawn = nullptr;
 PlayerUpdateFunc Original_PlayerUpdate = nullptr;
@@ -48,6 +47,7 @@ PollInputsFunc Original_PollInputs = nullptr;
 DWORD WINAPI ModThread(HMODULE hModule) {
 
     ReloadINI();
+    MH_Initialize();
     loadMods(); 
 
     if (g_ShowConsole) {
@@ -80,9 +80,6 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     //LPVOID renderDynamicAddr = (LPVOID)(baseAddr + 0xb570);
     LPVOID shatterHamsterAddr = (LPVOID)(baseAddr + 0x8d70);
     LPVOID pollInputsAddr = (LPVOID)(baseAddr + 0x6EBD0);
-
-    
-    MH_Initialize();
 
     MH_CreateHook(updateFuncAddr, &Hooked_PlayerUpdate, (LPVOID*)&Original_PlayerUpdate);
     MH_EnableHook(updateFuncAddr);
@@ -119,16 +116,6 @@ DWORD WINAPI ModThread(HMODULE hModule) {
 
     //MH_CreateHook(renderDynamicAddr, &Hooked_RenderDynamic, (LPVOID*)&Original_RenderDynamic);
     //MH_EnableHook(renderDynamicAddr);
-
-    LPVOID shatter1Addr = (LPVOID)(baseAddr + 0x8D70);
-    MH_CreateHook(shatter1Addr, &Hooked_Shatter1, (LPVOID*)&Original_Shatter1);
-    MH_EnableHook(shatter1Addr);
-    LPVOID shatter2Addr = (LPVOID)(baseAddr + 0x9050);
-    MH_CreateHook(shatter2Addr, &Hooked_Shatter2, (LPVOID*)&Original_Shatter2);
-    MH_EnableHook(shatter2Addr);
-    LPVOID shatter3Addr = (LPVOID)(baseAddr + 0x9480);
-    MH_CreateHook(shatter3Addr, &Hooked_Shatter3, (LPVOID*)&Original_Shatter3);
-    MH_EnableHook(shatter3Addr);
 
     MH_CreateHook(pollInputsAddr, &Hooked_PollInputs, (LPVOID*)&Original_PollInputs);
     MH_EnableHook(pollInputsAddr);

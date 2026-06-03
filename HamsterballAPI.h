@@ -7,26 +7,24 @@ public:
 	virtual ~IModAPI() {}
 
 	virtual DWORD GetGameBaseAddress() = 0;
-	virtual bool RegisterDynamicHook(DWORD targetAddres, void* detour, void** original) = 0;
+	virtual void RegisterCustomHook(DWORD targetAddress, void* hookFunction, void** original) = 0;
 	virtual bool IsKeyDown(int dik) = 0;
 	virtual bool WasKeyPressed(int dik) = 0;
 	virtual bool WasKeyReleased(int dik) = 0;
 	virtual void CreateToggleButton(const char* id, const char* displayText, bool defaultState) = 0;
 	virtual bool GetButtonState(const char* id) = 0;
 	virtual void* GetPlayer() = 0;
+	virtual void PatchMemory(DWORD address, const char* bytes, size_t size) = 0;
 };
 
 class HamsterballAPI {
 public:
 	virtual ~HamsterballAPI() {}
-
 	virtual const char* GetModName() = 0;
-
 	virtual void Initialize(IModAPI* loader) {}
-
 	virtual void onPlayerUpdate(void* PlayerObject) {}
-
 	virtual void onRenderApply(void* this_ptr, float* viewMatrix) {}
+	virtual void onButtonToggle(const char* buttonId, bool newState) {}
 };
 
 typedef HamsterballAPI* (*CreateModFunct)();
