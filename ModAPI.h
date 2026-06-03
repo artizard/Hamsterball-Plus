@@ -19,6 +19,7 @@ public:
 	bool WasKeyReleased(int dik) override;
 	void CreateToggleButton(const char* id, const char* displayText, bool defaultState) override;
 	bool GetButtonState(const char* id) override;
+	void* GetPlayer() override;
 };
 
 extern ModAPI g_ModApiInstance;

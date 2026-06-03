@@ -19,10 +19,7 @@ void loadMods();
 
 // Fullfilling Extern Promises
 void* g_StolenPlayer = nullptr;
-bool g_CheatSpeed = false;
-bool g_CheatJump = false;
 bool g_CheatNoBreak = false;
-bool g_CheatTopDown = false;
 
 FindRespawnPointFunc Original_FindRespawn = nullptr;
 PlayerUpdateFunc Original_PlayerUpdate = nullptr;

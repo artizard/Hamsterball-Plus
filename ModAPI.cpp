@@ -2,6 +2,7 @@
 #include "ModApi.h"
 #include "InputManager.h"
 #include "MinHook.h"
+#include "GameEngine.h"
 
 DWORD ModAPI::GetGameBaseAddress() {
 	return (DWORD)GetModuleHandle(NULL);
@@ -36,4 +37,7 @@ bool ModAPI::GetButtonState(const char* id) {
 	return false; // failsafe 
 }
 
+void* ModAPI::GetPlayer() {
+	return g_StolenPlayer; 
+}
 

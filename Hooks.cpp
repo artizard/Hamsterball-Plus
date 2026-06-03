@@ -235,29 +235,6 @@ void __fastcall Hooked_PlayerUpdate(void* ecx_player, void* edx_dummy) {
     if (*controllerID == 0) {
         g_StolenPlayer = ecx_player;
 
-        //float* gravity = (float*)((DWORD)ecx_player + 0x2a4);
-        //// normal is around 5
-        //*gravity = 10.f; 
-
-        // --- THE SPEED LIMIT BREAKER ---
-        //if (g_CheatSpeed) {
-        //    // Break moving speed limit
-        //    float* masterSpeed = (float*)((DWORD)ecx_player + 0x188);
-        //    *masterSpeed = 500.0f;
-
-        //    DWORD* physicsObjPtr = (DWORD*)((DWORD)ecx_player + 0x1a4);
-        //    if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
-        //        DWORD physicsObj = *physicsObjPtr;
-
-        //        // Break the global physics speed cap
-        //        float* maxSpeed = (float*)(physicsObj + 0xc70);
-        //        *maxSpeed = 9999.0f;
-
-        //        // Turn off air resistance
-        //        float* drag = (float*)(physicsObj + 0xc68);
-        //        *drag = 0.0f;
-        //    }
-        //}
         for (HamsterballAPI* mod : g_Mods) {
             mod->onPlayerUpdate(ecx_player);
         }
@@ -281,18 +258,8 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
         // Color Object vtable pointer
         DWORD vtableAddr = baseAddr + 0xCF300;
 
-        // Add custom options
-        //const char* speedText = g_CheatSpeed ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
-        //Original_AddMenuButton(this_ptr, nullptr, speedText, "CHEAT_SPEED", vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
-
-        //const char* jumpText = g_CheatJump ? "JUMPING: YES" : "JUMPING: NO";
-        //Original_AddMenuButton(this_ptr, nullptr, jumpText, "CHEAT_JUMP", vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
-
         const char* dmgText = g_CheatNoBreak ? "NO BREAK: YES" : "NO BREAK: NO";
         Original_AddMenuButton(this_ptr, nullptr, dmgText, "CHEAT_NOBREAK", vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
-
-        const char* topDownText = g_CheatTopDown ? "TOP-DOWN: YES" : "TOP-DOWN: NO";
-        Original_AddMenuButton(this_ptr, nullptr, topDownText, "CHEAT_TOPDOWN", vtableAddr, 1.0f, 1.0f, 1.0, 1.0f, nullptr);
 
         for (const auto& [id, data] : g_ModApiInstance.optionButtons) {
             std::string displayText = data.displayText + (data.isOn ? ": YES" : ": NO");
@@ -316,36 +283,12 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
         return; 
     }
 
-    //// Speed Cheat
-    //if (strcmp(clicked_id, "CHEAT_SPEED") == 0) {
-    //    g_CheatSpeed = !g_CheatSpeed;
-    //    const char* newText = g_CheatSpeed ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
-    //    Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_SPEED");
-    //    return;
-    //}
-
-    //// Jump Cheat
-    //if (strcmp(clicked_id, "CHEAT_JUMP") == 0) {
-    //    g_CheatJump = !g_CheatJump;
-    //    const char* newText = g_CheatJump ? "JUMPING: YES" : "JUMPING: NO";
-    //    Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_JUMP");
-    //    return;
-    //}
-
     // No Break Cheat
     if (strcmp(clicked_id, "CHEAT_NOBREAK") == 0) {
         g_CheatNoBreak = !g_CheatNoBreak;
         ApplyNoFallDamage(g_CheatNoBreak);
         const char* newText = g_CheatNoBreak ? "NO BREAK: YES" : "NO BREAK: NO";
         Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_NOBREAK");
-        return;
-    }
-
-    // Top-Down Camera Cheat
-    if (strcmp(clicked_id, "CHEAT_TOPDOWN") == 0) {
-        g_CheatTopDown = !g_CheatTopDown;
-        const char* newText = g_CheatTopDown ? "TOP-DOWN: YES" : "TOP-DOWN: NO";
-        Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_TOPDOWN");
         return;
     }
 
@@ -554,28 +497,11 @@ void __fastcall Hooked_HudManager(void* this_ptr, void* edx_dummy, void* param_1
 // Overrides the Camera Angle
 void __fastcall Hooked_RenderApply(void* this_ptr, void* edx_dummy, float* viewMatrix) {
 
-    if (g_StolenPlayer != nullptr && g_CheatTopDown) {
-
-        // Get Hamster pos
-        float pX = *(float*)((DWORD)g_StolenPlayer + 0x158);
-        float pY = *(float*)((DWORD)g_StolenPlayer + 0x15c);
-        float pZ = *(float*)((DWORD)g_StolenPlayer + 0x160);
-
-        // Build top-down camera angle
-        Vec3 target(pX, pY, pZ);
-        Vec3 eye(pX, pY + 800.0f, pZ);
-        Vec3 up(0.0f, 0.0f, 1.0f);
-
-        // Create a custom 16-float array and do the math
-        float customMatrix[16];
-        BuildCustomViewMatrix(customMatrix, eye, target, up);
-
-        // Pass our matrix into the engine instead of the original one
-        Original_RenderApply(this_ptr, edx_dummy, customMatrix);
+    for (HamsterballAPI* mod : g_Mods) {
+        mod->onRenderApply(this_ptr, viewMatrix);
     }
-    else {
-        Original_RenderApply(this_ptr, edx_dummy, viewMatrix);
-    }
+
+    Original_RenderApply(this_ptr, edx_dummy, viewMatrix);
 }
 
 void __fastcall Hooked_Shatter1(void* this_ptr, void* edx_dummy, int param_1) {
