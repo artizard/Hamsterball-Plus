@@ -120,56 +120,56 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     MH_CreateHook(pollInputsAddr, &Hooked_PollInputs, (LPVOID*)&Original_PollInputs);
     MH_EnableHook(pollInputsAddr);
 
-    bool wasJumpKeyPressed = false;
+    //bool wasJumpKeyPressed = false;
 
-    // Main Hotkey Loop
-    while (true) {
-        if (GetAsyncKeyState('X') & 0x8000) {
+    //// Main Hotkey Loop
+    //while (true) {
+    //    if (GetAsyncKeyState('X') & 0x8000) {
 
-            if (g_StolenPlayer != nullptr) {
-                // Call the original death function using our passively stolen pointer
-                Original_FindRespawn(g_StolenPlayer, nullptr);
-            }
-            Sleep(500);
-        }
+    //        if (g_StolenPlayer != nullptr) {
+    //            // Call the original death function using our passively stolen pointer
+    //            Original_FindRespawn(g_StolenPlayer, nullptr);
+    //        }
+    //        Sleep(500);
+    //    }
 
-        //if (g_CheatJump) {
-        //    bool isJumpKeyPressed = (GetAsyncKeyState(VK_LSHIFT) & 0x8000);
-        //    if (isJumpKeyPressed && !wasJumpKeyPressed) {
+    //    //if (g_CheatJump) {
+    //    //    bool isJumpKeyPressed = (GetAsyncKeyState(VK_LSHIFT) & 0x8000);
+    //    //    if (isJumpKeyPressed && !wasJumpKeyPressed) {
 
-        //        if (g_StolenPlayer != nullptr) {
+    //    //        if (g_StolenPlayer != nullptr) {
 
-        //            // Get the player's physics object
-        //            DWORD* physicsObjPtr = (DWORD*)((DWORD)g_StolenPlayer + 0x1a4);
+    //    //            // Get the player's physics object
+    //    //            DWORD* physicsObjPtr = (DWORD*)((DWORD)g_StolenPlayer + 0x1a4);
 
-        //            if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
+    //    //            if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
 
-        //                DWORD physicsObj = *physicsObjPtr;
+    //    //                DWORD physicsObj = *physicsObjPtr;
 
-        //                // Read Y Velocity
-        //                float* trueVelY = (float*)(physicsObj + 0xca8);
+    //    //                // Read Y Velocity
+    //    //                float* trueVelY = (float*)(physicsObj + 0xca8);
 
-        //                // Ground Check
-        //                float tolerance = 0.5f;
+    //    //                // Ground Check
+    //    //                float tolerance = 0.5f;
 
-        //                if (*trueVelY > -tolerance && *trueVelY < tolerance) {
+    //    //                if (*trueVelY > -tolerance && *trueVelY < tolerance) {
 
-        //                    // Apply the jump force!
-        //                    *trueVelY = 20.0f;
-        //                }
-        //            }
-        //        }
-        //    }
-        //    wasJumpKeyPressed = isJumpKeyPressed;
-        //}
+    //    //                    // Apply the jump force!
+    //    //                    *trueVelY = 20.0f;
+    //    //                }
+    //    //            }
+    //    //        }
+    //    //    }
+    //    //    wasJumpKeyPressed = isJumpKeyPressed;
+    //    //}
 
-        if (GetAsyncKeyState(VK_F5) & 0x8000) {
-            ReloadINI();
-            Sleep(500);
-        }
+    //    if (GetAsyncKeyState(VK_F5) & 0x8000) {
+    //        ReloadINI();
+    //        Sleep(500);
+    //    }
 
-        Sleep(10);
-    }
+    //    Sleep(10);
+    //}
     return 0;
 }
 

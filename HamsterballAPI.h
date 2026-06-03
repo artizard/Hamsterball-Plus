@@ -2,6 +2,14 @@
 #include <windows.h>
 #include <math.h>
 
+struct Color {
+	float r, g, b, a;
+	// default (white)
+	Color() : r(1.0f), g(1.0f), b(1.0f), a(1.0f) {}
+	// custom color select constructor
+	Color(float _r, float _g, float _b, float _a = 1.0f) : r(_r), g(_g), b(_b), a(_a) {}
+};
+
 class IModAPI {
 public:
 	virtual ~IModAPI() {}
@@ -11,7 +19,7 @@ public:
 	virtual bool IsKeyDown(int dik) = 0;
 	virtual bool WasKeyPressed(int dik) = 0;
 	virtual bool WasKeyReleased(int dik) = 0;
-	virtual void CreateToggleButton(const char* id, const char* displayText, bool defaultState) = 0;
+	virtual void CreateToggleButton(const char* id, const char* displayText, bool defaultState, Color color = Color()) = 0;
 	virtual bool GetButtonState(const char* id) = 0;
 	virtual void* GetPlayer() = 0;
 	virtual void PatchMemory(DWORD address, const char* bytes, size_t size) = 0;

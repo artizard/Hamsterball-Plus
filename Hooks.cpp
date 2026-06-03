@@ -192,6 +192,13 @@ void __fastcall Hooked_PlayerUpdate(void* ecx_player, void* edx_dummy) {
         for (HamsterballAPI* mod : g_Mods) {
             mod->onPlayerUpdate(ecx_player);
         }
+
+        if (WasKeyPressed(0x2D)) {
+            if (g_StolenPlayer != nullptr) {
+                // Call the original death function using our passively stolen pointer
+                Original_FindRespawn(g_StolenPlayer, nullptr);
+            }
+        }
     }
 
     Original_PlayerUpdate(ecx_player, edx_dummy);
@@ -214,7 +221,11 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
 
         for (const auto& [id, data] : g_ModApiInstance.optionButtons) {
             std::string displayText = data.displayText + (data.isOn ? ": YES" : ": NO");
-            Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
+            float r = data.color.r;
+            float g = data.color.g;
+            float b = data.color.b;
+            float a = data.color.a;
+            Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
         }
     }
 

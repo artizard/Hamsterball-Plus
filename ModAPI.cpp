@@ -23,10 +23,11 @@ bool ModAPI::WasKeyReleased(int dik) {
 	return ::WasKeyReleased(dik);
 }
 
-void ModAPI::CreateToggleButton(const char* id, const char* displayText, bool defaultState) {
+void ModAPI::CreateToggleButton(const char* id, const char* displayText, bool defaultState, Color color) {
 	ButtonData data;
 	data.displayText = displayText;
 	data.isOn = defaultState;
+	data.color = color;
 	optionButtons[std::string(id)] = data;
 }
 
