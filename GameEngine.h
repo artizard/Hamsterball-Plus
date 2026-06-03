@@ -32,6 +32,7 @@ typedef void(__thiscall* RenderDynamic_t)(void* this_ptr, void* param_1);
 typedef void(__thiscall* Shatter1_t)(void* this_ptr, int param_1);
 typedef void(__fastcall* Shatter2_t)(void* param_1);
 typedef void(__fastcall* Shatter3_t)(void* param_1);
+typedef void(__fastcall* PollInputsFunc)(void* self);
 
 // --- EXTERN GLOBALS ---
 extern bool g_CheatSpeed;
@@ -80,6 +81,8 @@ extern RenderDynamic_t Original_RenderDynamic;
 extern Shatter1_t Original_Shatter1;
 extern Shatter2_t Original_Shatter2;
 extern Shatter3_t Original_Shatter3;
+
+extern PollInputsFunc Original_PollInputs;
 
 // --- Vector3 ---
 

@@ -8,11 +8,13 @@
 #include "UniversalObjects.h"
 #include "Hooks.h"
 #include "HamsterballAPI.h"
+#include "ModAPI.h"
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
 extern void ReloadINI();
+ModAPI g_ModApiInstance; 
 void loadMods();
 
 // Fullfilling Extern Promises
@@ -41,6 +43,8 @@ RenderDynamic_t Original_RenderDynamic = nullptr;
 Shatter1_t Original_Shatter1 = nullptr;
 Shatter2_t Original_Shatter2 = nullptr;
 Shatter3_t Original_Shatter3 = nullptr;
+
+PollInputsFunc Original_PollInputs = nullptr;
 
 
 // The Mod Thread
@@ -78,6 +82,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID masterLevelSetupAddr = (LPVOID)(baseAddr + 0x1c5b0);
     //LPVOID renderDynamicAddr = (LPVOID)(baseAddr + 0xb570);
     LPVOID shatterHamsterAddr = (LPVOID)(baseAddr + 0x8d70);
+    LPVOID pollInputsAddr = (LPVOID)(baseAddr + 0x6EBD0);
 
     
     MH_Initialize();
@@ -128,6 +133,8 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     MH_CreateHook(shatter3Addr, &Hooked_Shatter3, (LPVOID*)&Original_Shatter3);
     MH_EnableHook(shatter3Addr);
 
+    MH_CreateHook(pollInputsAddr, &Hooked_PollInputs, (LPVOID*)&Original_PollInputs);
+    MH_EnableHook(pollInputsAddr);
 
     bool wasJumpKeyPressed = false;
 
@@ -142,35 +149,35 @@ DWORD WINAPI ModThread(HMODULE hModule) {
             Sleep(500);
         }
 
-        if (g_CheatJump) {
-            bool isJumpKeyPressed = (GetAsyncKeyState(VK_LSHIFT) & 0x8000);
-            if (isJumpKeyPressed && !wasJumpKeyPressed) {
+        //if (g_CheatJump) {
+        //    bool isJumpKeyPressed = (GetAsyncKeyState(VK_LSHIFT) & 0x8000);
+        //    if (isJumpKeyPressed && !wasJumpKeyPressed) {
 
-                if (g_StolenPlayer != nullptr) {
+        //        if (g_StolenPlayer != nullptr) {
 
-                    // Get the player's physics object
-                    DWORD* physicsObjPtr = (DWORD*)((DWORD)g_StolenPlayer + 0x1a4);
+        //            // Get the player's physics object
+        //            DWORD* physicsObjPtr = (DWORD*)((DWORD)g_StolenPlayer + 0x1a4);
 
-                    if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
+        //            if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
 
-                        DWORD physicsObj = *physicsObjPtr;
+        //                DWORD physicsObj = *physicsObjPtr;
 
-                        // Read Y Velocity
-                        float* trueVelY = (float*)(physicsObj + 0xca8);
+        //                // Read Y Velocity
+        //                float* trueVelY = (float*)(physicsObj + 0xca8);
 
-                        // Ground Check
-                        float tolerance = 0.5f;
+        //                // Ground Check
+        //                float tolerance = 0.5f;
 
-                        if (*trueVelY > -tolerance && *trueVelY < tolerance) {
+        //                if (*trueVelY > -tolerance && *trueVelY < tolerance) {
 
-                            // Apply the jump force!
-                            *trueVelY = 20.0f;
-                        }
-                    }
-                }
-            }
-            wasJumpKeyPressed = isJumpKeyPressed;
-        }
+        //                    // Apply the jump force!
+        //                    *trueVelY = 20.0f;
+        //                }
+        //            }
+        //        }
+        //    }
+        //    wasJumpKeyPressed = isJumpKeyPressed;
+        //}
 
         if (GetAsyncKeyState(VK_F5) & 0x8000) {
             ReloadINI();
@@ -209,6 +216,7 @@ void loadMods() {
                 if (factory) {
                     HamsterballAPI* newMod = factory();
                     if (newMod) {
+                        newMod->Initialize(&g_ModApiInstance); 
                         g_Mods.push_back(newMod);
                     }
                 }

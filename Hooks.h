@@ -14,3 +14,5 @@ void __fastcall Hooked_RenderDynamic(void* this_ptr, void* edx_dummy, void* para
 void __fastcall Hooked_Shatter1(void* this_ptr, void* edx_dummy, int param_1);
 void __fastcall Hooked_Shatter2(void* param_1, void* edx_dummy);
 void __fastcall Hooked_Shatter3(void* param_1, void* edx_dummy);
+
+void __fastcall Hooked_PollInputs(void* self);

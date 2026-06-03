@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-
 #include <fstream>
+#include "InputManager.h"
 
 ThemeConfig g_Theme;
 std::vector<LevelConfig> g_LevelConfigs = {};
@@ -582,4 +582,50 @@ void __fastcall Hooked_Shatter3(void* param_1, void* edx_dummy) {
     if (g_CheatNoBreak && param_1 == g_StolenPlayer) return;
 
     Original_Shatter3(param_1);
+}
+
+void __fastcall Hooked_PollInputs(void* self) {
+    Original_PollInputs(self); 
+
+    BYTE* base = (BYTE*)self;
+
+    BYTE* keyboardObj = *(BYTE**)(base + 0x434);
+
+    BYTE* inputBuffer = keyboardObj + 0x0C;
+
+    UpdateKeyboard(inputBuffer); 
+
+    /*inputBuffer[0xCD] = 0x80;
+    bool isShiftDown = (inputBuffer[0x2A] & 0x80) != 0;
+    bool isRightDown = (inputBuffer[0xCD] & 0x80) != 0;
+    std::ofstream logFile("C:\\Users\\artiz\\Documents\\loader_log.txt", std::ios::app);
+    if (logFile.is_open()) {
+
+        logFile << "==== Nonzero Input Buffer Dump ====\n";
+        logFile << "Self: 0x" << std::hex << (uintptr_t)self << std::dec << "\n";
+
+        int count = 0;
+
+        for (int i = 0; i < 256; i++)
+        {
+            if (inputBuffer[i] != 0)
+            {
+                logFile << "DIK 0x"
+                    << std::hex << i
+                    << " = 0x"
+                    << (int)inputBuffer[i]
+                    << std::dec
+                    << "\n";
+
+                count++;
+            }
+        }
+
+        logFile << "Nonzero count: " << count << "\n";
+        logFile << "===================================\n\n";
+
+
+        logFile.close();
+    }*/
+    
 }
