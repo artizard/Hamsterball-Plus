@@ -6,6 +6,7 @@
 #include <string>
 #include <fstream>
 #include "InputManager.h"
+#include "ModAPI.h"
 
 ThemeConfig g_Theme;
 std::vector<LevelConfig> g_LevelConfigs = {};
@@ -281,17 +282,22 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
         DWORD vtableAddr = baseAddr + 0xCF300;
 
         // Add custom options
-        const char* speedText = g_CheatSpeed ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
-        Original_AddMenuButton(this_ptr, nullptr, speedText, "CHEAT_SPEED", vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
+        //const char* speedText = g_CheatSpeed ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
+        //Original_AddMenuButton(this_ptr, nullptr, speedText, "CHEAT_SPEED", vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
 
-        const char* jumpText = g_CheatJump ? "JUMPING: YES" : "JUMPING: NO";
-        Original_AddMenuButton(this_ptr, nullptr, jumpText, "CHEAT_JUMP", vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
+        //const char* jumpText = g_CheatJump ? "JUMPING: YES" : "JUMPING: NO";
+        //Original_AddMenuButton(this_ptr, nullptr, jumpText, "CHEAT_JUMP", vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
 
         const char* dmgText = g_CheatNoBreak ? "NO BREAK: YES" : "NO BREAK: NO";
         Original_AddMenuButton(this_ptr, nullptr, dmgText, "CHEAT_NOBREAK", vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
 
         const char* topDownText = g_CheatTopDown ? "TOP-DOWN: YES" : "TOP-DOWN: NO";
         Original_AddMenuButton(this_ptr, nullptr, topDownText, "CHEAT_TOPDOWN", vtableAddr, 1.0f, 1.0f, 1.0, 1.0f, nullptr);
+
+        for (const auto& [id, data] : g_ModApiInstance.optionButtons) {
+            std::string displayText = data.displayText + (data.isOn ? ": YES" : ": NO");
+            Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, 1.0f, 1.0f, 1.0f, 1.0f, nullptr);
+        }
     }
 
     // Return the saved pointer
@@ -300,22 +306,31 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
 
 // Logic for clicking options menu buttons
 void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char* clicked_id) {
+    std::string id(clicked_id);
 
-    // Speed Cheat
-    if (strcmp(clicked_id, "CHEAT_SPEED") == 0) {
-        g_CheatSpeed = !g_CheatSpeed;
-        const char* newText = g_CheatSpeed ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
-        Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_SPEED");
-        return;
+    if (g_ModApiInstance.optionButtons.find(id) != g_ModApiInstance.optionButtons.end()) {
+        bool newState = !g_ModApiInstance.optionButtons[id].isOn;
+        g_ModApiInstance.optionButtons[id].isOn = newState;
+        std::string displayText = g_ModApiInstance.optionButtons[id].displayText + (newState ? ": YES" : ": NO");
+        Game_UpdateButtonText(this_ptr, nullptr, displayText.c_str(), clicked_id);
+        return; 
     }
 
-    // Jump Cheat
-    if (strcmp(clicked_id, "CHEAT_JUMP") == 0) {
-        g_CheatJump = !g_CheatJump;
-        const char* newText = g_CheatJump ? "JUMPING: YES" : "JUMPING: NO";
-        Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_JUMP");
-        return;
-    }
+    //// Speed Cheat
+    //if (strcmp(clicked_id, "CHEAT_SPEED") == 0) {
+    //    g_CheatSpeed = !g_CheatSpeed;
+    //    const char* newText = g_CheatSpeed ? "UNCAP SPEED: YES" : "UNCAP SPEED: NO";
+    //    Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_SPEED");
+    //    return;
+    //}
+
+    //// Jump Cheat
+    //if (strcmp(clicked_id, "CHEAT_JUMP") == 0) {
+    //    g_CheatJump = !g_CheatJump;
+    //    const char* newText = g_CheatJump ? "JUMPING: YES" : "JUMPING: NO";
+    //    Game_UpdateButtonText(this_ptr, nullptr, newText, "CHEAT_JUMP");
+    //    return;
+    //}
 
     // No Break Cheat
     if (strcmp(clicked_id, "CHEAT_NOBREAK") == 0) {

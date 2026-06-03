@@ -9,7 +9,8 @@ public:
 	virtual bool IsKeyDown(int dik) = 0;
 	virtual bool WasKeyPressed(int dik) = 0;
 	virtual bool WasKeyReleased(int dik) = 0;
-
+	virtual void CreateToggleButton(const char* id, const char* displayText, bool defaultState) = 0;
+	virtual bool GetButtonState(const char* id) = 0;
 };
 
 class HamsterballAPI {
