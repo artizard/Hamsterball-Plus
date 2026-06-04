@@ -36,6 +36,7 @@ typedef void(__fastcall* PollInputsFunc)(void* self);
 
 // --- EXTERN GLOBALS ---
 extern void* g_StolenPlayer;
+extern App g_App; 
 
 inline std::vector<HamsterballAPI*> g_Mods; 
 
