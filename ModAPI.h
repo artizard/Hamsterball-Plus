@@ -5,7 +5,7 @@
 
 struct ButtonData {
 	std::string displayText;
-	bool isOn;
+	bool isOn = false;
 	Color color;
 };
 
@@ -22,6 +22,14 @@ public:
 	bool GetButtonState(const char* id) override;
 	void* GetPlayer() override;
 	void PatchMemory(DWORD address, const char* bytes, size_t size) override;
+	App* GetApp() override;
+	void UnlockAll() override;
+	void LockAll() override;
+	bool QuitGame() override;
+	bool SaveConfig() override;
+	void ApplyForce(void* player, float x, float y, float z, float magnitude) override;
+private:
+	void setUnlocks(bool isUnlock);
 };
 
 extern ModAPI g_ModApiInstance;

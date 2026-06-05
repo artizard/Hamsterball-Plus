@@ -33,10 +33,13 @@ typedef void(__thiscall* Shatter1_t)(void* this_ptr, int param_1);
 typedef void(__fastcall* Shatter2_t)(void* param_1);
 typedef void(__fastcall* Shatter3_t)(void* param_1);
 typedef void(__fastcall* PollInputsFunc)(void* self);
+typedef void(__fastcall* SaveConfigFunc)(App* app); 
+typedef void(__fastcall* GameUpdateFunc)(App* app);
+typedef void(__thiscall* ApplyForceFunc)(void* player, float x, float y, float z, float magnitude);
 
 // --- EXTERN GLOBALS ---
 extern void* g_StolenPlayer;
-extern App g_App; 
+extern App* g_App; 
 
 inline std::vector<HamsterballAPI*> g_Mods; 
 
@@ -74,7 +77,9 @@ extern BaseCollideCheckFunc Original_BaseCollideCheck;
 extern GeometryBinderFunc Original_BindGeometry;
 extern MasterLevelSetupFunc Original_MasterLevelSetup;
 extern RenderDynamic_t Original_RenderDynamic;
-
+extern SaveConfigFunc SaveConfig; 
 
 extern PollInputsFunc Original_PollInputs;
+extern GameUpdateFunc Original_GameUpdate; 
+extern ApplyForceFunc ApplyForce; 
 

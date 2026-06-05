@@ -13,7 +13,7 @@ public:
 
     void onPlayerUpdate(void* playerObject) override {
         if (api->GetButtonState("CHEAT_JUMP")) {
-            if (api->WasKeyPressed(0x2A)) {
+            if (api->WasKeyPressed(DIK_LSHIFT)) {
                 DWORD* physicsObjPtr = (DWORD*)((DWORD)playerObject + 0x1a4);
 
                 if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {

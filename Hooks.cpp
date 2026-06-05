@@ -508,3 +508,10 @@ void __fastcall Hooked_PollInputs(void* self) {
     }*/
     
 }
+
+void __fastcall Hooked_GameUpdate(App* app) {
+    for (HamsterballAPI* mod : g_Mods) {
+        mod->onGameUpdate();
+    }
+    Original_GameUpdate(app); 
+}

@@ -1,5 +1,6 @@
 #pragma once
 #include <windows.h>
+#include "HamsterballAPI.h"
 
 void __fastcall Hooked_PlayerUpdate(void* ecx_player, void* edx_dummy);
 void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1, int param_2);
@@ -12,3 +13,4 @@ void __fastcall Hooked_HudManager(void* this_ptr, void* edx_dummy, void* param_1
 void __fastcall Hooked_RenderApply(void* this_ptr, void* edx_dummy, float* viewMatrix);
 void __fastcall Hooked_RenderDynamic(void* this_ptr, void* edx_dummy, void* param_1);
 void __fastcall Hooked_PollInputs(void* self);
+void __fastcall Hooked_GameUpdate(App* app); 

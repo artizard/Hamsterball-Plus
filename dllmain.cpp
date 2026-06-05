@@ -39,8 +39,13 @@ RenderDynamic_t Original_RenderDynamic = nullptr;
 Shatter1_t Original_Shatter1 = nullptr;
 Shatter2_t Original_Shatter2 = nullptr;
 Shatter3_t Original_Shatter3 = nullptr;
+SaveConfigFunc SaveConfig = nullptr; 
 
 PollInputsFunc Original_PollInputs = nullptr;
+GameUpdateFunc Original_GameUpdate = nullptr;
+ApplyForceFunc ApplyForce = nullptr;
+
+App* g_App = nullptr;
 
 
 // The Mod Thread
@@ -60,6 +65,9 @@ DWORD WINAPI ModThread(HMODULE hModule) {
 
     // Get base address
     DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
+    g_App = (App*)(baseAddr + 0xFD680); 
+    SaveConfig = (SaveConfigFunc)(baseAddr + 0x284c0);
+    ApplyForce = (ApplyForceFunc)(baseAddr + 0x02650);
 
     // The exact function addresses
     LPVOID updateFuncAddr = (LPVOID)(baseAddr + 0x5E00);
@@ -80,6 +88,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     //LPVOID renderDynamicAddr = (LPVOID)(baseAddr + 0xb570);
     LPVOID shatterHamsterAddr = (LPVOID)(baseAddr + 0x8d70);
     LPVOID pollInputsAddr = (LPVOID)(baseAddr + 0x6EBD0);
+    LPVOID gameUpdateAddr = (LPVOID)(baseAddr + 0x6C170);
 
     MH_CreateHook(updateFuncAddr, &Hooked_PlayerUpdate, (LPVOID*)&Original_PlayerUpdate);
     MH_EnableHook(updateFuncAddr);
@@ -119,6 +128,9 @@ DWORD WINAPI ModThread(HMODULE hModule) {
 
     MH_CreateHook(pollInputsAddr, &Hooked_PollInputs, (LPVOID*)&Original_PollInputs);
     MH_EnableHook(pollInputsAddr);
+
+    MH_CreateHook(gameUpdateAddr, &Hooked_GameUpdate, (LPVOID*)&Original_GameUpdate);
+    MH_EnableHook(gameUpdateAddr);
 
     //bool wasJumpKeyPressed = false;
 
