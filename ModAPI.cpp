@@ -40,7 +40,7 @@ bool ModAPI::GetButtonState(const char* id) {
 }
 
 Ball* ModAPI::GetPlayer() {
-	return (Ball*) g_StolenPlayer; 
+	return (Ball*) g_Player; 
 }
 
 void ModAPI::PatchMemory(DWORD address, const char* bytes, size_t size) {
@@ -118,12 +118,63 @@ bool ModAPI::QuitGame() {
 	}
 }
 
-void ModAPI::ApplyForce(void* player, float x, float y, float z, float magnitude) {
+void ModAPI::ApplyForce(Ball* player, float x, float y, float z, float magnitude) {
 	if (player) {
 		::ApplyForce(player, x, y, z, magnitude);
 	}
 }
 
 PhysicsObject* ModAPI::GetPhysicsObj() {
-	return ((Ball*)g_StolenPlayer)->physics_object;
+	return (g_Player)->physics_object;
+}
+
+void ModAPI::SetSpeed(Ball* player, float mult) {
+	PhysicsObject* physics = player->physics_object; 
+	Vec3 velocity = Vec3(physics->velocity_x, physics->velocity_y, physics->velocity_z); 
+	Vec3 normalized = Normalize(velocity);
+	physics->velocity_x = normalized.x * mult;
+	physics->velocity_y = normalized.y * mult;
+	physics->velocity_z = normalized.z * mult;
+}
+
+Scene* ModAPI::GetScene() {
+	if (g_Player) {
+		return g_Player->scene;
+	}
+}
+
+Ball* ModAPI::GetPlayer2() {
+	if (g_Player2) {
+		return g_Player2;
+	}
+	else {
+		return nullptr;
+	}
+}
+Ball* ModAPI::GetPlayer3() {
+	if (g_Player3) {
+		return g_Player3;
+	}
+	else {
+		return nullptr;
+	}
+}
+Ball* ModAPI::GetPlayer4() {
+	if (g_Player4) {
+		return g_Player4;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+// pass in &enemyCount to get the size of the array that is returned 
+Ball** ModAPI::GetEnemies(size_t* enemyCount) {
+	*enemyCount = g_Enemies.size();
+	if (!g_Enemies.empty()) {
+		return g_Enemies.data();
+	}
+	else {
+		return nullptr;
+	}
 }

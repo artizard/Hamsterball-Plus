@@ -18,7 +18,10 @@ ModAPI g_ModApiInstance;
 void loadMods();
 
 // Fullfilling Extern Promises
-void* g_StolenPlayer = nullptr;
+Ball* g_Player = nullptr;
+Ball* g_Player2 = nullptr;
+Ball* g_Player3 = nullptr;
+Ball* g_Player4 = nullptr;
 
 FindRespawnPointFunc Original_FindRespawn = nullptr;
 PlayerUpdateFunc Original_PlayerUpdate = nullptr;

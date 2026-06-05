@@ -25,7 +25,7 @@ public:
         api->RegisterCustomHook((baseAddr + 0x9480), &Hooked_Shatter3, (void**)&Original_Shatter3);
     }
 
-    void onPlayerUpdate(void* playerObject) override {
+    void onPlayerUpdate(Ball* playerObject) override {
         if (api->GetButtonState("CHEAT_NOBREAK")) {
             if (api->WasKeyPressed(0x2A)) {
                 DWORD* physicsObjPtr = (DWORD*)((DWORD)playerObject + 0x1a4);

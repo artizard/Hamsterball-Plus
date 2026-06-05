@@ -11,7 +11,7 @@ public:
         api->CreateToggleButton("CHEAT_SPEED", "UNCAP SPEED", false);
     }
 
-    void onPlayerUpdate(void* playerObject) override {
+    void onPlayerUpdate(Ball* playerObject) override {
         if (api->GetButtonState("CHEAT_SPEED")) {
             float* masterSpeed = (float*)((DWORD)playerObject + 0x188);
             *masterSpeed = 500.0f;

@@ -16,27 +16,40 @@ struct Color {
 struct PhysicsObject;
 struct App;
 struct Ball;
+struct Scene;
 
 class IModAPI {
 public:
 	virtual ~IModAPI() {}
 
-	virtual DWORD GetGameBaseAddress() = 0;
+	
 	virtual void RegisterCustomHook(DWORD targetAddress, void* hookFunction, void** original) = 0;
 	virtual bool IsKeyDown(int dik) = 0;
 	virtual bool WasKeyPressed(int dik) = 0;
 	virtual bool WasKeyReleased(int dik) = 0;
 	virtual void CreateToggleButton(const char* id, const char* displayText, bool defaultState, Color color = Color()) = 0;
-	virtual bool GetButtonState(const char* id) = 0;
-	virtual Ball* GetPlayer() = 0;
-	virtual PhysicsObject* GetPhysicsObj() = 0;
+	
 	virtual void PatchMemory(DWORD address, const char* bytes, size_t size) = 0;
-	virtual App* GetApp() = 0;
 	virtual void UnlockAll() = 0;
 	virtual void LockAll() = 0;
 	virtual bool QuitGame() = 0; 
 	virtual bool SaveConfig() = 0;
-	virtual void ApplyForce(void* player, float x, float y, float z, float magnitude) = 0;
+	virtual void ApplyForce(Ball* player, float x, float y, float z, float magnitude) = 0;
+	virtual void SetSpeed(Ball* player, float mult) = 0;
+
+	virtual bool GetButtonState(const char* id) = 0;
+	virtual Ball* GetPlayer() = 0;
+	virtual Ball* GetPlayer2() = 0;
+	virtual Ball* GetPlayer3() = 0;
+	virtual Ball* GetPlayer4() = 0;
+
+	// pass in &enemyCount to get the size of the array that is returned 
+	virtual Ball** GetEnemies(size_t* enemyCount) = 0;
+
+	virtual PhysicsObject* GetPhysicsObj() = 0;
+	virtual Scene* GetScene() = 0;
+	virtual DWORD GetGameBaseAddress() = 0;
+	virtual App* GetApp() = 0;
 };
 
 class HamsterballAPI {
@@ -44,7 +57,7 @@ public:
 	virtual ~HamsterballAPI() {}
 	virtual const char* GetModName() = 0;
 	virtual void Initialize(IModAPI* loader) {}
-	virtual void onPlayerUpdate(void* PlayerObject) {}
+	virtual void onPlayerUpdate(Ball* PlayerObject) {}
 	virtual void onRenderApply(void* this_ptr, float* viewMatrix) {}
 	virtual void onButtonToggle(const char* buttonId, bool newState) {}
 	virtual void onGameUpdate() {}
@@ -137,8 +150,8 @@ struct Ball {
 	// unverified means i don't know for sure that memory address is what i think it is
 	void** vtable; // +0x000
 	std::uint8_t pad_004[0x014 - 0x004];
-	void* scene; // +0x014 unverified
-	int player_index; // +0x018 
+	Scene* scene; // +0x014 unverified
+	int playerID; // +0x018 
 	std::uint8_t pad_01C[0x158 - 0x01C];
 	float prev_pos_x; // +0x158
 	float prev_pos_y; // +0x15C
@@ -192,6 +205,39 @@ struct Ball {
 };
 #pragma pack(pop)
 
+#pragma pack(push, 1)
+struct Scene {
+	void** vtable; // +0x000
+	std::uint8_t pad_004[0x014 - 0x004];
+	App* owner_app; // +0x014
+	std::uint8_t pad_018[0x868 - 0x018];
+	char* name; // +0x868 
+	std::uint8_t pad_86C[0x8AC - 0x86C];
+	void* level_ptr; // +0x8AC unverified 
+	void* skybox_ptr; // +0x8B0 unverfied
+	std::uint8_t pad_8B4[0x29BC - 0x8B4];
+	float camera_angle; // +0x29BC 
+	float camera_distance; // +0x29C0
+	std::uint8_t pad_29C4[0x29D0 - 0x29C4];
+	Ball* current_ball_ptr; // +0x29D0 couldn't change 
+	std::uint8_t pad_29D4[0x29D8 - 0x29D4];
+	int ball_list_count; // +0x29D8
+	std::uint8_t pad_29DC[0x2DE0 - 0x29DC];
+	Ball** ball_list; // +0x2DE0
+	std::uint8_t pad_2DE4[0x3620 - 0x2DE4];
+	int frame_counter; // +0x3620 frames since start 
+	std::uint8_t pad_3624[0x362C - 0x3624];
+	void* player_list; // +0x362C unverified
+	int player_count; // +0x3630 
+	std::uint8_t pad_3634[0x3F20 - 0x3634];
+	void* cam_path_object; // +0x3F20 unverified
+	float cam_path_position; // +0x3F24
+	std::uint8_t pad_3F28[0x434C - 0x3F28];
+	float cam_offset_x; // +0x434C
+	float cam_offset_y; // +0x4350 
+	float cam_offset_z; // +0x4354
+};
+#pragma pack(pop)
 
 #pragma pack(push, 1)
 struct PhysicsObject {
@@ -215,8 +261,6 @@ struct PhysicsObject {
 };
 #pragma pack(pop)
 
-
-
 #pragma pack(push, 1)
 struct App {
 	// unverified means i don't know for sure that memory address is what i think it is
@@ -230,7 +274,7 @@ struct App {
 	int gameHeight; // +0x160 
 	std::uint8_t pad_164[0x10];
 	void* graphics; // +0x174 unverified
-	void* currentScene; // +0x178 unverified; scene object 
+	std::uint8_t pad_178[0x17C-0x178];
 	void* audioSystem; // +0x17C unverified
 	void* inputHandler; // +0x180 unverified
 	void* gameUpdateObj; // +0x184 unverified
@@ -297,7 +341,7 @@ struct App {
 
 static_assert(offsetof(Ball, vtable) == 0x000);
 static_assert(offsetof(Ball, scene) == 0x014);
-static_assert(offsetof(Ball, player_index) == 0x018);
+static_assert(offsetof(Ball, playerID) == 0x018);
 static_assert(offsetof(Ball, prev_pos_x) == 0x158);
 static_assert(offsetof(Ball, prev_pos_y) == 0x15C);
 static_assert(offsetof(Ball, prev_pos_z) == 0x160);
@@ -356,7 +400,6 @@ static_assert(offsetof(App, isGameFocused) == 0x15A);
 static_assert(offsetof(App, gameWidth) == 0x15C);
 static_assert(offsetof(App, gameHeight) == 0x160);
 static_assert(offsetof(App, graphics) == 0x174);
-static_assert(offsetof(App, currentScene) == 0x178);
 static_assert(offsetof(App, audioSystem) == 0x17C);
 static_assert(offsetof(App, inputHandler) == 0x180);
 static_assert(offsetof(App, gameUpdateObj) == 0x184);
@@ -378,3 +421,23 @@ static_assert(offsetof(App, p2Controller1) == 0xB28);
 static_assert(offsetof(App, p2Controller2) == 0xB2C);
 static_assert(offsetof(App, p2Controller3) == 0xB30);
 static_assert(offsetof(App, p2Controller4) == 0xB34);
+
+static_assert(offsetof(Scene, vtable) == 0x000);
+static_assert(offsetof(Scene, owner_app) == 0x014);
+static_assert(offsetof(Scene, name) == 0x868);
+static_assert(offsetof(Scene, level_ptr) == 0x8AC);
+static_assert(offsetof(Scene, skybox_ptr) == 0x8B0);
+static_assert(offsetof(Scene, camera_angle) == 0x29BC);
+static_assert(offsetof(Scene, camera_distance) == 0x29C0);
+static_assert(offsetof(Scene, current_ball_ptr) == 0x29D0);
+static_assert(offsetof(Scene, ball_list_count) == 0x29D8);
+static_assert(offsetof(Scene, ball_list) == 0x2DE0);
+static_assert(offsetof(Scene, frame_counter) == 0x3620);
+static_assert(offsetof(Scene, player_list) == 0x362C);
+static_assert(offsetof(Scene, player_count) == 0x3630);
+static_assert(offsetof(Scene, cam_path_object) == 0x3F20);
+static_assert(offsetof(Scene, cam_path_position) == 0x3F24);
+static_assert(offsetof(Scene, cam_offset_x) == 0x434C);
+static_assert(offsetof(Scene, cam_offset_y) == 0x4350);
+static_assert(offsetof(Scene, cam_offset_z) == 0x4354);
+static_assert(sizeof(Scene) == 0x4358);

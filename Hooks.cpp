@@ -7,6 +7,7 @@
 #include <fstream>
 #include "InputManager.h"
 #include "ModAPI.h"
+#include <vector>
 
 ThemeConfig g_Theme;
 std::vector<LevelConfig> g_LevelConfigs = {};
@@ -179,24 +180,19 @@ const int GetLevelIdFromHUDText(const char* text, bool& isArena) {
 // --- HOOK IMPLEMENTATIONS ---
 
 // Hooked Player Update Loop (for getting player object pointer)
-void __fastcall Hooked_PlayerUpdate(void* ecx_player, void* edx_dummy) {
+void __fastcall Hooked_PlayerUpdate(Ball* ecx_player, void* edx_dummy) {
 
-    // Look at offset 0x18 to check the "Controller ID"
-    int* controllerID = (int*)((DWORD)ecx_player + 0x18);
+    for (HamsterballAPI* mod : g_Mods) {
+        mod->onPlayerUpdate((Ball*)ecx_player);
+    }
+    if (ecx_player->playerID == 0) {
+        g_Player = ecx_player; 
+        UpdateBallReferences();
 
-    // ONLY steal the pointer if it is Player 1 (ID = 0)
-    // This will safely ignore the 8-Ball (which is likely -1)
-    if (*controllerID == 0) {
-        g_StolenPlayer = ecx_player;
-
-        for (HamsterballAPI* mod : g_Mods) {
-            mod->onPlayerUpdate(ecx_player);
-        }
-
+        // respawn logic
         if (WasKeyPressed(0x2D)) {
-            if (g_StolenPlayer != nullptr) {
-                // Call the original death function using our passively stolen pointer
-                Original_FindRespawn(g_StolenPlayer, nullptr);
+            if (g_Player != nullptr) {
+                Original_FindRespawn(g_Player, nullptr);
             }
         }
     }
@@ -514,4 +510,32 @@ void __fastcall Hooked_GameUpdate(App* app) {
         mod->onGameUpdate();
     }
     Original_GameUpdate(app); 
+}
+
+void UpdateBallReferences() {
+    if (g_Player) {
+        g_Enemies.clear(); // clear list so you don't keep adding to it 
+        Scene* scene = g_Player->scene;
+        int ball_count = scene->ball_list_count;
+        
+        for (int i = 0; i < ball_count; i++) {
+            Ball* curr_ball = scene->ball_list[i];
+            int curr_id = curr_ball->playerID;
+            // stolen player 1 should already be updated 
+            switch (curr_id) {
+            case -1:
+                g_Enemies.push_back(curr_ball);
+                break;
+            case 1:
+                g_Player2 = curr_ball;
+                break;
+            case 2:
+                g_Player3 = curr_ball;
+                break;
+            case 3:
+                g_Player4 = curr_ball;
+                break;
+            }
+        }
+    }
 }

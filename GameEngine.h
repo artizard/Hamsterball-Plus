@@ -7,7 +7,7 @@
 
 // --- TYPEDEFS ---
 typedef void(__fastcall* FindRespawnPointFunc)(void* ecx_playerObject, void* edx_dummy);
-typedef void(__fastcall* PlayerUpdateFunc)(void* ecx_player, void* edx_dummy);
+typedef void(__fastcall* PlayerUpdateFunc)(Ball* ecx_player, void* edx_dummy);
 typedef void* (__fastcall* OptionsMenuFunc)(void* this_ptr, void* edx_dummy, int param_1, int param_2);
 typedef void(__fastcall* AddMenuButtonFunc)(void* this_ptr, void* edx_dummy, const char* displayText, const char* id, DWORD vtable, float r, float g, float b, float a, const void* img);
 typedef void(__fastcall* AddSpacerFunc)(void* this_ptr, void* edx_dummy, int height);
@@ -38,7 +38,11 @@ typedef void(__fastcall* GameUpdateFunc)(App* app);
 typedef void(__thiscall* ApplyForceFunc)(void* player, float x, float y, float z, float magnitude);
 
 // --- EXTERN GLOBALS ---
-extern void* g_StolenPlayer;
+extern Ball* g_Player;
+extern Ball* g_Player2;
+extern Ball* g_Player3;
+extern Ball* g_Player4;
+inline std::vector<Ball*> g_Enemies; // 8 ball or ball on sky race 
 extern App* g_App; 
 
 inline std::vector<HamsterballAPI*> g_Mods; 
@@ -83,3 +87,4 @@ extern PollInputsFunc Original_PollInputs;
 extern GameUpdateFunc Original_GameUpdate; 
 extern ApplyForceFunc ApplyForce; 
 
+void UpdateBallReferences(); 

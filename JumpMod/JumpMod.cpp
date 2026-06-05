@@ -11,24 +11,22 @@ public:
         api->CreateToggleButton("CHEAT_JUMP", "JUMPING", false);
     }
 
-    void onPlayerUpdate(void* playerObject) override {
+    void onPlayerUpdate(Ball* playerObject) override {
         if (api->GetButtonState("CHEAT_JUMP")) {
             if (api->WasKeyPressed(DIK_LSHIFT)) {
-                DWORD* physicsObjPtr = (DWORD*)((DWORD)playerObject + 0x1a4);
+                PhysicsObject* physicsObj = playerObject->physics_object; 
 
-                if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
-
-                    DWORD physicsObj = *physicsObjPtr;
+                if (physicsObj != nullptr) {
 
                     // Read Y Velocity
-                    float* trueVelY = (float*)(physicsObj + 0xca8);
+                    float trueVelY = physicsObj->velocity_y;
 
                     // Ground Check
                     float tolerance = 0.5f;
 
-                    if (*trueVelY > -tolerance && *trueVelY < tolerance) {
+                    if (trueVelY > -tolerance && trueVelY < tolerance) {
                         // Apply the jump force
-                        *trueVelY = 20.0f;
+                        physicsObj->velocity_y = 20.0f; 
                     }
                 }
             }
