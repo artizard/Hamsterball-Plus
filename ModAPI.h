@@ -20,7 +20,8 @@ public:
 	bool WasKeyReleased(int dik) override;
 	void CreateToggleButton(const char* id, const char* displayText, bool defaultState, Color color) override;
 	bool GetButtonState(const char* id) override;
-	void* GetPlayer() override;
+	Ball* GetPlayer() override;
+	PhysicsObject* GetPhysicsObj() override;
 	void PatchMemory(DWORD address, const char* bytes, size_t size) override;
 	App* GetApp() override;
 	void UnlockAll() override;

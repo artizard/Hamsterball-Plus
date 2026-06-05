@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <fstream>
 
-typedef bool(__thiscall* currFunc)(void* it, float param_1, float param_2, float param_3, float param_4);
+typedef bool(__thiscall* currFunc)(void* it, float param_1);
 currFunc Original_currFunc = nullptr;
 
 class PrintArgs : public HamsterballAPI {
@@ -14,24 +14,21 @@ public:
     void Initialize(IModAPI* modApi) override {
         api = modApi;
 
-        DWORD baseAddr = api->GetGameBaseAddress();
-        api->RegisterCustomHook((baseAddr + 0x02650), &Hooked_currFunc, (void**)&Original_currFunc);
+        /*DWORD baseAddr = api->GetGameBaseAddress();
+        api->RegisterCustomHook((baseAddr + 0x029C0), &Hooked_currFunc, (void**)&Original_currFunc);*/
     }
 
-    static void __fastcall Hooked_currFunc(void* it, float param_1, float param_2, float param_3, float param_4) {
+    static void __fastcall Hooked_currFunc(void* it, float param_1) {
         std::ofstream logFile("C:\\Users\\artiz\\Documents\\hbModStuff\\loader_log.txt", std::ios::app);
         if (logFile.is_open()) {
             logFile << "player:     0x" << std::hex << api->GetPlayer() << std::dec << "\n";
+            logFile << "physics object:     0x" << std::hex << api->GetPhysicsObj() << std::dec << "\n";
             logFile << "it:     0x" << std::hex << it << std::dec << "\n";
-            logFile << "player id: "<< (int*)((DWORD)it + 0x18) << "\n";
             logFile << "param_1: " << param_1 << "\n";
-            logFile << "param_2: " << param_2 << "\n";
-            logFile << "param_3: " << param_3 << "\n";
-            logFile << "param_4: " << param_4 << "\n";
             logFile << "-----------------------------------------\n";
             logFile.close();
         }
-        Original_currFunc(it, param_1, param_2, param_3, param_4);
+        Original_currFunc(it, param_1);
     }
 
     void onGameUpdate() override {
@@ -42,6 +39,7 @@ public:
             if (logFile.is_open()) {
                 logFile << "App hex:     0x" << std::hex << app << std::dec << "\n";
                 logFile << "player:     0x" << std::hex << api->GetPlayer() << std::dec << "\n";
+                logFile << "physics object:     0x" << std::hex << api->GetPhysicsObj() << std::dec << "\n";
                 logFile << "isFullscreen: " << ((app->isFullscreen) ? "True" : "False") << "\n";
                 logFile << "quitFlag: " << ((app->quitFlag) ? "True" : "False") << "\n";
                 logFile << "isGameFocused: " << ((app->isGameFocused) ? "True" : "False") << "\n";
@@ -73,6 +71,21 @@ public:
         }
         if (api->WasKeyPressed(DIK_S)) {
             api->ApplyForce(player, 0.0f, -1.0f, 0.0f, 1000);
+        }
+
+        if (api->WasKeyPressed(DIK_U)) {
+            api->GetPhysicsObj()->gravity_x = 1; 
+        }
+        if (api->WasKeyPressed(DIK_E)) {
+            CallMethod(0x029C0, api->GetPhysicsObj(), 1000.0f);
+        }
+
+        if (api->WasKeyPressed(DIK_M)) {
+            api->GetPlayer()->radius = 2.0f;
+        }
+
+        if (api->WasKeyPressed(DIK_F)) {
+            api->GetPhysicsObj()->velocity_y = 100.0f;
         }
 
     }

@@ -39,8 +39,8 @@ bool ModAPI::GetButtonState(const char* id) {
 	return false; // failsafe 
 }
 
-void* ModAPI::GetPlayer() {
-	return g_StolenPlayer; 
+Ball* ModAPI::GetPlayer() {
+	return (Ball*) g_StolenPlayer; 
 }
 
 void ModAPI::PatchMemory(DWORD address, const char* bytes, size_t size) {
@@ -122,4 +122,8 @@ void ModAPI::ApplyForce(void* player, float x, float y, float z, float magnitude
 	if (player) {
 		::ApplyForce(player, x, y, z, magnitude);
 	}
+}
+
+PhysicsObject* ModAPI::GetPhysicsObj() {
+	return ((Ball*)g_StolenPlayer)->physics_object;
 }
