@@ -139,8 +139,11 @@ struct PhysicsConstants {
 	float hamsterSize; // 0x4CF39C default is .037
 	std::uint8_t pad_38[0x48];
 	float unknown4; // 0x4CF3E8 not exactly sure what this is, but it affected the 8ball on glass race 
+	std::uint8_t pad_84[0x04];
 	float cameraDamping; // 0x4CF3F0
+	std::uint8_t pad_8C[0x4CF484 - 0x4CF3F4];
 	float unknown5; // 0x4CF484
+	std::uint8_t pad_120[4];
 	float unknown6; // 0x4CF48C 
 };
 #pragma pack(pop)
@@ -164,7 +167,9 @@ struct Ball {
 	float accel_y; // +0x180
 	float accel_z; // +0x184
 	float max_speed; // +0x188
-	std::uint8_t pad_18C[0x1A0 - 0x18C];
+	std::uint8_t pad_18C[0x190 - 0x18C];
+	float facing_angle; // +0x190
+	std::uint8_t pad_194[0x1A0 - 0x194];
 	float speed_mult; // +0x1A0
 	PhysicsObject* physics_object; // +0x1A4 
 	float gravity_vec[3]; // +0x1A8 can't change this, it always changes back to default 
@@ -186,7 +191,9 @@ struct Ball {
 	float force_z; // +0x2C4
 	std::uint8_t pad_2C8[0x2CC - 0x2C8];
 	bool disable_ball; // +0x2CC
-	std::uint8_t pad_2CD[0x2DC - 0x2CD];
+	std::uint8_t pad_2CD[0x2D4 - 0x2CD];
+	bool ball_shake; // +0x2D4 not sure if this is intended or what 
+	std::uint8_t pad_2D5[0x2DC - 0x2D5];
 	float checkpoint_x; // +0x2DC
 	float checkpoint_y; // +0x2E0
 	float checkpoint_z; // +0x2E4
@@ -196,11 +203,15 @@ struct Ball {
 	bool state_active; // +0x310 unverified
 	std::uint8_t pad_311[0x700 - 0x311];
 	int sound_3d_handle; // +0x700 unverified
-	std::uint8_t pad_704[0x768 - 0x704];
+	std::uint8_t pad_704[0x748 - 0x704];
+	int gravity_type; // +0x748 can be 0,1,2, causes crashes when outside of odd race
+	std::uint8_t pad_74C[0x768 - 0x74C];
 	bool cam_active; // +0x768
 	std::uint8_t pad_769[0xC4C - 0x769];
 	bool low_gravity_mode; // +0xC4C
-	std::uint8_t pad_C4D[0xC88 - 0xC4D];
+	std::uint8_t pad_C4D[0xC50 - 0xC4D];
+	float burn_amount; // +0xC50 how burnt the ball is (from the magnifying glass), 1 kills the player normally, but setting manually doesn't seem to do this
+	std::uint8_t pad_C54[0xC88 - 0xC54];
 	float world_matrix[16]; // +0xC88 unverified
 };
 #pragma pack(pop)
@@ -229,10 +240,13 @@ struct Scene {
 	std::uint8_t pad_3624[0x362C - 0x3624];
 	void* player_list; // +0x362C unverified
 	int player_count; // +0x3630 
-	std::uint8_t pad_3634[0x3F20 - 0x3634];
+	std::uint8_t pad_3634[0x3F1C - 0x3634];
+	int path_follow_mode; // +0x3F1C unverified - i haven't been able to get this to work. but on 2p this is set to 0, and is another number one 1p
 	void* cam_path_object; // +0x3F20 unverified
 	float cam_path_position; // +0x3F24
-	std::uint8_t pad_3F28[0x434C - 0x3F28];
+	std::uint8_t pad_3F28[0x3F2C - 0x3F28];
+	float cam_time_to_zoom; // +0x3F2C i didn't really know what to call this one, it's weird
+	std::uint8_t pad_3F30[0x434C - 0x3F30];
 	float cam_offset_x; // +0x434C
 	float cam_offset_y; // +0x4350 
 	float cam_offset_z; // +0x4354
@@ -376,6 +390,10 @@ static_assert(offsetof(Ball, sound_3d_handle) == 0x700);
 static_assert(offsetof(Ball, cam_active) == 0x768);
 static_assert(offsetof(Ball, low_gravity_mode) == 0xC4C);
 static_assert(offsetof(Ball, world_matrix) == 0xC88);
+static_assert(offsetof(Ball, facing_angle) == 0x190);
+static_assert(offsetof(Ball, ball_shake) == 0x2D4);
+static_assert(offsetof(Ball, gravity_type) == 0x748);
+static_assert(offsetof(Ball, burn_amount) == 0xC50);
 
 static_assert(offsetof(PhysicsObject, owner_ball) == 0x010);
 static_assert(offsetof(PhysicsObject, unknown) == 0x0C60);
@@ -440,4 +458,16 @@ static_assert(offsetof(Scene, cam_path_position) == 0x3F24);
 static_assert(offsetof(Scene, cam_offset_x) == 0x434C);
 static_assert(offsetof(Scene, cam_offset_y) == 0x4350);
 static_assert(offsetof(Scene, cam_offset_z) == 0x4354);
-static_assert(sizeof(Scene) == 0x4358);
+static_assert(offsetof(Scene, path_follow_mode) == 0x3F1C);
+static_assert(offsetof(Scene, cam_time_to_zoom) == 0x3F2C);
+
+static_assert(offsetof(PhysicsConstants, unknown) == 0x00);
+static_assert(offsetof(PhysicsConstants, dizzyForceMult) == 0x04);
+static_assert(offsetof(PhysicsConstants, glassForceMult) == 0x0C);
+static_assert(offsetof(PhysicsConstants, unknown2) == 0x10);
+static_assert(offsetof(PhysicsConstants, unknown3) == 0x18);
+static_assert(offsetof(PhysicsConstants, hamsterSize) == 0x34);
+static_assert(offsetof(PhysicsConstants, unknown4) == 0x80);
+static_assert(offsetof(PhysicsConstants, cameraDamping) == 0x88);
+static_assert(offsetof(PhysicsConstants, unknown5) == 0x11C);
+static_assert(offsetof(PhysicsConstants, unknown6) == 0x124);

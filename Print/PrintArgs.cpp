@@ -119,7 +119,9 @@ public:
         }
 
         if (api->WasKeyPressed(DIK_M)) {
-            api->GetPlayer()->radius = 2.0f;
+            size_t enemyCount;
+            Ball* enemy = api->GetEnemies(&enemyCount)[0]; 
+            enemy->radius = 100.0f;
         }
 
         if (api->WasKeyPressed(DIK_F)) {
