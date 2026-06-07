@@ -2,8 +2,9 @@
 #include <windows.h>
 #include <fstream>
 #include <set>
+#include <ctime>
 
-typedef bool(__fastcall* currFunc)(int* param_1);
+typedef bool(__fastcall* currFunc)(Ball* param_1);
 currFunc Original_currFunc = nullptr;
 
 class PrintArgs : public HamsterballAPI {
@@ -15,13 +16,18 @@ public:
 
     void Initialize(IModAPI* modApi) override {
         api = modApi;
-        /*DWORD baseAddr = api->GetGameBaseAddress();
-        api->RegisterCustomHook((baseAddr + 0x19C00), &Hooked_currFunc, (void**)&Original_currFunc);*/
+        DWORD baseAddr = api->GetGameBaseAddress();
+        //api->RegisterCustomHook((baseAddr + 0x08390), &Hooked_currFunc, (void**)&Original_currFunc);*/
+        
     }
 
-    static void __fastcall Hooked_currFunc(int* param_1) {
+    static void __fastcall Hooked_currFunc(Ball* param_1) {
         std::ofstream logFile("C:\\Users\\artiz\\Documents\\hbModStuff\\loader_log.txt", std::ios::app);
         if (logFile.is_open()) {
+            std::time_t rawTime = std::time(nullptr);
+            char timeBuffer[26];
+            ctime_s(timeBuffer, sizeof(timeBuffer), &rawTime);
+            logFile << "Time: " << timeBuffer;
             logFile << "param_1: " << std::hex << param_1 << std::dec << "\n";
             logFile << "-----------------------------------------\n";
             logFile.close();
@@ -105,7 +111,10 @@ public:
         }
 
         if (api->WasKeyPressed(DIK_S)) {
-            api->ApplyForce(player, 0.0f, -1.0f, 0.0f, 1000);
+            api->ApplyForce(player, 0.0f, 1.0f, 0.0f, 1000);
+        }
+        if (api->WasKeyPressed(DIK_A)) {
+            CallMethod(0x016F0, player, 0.0f, 1.0f, 0.0f, 1000.0f);
         }
 
         if (api->WasKeyPressed(DIK_G)) {
@@ -113,6 +122,10 @@ public:
         }
         if (api->WasKeyPressed(DIK_E)) {
             CallMethod(0x029C0, api->GetPhysicsObj(), 1.0f);
+        }
+        if (api->IsKeyDown(DIK_T)) {
+            api->GetPlayer()->playerID = -1; 
+            CallFast(0x08390, api->GetPlayer());
         }
         if (api->IsKeyDown(DIK_D)) {
             api->SetSpeed(player, 10.0f);
@@ -127,7 +140,45 @@ public:
         if (api->WasKeyPressed(DIK_F)) {
             api->GetPhysicsObj()->velocity_y = 100.0f;
         }
+        DWORD baseAddr = api->GetGameBaseAddress();
+        if (api->WasKeyPressed(DIK_9)) {
+            //api->PatchMemory(baseAddr + 0x08412, "\x83\x7F\x18\x01", 4);
+            api->PatchMemory(baseAddr + 0x08416, "\x0F\x85\xAA", 3);
+        }
+        if (api->WasKeyPressed(DIK_0)) {
+            //api->PatchMemory(baseAddr + 0x08412, "\x83\x7F\x18\xFF", 4);
+            api->PatchMemory(baseAddr + 0x08416, "\x0F\x84\xAA", 3);
+        }
 
+
+        if (api->WasKeyPressed(DIK_5)) {
+            Ball* p = api->GetPlayer();
+            Vec3 pos = Vec3((p->pos_x + 50), (p->pos_y), (p->pos_z + 50));
+            Vec3 home_pos = Vec3((p->pos_x + 50), (p->pos_y), (p->pos_z + 50));
+            api->CreateBadBall(pos, home_pos);
+        }
+
+        if (api->WasKeyPressed(DIK_6)) {
+            CallMethod(0x19FA0, api->GetScene(), api->GetPlayer(), false);
+        }
+        if (api->WasKeyPressed(DIK_7)) {
+            CallMethod(0x19FA0, api->GetScene(), api->GetPlayer(), true);
+        }
+        if (api->WasKeyPressed(DIK_8)) {
+            size_t size;
+            CallMethod(0x19FA0, api->GetScene(), (Ball*)api->GetEnemies(&size), false);
+        }
+        if (api->WasKeyPressed(DIK_9)) {
+            DWORD baseAddr = api->GetGameBaseAddress();
+            if (*(bool*)(baseAddr + 0x1a394) == 1) {
+                api->PatchMemory(api->GetGameBaseAddress() + 0x1a394, "\x00", 1);
+            }
+            else {
+                api->PatchMemory(api->GetGameBaseAddress() + 0x1a394, "\x01", 1);
+            }
+            
+        }
+        
     }
 };
 

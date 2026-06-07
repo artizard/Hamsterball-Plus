@@ -178,3 +178,30 @@ Ball** ModAPI::GetEnemies(size_t* enemyCount) {
 		return nullptr;
 	}
 }
+
+void* ModAPI::AllocateMem(unsigned int size) {
+	HANDLE hCrtHeap = *(HANDLE*)0x005369C0;
+	return HeapAlloc(hCrtHeap, 0, size);
+}
+
+void ModAPI::CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance, float chase_distance, float radius, float spin_distance) {
+	void* mem = AllocateMem(0xC98);
+	Ball* badball = nullptr;
+	Scene* scene = GetScene();
+	badball = CallMethod<Ball*>(0x0AFE0, mem, scene); // ball constructor 
+	//badball = CallMethod<Ball*>(0x039E0, &badball, api->GetScene()); 
+	CallMethod(0x05100, badball); // set physics? without this the physics are all weird, 8ball defies gravity 
+	badball->pos_x = spawn_pos.x;
+	badball->pos_y = spawn_pos.y;
+	badball->pos_z = spawn_pos.z;
+	badball->home_position_x = home_pos.x;
+	badball->home_position_y = home_pos.y;
+	badball->home_position_z = home_pos.z;
+	badball->home_distance = home_distance;
+	badball->chase_distance = chase_distance;
+	badball->radius = radius;
+	badball->spin_distance = spin_distance;
+	*((uint8_t*)badball + 0x281) = 0; // unsure if this one matters 
+	CallMethod(0x53780, &scene->ball_list, badball);  // append ball to ball_list 
+	CallMethod(0x53780, (char*)scene + 0x2DEC, badball); // unsure if this is required, but the original function calls this, not removing in case it causes memory leaks or whatever 
+}

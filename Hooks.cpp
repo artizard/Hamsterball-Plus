@@ -519,7 +519,7 @@ void UpdateBallReferences() {
         int ball_count = scene->ball_list_count;
         
         for (int i = 0; i < ball_count; i++) {
-            Ball* curr_ball = scene->ball_list[i];
+            Ball* curr_ball = scene->ball_array[i];
             int curr_id = curr_ball->playerID;
             // stolen player 1 should already be updated 
             switch (curr_id) {

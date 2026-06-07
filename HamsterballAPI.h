@@ -17,6 +17,7 @@ struct PhysicsObject;
 struct App;
 struct Ball;
 struct Scene;
+struct Vec3;
 
 class IModAPI {
 public:
@@ -50,6 +51,8 @@ public:
 	virtual Scene* GetScene() = 0;
 	virtual DWORD GetGameBaseAddress() = 0;
 	virtual App* GetApp() = 0;
+	virtual void* AllocateMem(unsigned int size) = 0;
+	virtual void CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance=200, float chase_distance=300, float radius=35, float spin_distance=45) = 0;
 };
 
 class HamsterballAPI {
@@ -211,7 +214,17 @@ struct Ball {
 	bool low_gravity_mode; // +0xC4C
 	std::uint8_t pad_C4D[0xC50 - 0xC4D];
 	float burn_amount; // +0xC50 how burnt the ball is (from the magnifying glass), 1 kills the player normally, but setting manually doesn't seem to do this
-	std::uint8_t pad_C54[0xC88 - 0xC54];
+	std::uint8_t pad_C54[0xC60 - 0xC54];
+	float home_position_x; // +0xC60 only valid for badball, where the ball stays when not in chase
+	float home_position_y; // +0xC64
+	float home_position_z; // +0xC68
+	float home_distance; // +0xC6C only valid for badball, how far badball will go from home_position
+	float chase_distance; // +0xC70 only valid for badball, range in which badball can see players 
+	bool is_badball_on_screen; // +0xC74 
+	std::uint8_t pad_C75[0xC78 - 0xC75];
+	float spin_counter; // +0xC78 only valid for badball, goes up for while the 8ball is spinning
+	float spin_distance; // +0xC7C only valid for badball, how far 8ball spins (idle animation) 
+	std::uint8_t pad_C80[0xC88 - 0xC80];
 	float world_matrix[16]; // +0xC88 unverified
 };
 #pragma pack(pop)
@@ -230,11 +243,11 @@ struct Scene {
 	float camera_angle; // +0x29BC 
 	float camera_distance; // +0x29C0
 	std::uint8_t pad_29C4[0x29D0 - 0x29C4];
-	Ball* current_ball_ptr; // +0x29D0 couldn't change 
-	std::uint8_t pad_29D4[0x29D8 - 0x29D4];
+	Ball* current_ball_ptr; // +0x29D0 couldn't change
+	void* ball_list; // +0x29D4 dynamic list struct
 	int ball_list_count; // +0x29D8
 	std::uint8_t pad_29DC[0x2DE0 - 0x29DC];
-	Ball** ball_list; // +0x2DE0
+	Ball** ball_array; // +0x2DE0 actual array pointer 
 	std::uint8_t pad_2DE4[0x3620 - 0x2DE4];
 	int frame_counter; // +0x3620 frames since start 
 	std::uint8_t pad_3624[0x362C - 0x3624];
@@ -394,6 +407,12 @@ static_assert(offsetof(Ball, facing_angle) == 0x190);
 static_assert(offsetof(Ball, ball_shake) == 0x2D4);
 static_assert(offsetof(Ball, gravity_type) == 0x748);
 static_assert(offsetof(Ball, burn_amount) == 0xC50);
+static_assert(offsetof(Ball, home_position_x) == 0xC60);
+static_assert(offsetof(Ball, home_distance) == 0xC6C);
+static_assert(offsetof(Ball, chase_distance) == 0xC70);
+static_assert(offsetof(Ball, is_badball_on_screen) == 0xC74);
+static_assert(offsetof(Ball, spin_counter) == 0xC78);
+static_assert(offsetof(Ball, spin_distance) == 0xC7C);
 
 static_assert(offsetof(PhysicsObject, owner_ball) == 0x010);
 static_assert(offsetof(PhysicsObject, unknown) == 0x0C60);
@@ -449,7 +468,7 @@ static_assert(offsetof(Scene, camera_angle) == 0x29BC);
 static_assert(offsetof(Scene, camera_distance) == 0x29C0);
 static_assert(offsetof(Scene, current_ball_ptr) == 0x29D0);
 static_assert(offsetof(Scene, ball_list_count) == 0x29D8);
-static_assert(offsetof(Scene, ball_list) == 0x2DE0);
+static_assert(offsetof(Scene, ball_array) == 0x2DE0);
 static_assert(offsetof(Scene, frame_counter) == 0x3620);
 static_assert(offsetof(Scene, player_list) == 0x362C);
 static_assert(offsetof(Scene, player_count) == 0x3630);

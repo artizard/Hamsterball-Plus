@@ -36,7 +36,8 @@ public:
 	Scene* GetScene() override;
 	App* GetApp() override;
 	bool GetButtonState(const char* id) override;
-
+	void* AllocateMem(unsigned int size) override;
+	void CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance, float chase_distance, float radius, float spin_distance) override;
 private:
 	void setUnlocks(bool isUnlock);
 };
