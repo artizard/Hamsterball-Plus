@@ -8,6 +8,7 @@
 #include "InputManager.h"
 #include "ModAPI.h"
 #include <vector>
+#include "UniversalObjects.h"
 
 ThemeConfig g_Theme;
 std::vector<LevelConfig> g_LevelConfigs = {};
@@ -538,4 +539,13 @@ void UpdateBallReferences() {
             }
         }
     }
+}
+
+void __fastcall Hooked_CollisionCheck(void* this_ptr, void* edx_dummy, Ball* colliding_ball, int* param_1) {
+    BaseCollideCheck(this_ptr, edx_dummy, colliding_ball, param_1); // universal objects thing 
+    char* eventPlaneID = (*(char**)(param_1[1] + 0x864));
+    for (HamsterballAPI* mod : g_Mods) {
+        mod->onEventPlaneCollide(colliding_ball, eventPlaneID);
+    }
+    Original_CollisionCheck(this_ptr, colliding_ball, param_1); 
 }

@@ -10,6 +10,7 @@
 #include "HamsterballAPI.h"
 #include "ModAPI.h"
 #include <filesystem>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -35,7 +36,7 @@ DrawHUDTextFunc Original_DrawHUDText = nullptr;
 CreateColorFunc Original_CreateColor = nullptr;
 HudManagerFunc Original_HudManager = nullptr;
 RenderApplyFunc Original_RenderApply = nullptr;
-BaseCollideCheckFunc Original_BaseCollideCheck = nullptr;
+//BaseCollideCheckFunc Original_BaseCollideCheck = nullptr;
 GeometryBinderFunc Original_BindGeometry = nullptr;
 MasterLevelSetupFunc Original_MasterLevelSetup = nullptr;
 RenderDynamic_t Original_RenderDynamic = nullptr;
@@ -47,6 +48,7 @@ SaveConfigFunc SaveConfig = nullptr;
 PollInputsFunc Original_PollInputs = nullptr;
 GameUpdateFunc Original_GameUpdate = nullptr;
 ApplyForceFunc ApplyForce = nullptr;
+CollisionCheckFunc Original_CollisionCheck = nullptr; 
 
 App* g_App = nullptr;
 
@@ -85,13 +87,14 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID createColorAddr = (LPVOID)(baseAddr + 0x53150);
     LPVOID hudManagerAddr = (LPVOID)(baseAddr + 0x1b710);
     LPVOID renderApplyAddr = (LPVOID)(baseAddr + 0x54A30);
-    LPVOID baseCollideCheckAddr = (LPVOID)(baseAddr + 0xc5d0);
+    //LPVOID baseCollideCheckAddr = (LPVOID)(baseAddr + 0xc5d0);
     Original_BindGeometry = (GeometryBinderFunc)(baseAddr + 0x602f0);
     LPVOID masterLevelSetupAddr = (LPVOID)(baseAddr + 0x1c5b0);
     //LPVOID renderDynamicAddr = (LPVOID)(baseAddr + 0xb570);
     LPVOID shatterHamsterAddr = (LPVOID)(baseAddr + 0x8d70);
     LPVOID pollInputsAddr = (LPVOID)(baseAddr + 0x6EBD0);
     LPVOID gameUpdateAddr = (LPVOID)(baseAddr + 0x6C170);
+    LPVOID collisionCheckAddr = (LPVOID)(baseAddr + 0x0C5D0);
 
     MH_CreateHook(updateFuncAddr, &Hooked_PlayerUpdate, (LPVOID*)&Original_PlayerUpdate);
     MH_EnableHook(updateFuncAddr);
@@ -120,8 +123,8 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     MH_CreateHook(renderApplyAddr, &Hooked_RenderApply, (LPVOID*)&Original_RenderApply);
     MH_EnableHook(renderApplyAddr);
 
-    MH_CreateHook(baseCollideCheckAddr, &Hooked_BaseCollideCheck, (LPVOID*)&Original_BaseCollideCheck);
-    MH_EnableHook(baseCollideCheckAddr);
+    //MH_CreateHook(baseCollideCheckAddr, &Hooked_BaseCollideCheck, (LPVOID*)&Original_BaseCollideCheck);
+    //MH_EnableHook(baseCollideCheckAddr);
 
     MH_CreateHook(masterLevelSetupAddr, &Hooked_MasterLevelSetup, (LPVOID*)&Original_MasterLevelSetup);
     MH_EnableHook(masterLevelSetupAddr);
@@ -134,6 +137,9 @@ DWORD WINAPI ModThread(HMODULE hModule) {
 
     MH_CreateHook(gameUpdateAddr, &Hooked_GameUpdate, (LPVOID*)&Original_GameUpdate);
     MH_EnableHook(gameUpdateAddr);
+
+    MH_STATUS status = MH_CreateHook(collisionCheckAddr, &Hooked_CollisionCheck, (LPVOID*)&Original_CollisionCheck);
+    MH_EnableHook(collisionCheckAddr);
 
     //bool wasJumpKeyPressed = false;
 

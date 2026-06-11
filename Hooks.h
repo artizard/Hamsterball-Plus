@@ -14,3 +14,4 @@ void __fastcall Hooked_RenderApply(void* this_ptr, void* edx_dummy, float* viewM
 void __fastcall Hooked_RenderDynamic(void* this_ptr, void* edx_dummy, void* param_1);
 void __fastcall Hooked_PollInputs(void* self);
 void __fastcall Hooked_GameUpdate(App* app); 
+void __fastcall Hooked_CollisionCheck(void* this_ptr, void* edx_dummy, Ball* colliding_ball, int* param_1);

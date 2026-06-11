@@ -3,9 +3,10 @@
 #include <fstream>
 #include <set>
 #include <ctime>
+#include <cstring>
 
-typedef bool(__fastcall* currFunc)(Ball* param_1);
-currFunc Original_currFunc = nullptr;
+//typedef bool(__thiscall* currFunc)(void* param_1, Ball* param_2, int* param_3);
+//currFunc Original_currFunc = nullptr;
 
 class PrintArgs : public HamsterballAPI {
 private:
@@ -17,22 +18,53 @@ public:
     void Initialize(IModAPI* modApi) override {
         api = modApi;
         DWORD baseAddr = api->GetGameBaseAddress();
-        //api->RegisterCustomHook((baseAddr + 0x08390), &Hooked_currFunc, (void**)&Original_currFunc);*/
+        //api->PatchMemory(baseAddr + 0x65447, "\x00", 1); // show event planes 
         
+        //api->RegisterCustomHook((baseAddr + 0x0C5D0), &Hooked_currFunc, (void**)&Original_currFunc);
+        api->PatchMemory(baseAddr + 0x29d23, "\x01", 1);
+        api->PatchMemory(baseAddr + 0x29d0a, "\x01", 1);
     }
 
-    static void __fastcall Hooked_currFunc(Ball* param_1) {
-        std::ofstream logFile("C:\\Users\\artiz\\Documents\\hbModStuff\\loader_log.txt", std::ios::app);
-        if (logFile.is_open()) {
-            std::time_t rawTime = std::time(nullptr);
-            char timeBuffer[26];
-            ctime_s(timeBuffer, sizeof(timeBuffer), &rawTime);
-            logFile << "Time: " << timeBuffer;
-            logFile << "param_1: " << std::hex << param_1 << std::dec << "\n";
-            logFile << "-----------------------------------------\n";
-            logFile.close();
+    //static void __fastcall Hooked_currFunc(void* param_1, void* edx_dummy, Ball* param_2, int* param_3) {
+    //    //DWORD objectPtr = ((DWORD*)param_3)[1];
+    //    //std::string eventName(*(char**)(param_3[1] + 0x864));
+    //    //if (eventName == "E:CAMLEFT") {
+    //    //    //api->GetScene()->camera_angle += 5; 
+    //    //}
+    //    std::string eventName(*(char**)(param_3[1] + 0x864));
+    //    std::ofstream logFile("C:\\Users\\artiz\\Documents\\hbModStuff\\loader_log.txt", std::ios::app);
+    //    if (logFile.is_open()) {
+    //        logFile << "event: " << *(char**)(param_3[1] + 0x864) << "\n";
+    //        logFile << "string version: " << eventName << "\n";
+    //        logFile.close();
+    //    }
+    //    if (eventName == "E:CAMLEFT") {
+    //        param_2->burn_amount = 1.0f;
+    //        param_2->radius += 5;
+    //        float* camera_angle = &api->GetScene()->camera_angle;
+    //        if (*camera_angle == 90) {
+    //            *camera_angle = 180;
+    //        }
+    //        else {
+    //            *camera_angle = 90;
+    //        }
+    //    }
+    //    
+    //    Original_currFunc(param_1, param_2, param_3);
+    //}
+
+    void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) override {
+        if (strcmp(eventPlaneID, "E:CAMLEFT") == 0) {
+            colliding_ball->burn_amount = 1.0f;
+            colliding_ball->radius += 5;
+            float* camera_angle = &api->GetScene()->camera_angle;
+            if (*camera_angle == 90) {
+                *camera_angle = 180;
+            }
+            else {
+                *camera_angle = 90;
+            }
         }
-        Original_currFunc(param_1);
     }
 
     //void onPlayerUpdate(Ball* ball) override {
@@ -141,14 +173,14 @@ public:
             api->GetPhysicsObj()->velocity_y = 100.0f;
         }
         DWORD baseAddr = api->GetGameBaseAddress();
-        if (api->WasKeyPressed(DIK_9)) {
-            //api->PatchMemory(baseAddr + 0x08412, "\x83\x7F\x18\x01", 4);
-            api->PatchMemory(baseAddr + 0x08416, "\x0F\x85\xAA", 3);
-        }
-        if (api->WasKeyPressed(DIK_0)) {
-            //api->PatchMemory(baseAddr + 0x08412, "\x83\x7F\x18\xFF", 4);
-            api->PatchMemory(baseAddr + 0x08416, "\x0F\x84\xAA", 3);
-        }
+        //if (api->WasKeyPressed(DIK_9)) {
+        //    //api->PatchMemory(baseAddr + 0x08412, "\x83\x7F\x18\x01", 4);
+        //    api->PatchMemory(baseAddr + 0x08416, "\x0F\x85\xAA", 3);
+        //}
+        //if (api->WasKeyPressed(DIK_0)) {
+        //    //api->PatchMemory(baseAddr + 0x08412, "\x83\x7F\x18\xFF", 4);
+        //    api->PatchMemory(baseAddr + 0x08416, "\x0F\x84\xAA", 3);
+        //}
 
 
         if (api->WasKeyPressed(DIK_5)) {
@@ -178,7 +210,48 @@ public:
             }
             
         }
-        
+        if (api->IsKeyDown(DIK_NUMPAD7)) {
+            api->GetScene()->camera_angle += .8;
+        }
+        if (api->IsKeyDown(DIK_NUMPAD9)) {
+            api->GetScene()->camera_angle -= .8;
+        }
+        if (api->IsKeyDown(DIK_EQUALS)) {
+            api->GetScene()->camera_distance -= 5;
+        }
+        if (api->IsKeyDown(DIK_MINUS)) {
+            api->GetScene()->camera_distance += 5;
+        }
+        if (api->IsKeyDown(DIK_NUMPAD8)) {
+            api->GetScene()->cam_offset_y += 2;
+        }
+        if (api->IsKeyDown(DIK_NUMPAD5)) {
+            api->GetScene()->cam_offset_y -= 2;
+        }
+        if (api->IsKeyDown(DIK_NUMPAD4)) {
+            api->GetScene()->cam_offset_x -= 2;
+            api->GetScene()->cam_offset_z -= 2;
+        }
+        if (api->IsKeyDown(DIK_NUMPAD6)) {
+            api->GetScene()->cam_offset_x += 2;
+            api->GetScene()->cam_offset_z += 2;
+        }
+        if (api->IsKeyDown(DIK_NUMPAD1)) { // collision 
+            if (*(bool*)(baseAddr + 0x65440) == 1) {
+                api->PatchMemory(baseAddr + 0x65440, "\x00", 1);
+            }
+            else {
+                api->PatchMemory(baseAddr + 0x65440, "\x01", 1);
+            }
+        }
+        if (api->IsKeyDown(DIK_NUMPAD2)) { // visibility 
+            if (*(bool*)(baseAddr + 0x61B60) == 1) {
+                api->PatchMemory(baseAddr + 0x61B60, "\x00", 1);
+            }
+            else {
+                api->PatchMemory(baseAddr + 0x61B60, "\x01", 1);
+            }
+        }
     }
 };
 

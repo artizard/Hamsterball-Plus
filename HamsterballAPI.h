@@ -64,6 +64,7 @@ public:
 	virtual void onRenderApply(void* this_ptr, float* viewMatrix) {}
 	virtual void onButtonToggle(const char* buttonId, bool newState) {}
 	virtual void onGameUpdate() {}
+	virtual void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) {}
 };
 
 typedef HamsterballAPI* (*CreateModFunct)();

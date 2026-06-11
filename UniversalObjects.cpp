@@ -41,7 +41,7 @@ void __fastcall Hooked_MasterLevelSetup(int* param_1) {
 //    }
 }
 
-void __fastcall Hooked_BaseCollideCheck(void* this_ptr, void* edx, int* ballPhysics, int* collisionData) {
+void __fastcall BaseCollideCheck(void* this_ptr, void* edx, Ball* ballPhysics, int* collisionData) {
 
     if (collisionData != nullptr && collisionData[1] != 0) {
         char* hitNodeName = *(char**)(collisionData[1] + 0x864);
@@ -89,6 +89,4 @@ void __fastcall Hooked_BaseCollideCheck(void* this_ptr, void* edx, int* ballPhys
             }
         }
     }
-
-    Original_BaseCollideCheck(this_ptr, edx, ballPhysics, collisionData);
 }

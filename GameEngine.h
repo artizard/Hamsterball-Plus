@@ -25,7 +25,7 @@ typedef void(__fastcall* DrawHUDTextFunc)(
 typedef void* (__fastcall* CreateColorFunc)(void* colorStruct, void* edx_dummy, float r, float g, float b, float a);
 typedef void(__thiscall* HudManagerFunc)(void* this_ptr, void* param_1);
 typedef void(__fastcall* RenderApplyFunc)(void* this_ptr, void* edx_dummy, float* viewMatrix);
-typedef void(__fastcall* BaseCollideCheckFunc)(void* this_ptr, void* edx, int* ballPhysics, int* collisionData);
+//typedef void(__fastcall* BaseCollideCheckFunc)(void* this_ptr, void* edx, Ball* colliding_ball, int* collisionData);
 typedef void(__thiscall* GeometryBinderFunc)(void* meshWorld_this, const char* searchString, void* destStruct);
 typedef void(__fastcall* MasterLevelSetupFunc)(int* param_1);
 typedef void(__thiscall* RenderDynamic_t)(void* this_ptr, void* param_1);
@@ -36,6 +36,7 @@ typedef void(__fastcall* PollInputsFunc)(void* self);
 typedef void(__fastcall* SaveConfigFunc)(App* app); 
 typedef void(__fastcall* GameUpdateFunc)(App* app);
 typedef void(__thiscall* ApplyForceFunc)(void* player, float x, float y, float z, float magnitude);
+typedef void(__thiscall* CollisionCheckFunc)(void* this_ptr, Ball* colliding_ball, int* param_3);
 
 // --- EXTERN GLOBALS ---
 extern Ball* g_Player;
@@ -77,7 +78,7 @@ extern DrawHUDTextFunc Original_DrawHUDText;
 extern CreateColorFunc Original_CreateColor;
 extern HudManagerFunc Original_HudManager;
 extern RenderApplyFunc Original_RenderApply;
-extern BaseCollideCheckFunc Original_BaseCollideCheck;
+//extern BaseCollideCheckFunc Original_BaseCollideCheck;
 extern GeometryBinderFunc Original_BindGeometry;
 extern MasterLevelSetupFunc Original_MasterLevelSetup;
 extern RenderDynamic_t Original_RenderDynamic;
@@ -86,5 +87,6 @@ extern SaveConfigFunc SaveConfig;
 extern PollInputsFunc Original_PollInputs;
 extern GameUpdateFunc Original_GameUpdate; 
 extern ApplyForceFunc ApplyForce; 
+extern CollisionCheckFunc Original_CollisionCheck; 
 
 void UpdateBallReferences(); 
