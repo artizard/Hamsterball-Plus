@@ -56,7 +56,6 @@ public:
     void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) override {
         if (strcmp(eventPlaneID, "E:CAMLEFT") == 0) {
             colliding_ball->burn_amount = 1.0f;
-            colliding_ball->radius += 5;
             float* camera_angle = &api->GetScene()->camera_angle;
             if (*camera_angle == 90) {
                 *camera_angle = 180;
