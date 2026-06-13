@@ -1,9 +1,10 @@
 #include "HamsterballAPI.h"
 #include <windows.h>
+#include <stdio.h>
 
-typedef void(__thiscall* Shatter1_t)(void* this_ptr, int param_1);
-typedef void(__fastcall* Shatter2_t)(void* param_1);
-typedef void(__fastcall* Shatter3_t)(void* param_1);
+typedef void(__thiscall* Shatter1_t)(Ball* ball, int param_1);
+typedef void(__fastcall* Shatter2_t)(Ball* ball);
+typedef void(__fastcall* Shatter3_t)(Ball* ball);
 
 Shatter1_t Original_Shatter1 = nullptr;
 Shatter2_t Original_Shatter2 = nullptr;
@@ -18,35 +19,11 @@ public:
     void Initialize(IModAPI* modApi) override {
         api = modApi;
         api->CreateToggleButton("CHEAT_NOBREAK", "NO BREAK", false);
-
+        
         DWORD baseAddr = api->GetGameBaseAddress();
         api->RegisterCustomHook((baseAddr + 0x8D70), &Hooked_Shatter1, (void**)&Original_Shatter1);
         api->RegisterCustomHook((baseAddr + 0x9050), &Hooked_Shatter2, (void**)&Original_Shatter2);
         api->RegisterCustomHook((baseAddr + 0x9480), &Hooked_Shatter3, (void**)&Original_Shatter3);
-    }
-
-    void onPlayerUpdate(Ball* playerObject) override {
-        if (api->GetButtonState("CHEAT_NOBREAK")) {
-            if (api->WasKeyPressed(0x2A)) {
-                DWORD* physicsObjPtr = (DWORD*)((DWORD)playerObject + 0x1a4);
-
-                if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
-
-                    DWORD physicsObj = *physicsObjPtr;
-
-                    // Read Y Velocity
-                    float* trueVelY = (float*)(physicsObj + 0xca8);
-
-                    // Ground Check
-                    float tolerance = 0.5f;
-
-                    if (*trueVelY > -tolerance && *trueVelY < tolerance) {
-                        // Apply the jump force
-                        *trueVelY = 20.0f;
-                    }
-                }
-            }
-        }
     }
 
     void onButtonToggle(const char* buttonId, bool newState) override {
@@ -54,9 +31,13 @@ public:
             ApplyNoFallDamage(newState); 
         }
     }
+    void onGameUpdate() override {
+        if (api->WasKeyPressed(DIK_W)) {
+            CallFast(0x9050, api->GetPlayer());
+        }
+    }
 
     void ApplyNoFallDamage(bool enable) {
-
         DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
 
         if (enable) {
@@ -84,19 +65,19 @@ public:
         }
     }
 
-    static void __fastcall Hooked_Shatter1(void* this_ptr, void* edx_dummy, int param_1) {
-        if (api->GetButtonState("CHEAT_NOBREAK") && this_ptr == api->GetPlayer()) return;
-        Original_Shatter1(this_ptr, param_1);
+    static void __fastcall Hooked_Shatter1(Ball* ball, void* edx_dummy, int param_1) {
+        if (api->GetButtonState("CHEAT_NOBREAK") && ball == api->GetPlayer()) return;
+        Original_Shatter1(ball, param_1);
     }
 
-    static void __fastcall Hooked_Shatter2(void* param_1, void* edx_dummy) {
-        if (api->GetButtonState("CHEAT_NOBREAK") && param_1 == api->GetPlayer()) return;
-        Original_Shatter2(param_1);
+    static void __fastcall Hooked_Shatter2(Ball* ball) {
+        if (api->GetButtonState("CHEAT_NOBREAK") && ball == api->GetPlayer()) return;
+        Original_Shatter2(ball);
     }
 
-    static void __fastcall Hooked_Shatter3(void* param_1, void* edx_dummy) {
-        if (api->GetButtonState("CHEAT_NOBREAK") && param_1 == api->GetPlayer()) return;
-        Original_Shatter3(param_1);
+    static void __fastcall Hooked_Shatter3(Ball* ball) {
+        if (api->GetButtonState("CHEAT_NOBREAK") && ball == api->GetPlayer()) return;
+        Original_Shatter3(ball);
     }
 
 };

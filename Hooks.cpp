@@ -56,7 +56,6 @@ void ReloadINI() {
     g_Theme.MenuHeaderA = ReadIniFloat("Theme", "MenuHeaderA", 0.75f, path);
 
     g_ShowCheats = GetPrivateProfileIntA("Config", "ShowCheats", 1, path) != 0;
-    g_ShowConsole = GetPrivateProfileIntA("Config", "ShowConsole", 0, path) != 0;
 
     // load/store custom controls
     for (auto& [key, value] : g_CustomControls) {

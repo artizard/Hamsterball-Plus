@@ -10,8 +10,14 @@ DWORD ModAPI::GetGameBaseAddress() {
 }
 
 void ModAPI::RegisterCustomHook(DWORD targetAddress, void* hookFunction, void** original) {
-	MH_CreateHook((LPVOID)targetAddress, hookFunction, original);
-	MH_EnableHook((LPVOID)targetAddress);
+	MH_STATUS createStatus = MH_CreateHook((LPVOID)targetAddress, hookFunction, original);
+	MH_STATUS enableStatus = MH_EnableHook((LPVOID)targetAddress);
+	if (createStatus != MH_OK) {
+		printf("Minhook create error at %x: %s\n", targetAddress, MH_StatusToString(createStatus));
+	}
+	if (enableStatus != MH_OK) {
+		printf("Minhook enable error at %x: %s\n", targetAddress, MH_StatusToString(enableStatus));
+	}
 }
 
 bool ModAPI::IsKeyDown(int dik) {

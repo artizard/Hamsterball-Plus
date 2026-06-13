@@ -39,9 +39,6 @@ RenderApplyFunc Original_RenderApply = nullptr;
 GeometryBinderFunc Original_BindGeometry = nullptr;
 MasterLevelSetupFunc Original_MasterLevelSetup = nullptr;
 RenderDynamic_t Original_RenderDynamic = nullptr;
-Shatter1_t Original_Shatter1 = nullptr;
-Shatter2_t Original_Shatter2 = nullptr;
-Shatter3_t Original_Shatter3 = nullptr;
 SaveConfigFunc SaveConfig = nullptr; 
 
 PollInputsFunc Original_PollInputs = nullptr;
@@ -55,10 +52,8 @@ App* g_App = nullptr;
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
 
-    loadMods();
-    ReloadINI();
-    MH_Initialize();
-
+    const char* path = GetModIniPath();
+    g_ShowConsole = GetPrivateProfileIntA("Config", "ShowConsole", 0, path) != 0;
     if (g_ShowConsole) {
         // Spawn command prompt window
         AllocConsole();
@@ -66,6 +61,10 @@ DWORD WINAPI ModThread(HMODULE hModule) {
         freopen_s(&f, "CONOUT$", "w", stdout);
         printf("Hamsterball Mod Debug Console\n");
     }
+
+    MH_Initialize();
+    loadMods();
+    ReloadINI();
 
     // Get base address
     DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
@@ -90,7 +89,6 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     Original_BindGeometry = (GeometryBinderFunc)(baseAddr + 0x602f0);
     LPVOID masterLevelSetupAddr = (LPVOID)(baseAddr + 0x1c5b0);
     //LPVOID renderDynamicAddr = (LPVOID)(baseAddr + 0xb570);
-    LPVOID shatterHamsterAddr = (LPVOID)(baseAddr + 0x8d70);
     LPVOID pollInputsAddr = (LPVOID)(baseAddr + 0x6EBD0);
     LPVOID gameUpdateAddr = (LPVOID)(baseAddr + 0x6C170);
     LPVOID collisionCheckAddr = (LPVOID)(baseAddr + 0x0C5D0);

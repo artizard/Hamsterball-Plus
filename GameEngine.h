@@ -30,9 +30,6 @@ typedef void(__fastcall* RenderApplyFunc)(void* this_ptr, void* edx_dummy, float
 typedef void(__thiscall* GeometryBinderFunc)(void* meshWorld_this, const char* searchString, void* destStruct);
 typedef void(__fastcall* MasterLevelSetupFunc)(int* param_1);
 typedef void(__thiscall* RenderDynamic_t)(void* this_ptr, void* param_1);
-typedef void(__thiscall* Shatter1_t)(void* this_ptr, int param_1);
-typedef void(__fastcall* Shatter2_t)(void* param_1);
-typedef void(__fastcall* Shatter3_t)(void* param_1);
 typedef void(__fastcall* PollInputsFunc)(void* self);
 typedef void(__fastcall* SaveConfigFunc)(App* app); 
 typedef void(__fastcall* GameUpdateFunc)(App* app);
