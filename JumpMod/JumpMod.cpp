@@ -31,6 +31,41 @@ public:
                     }
                 }
             }
+            if (api->WasKeyPressed(DIK_W)) {
+                PhysicsObject* physicsObj = playerObject->physics_object;
+
+                if (physicsObj != nullptr) {
+
+                    // Read Y Velocity
+                    float trueVelY = physicsObj->velocity_y;
+
+                    // Ground Check
+                    float tolerance = 0.5f;
+
+                    if (trueVelY > -tolerance && trueVelY < tolerance) {
+                        // Apply the jump force
+                        api->ApplyForce(playerObject, 0, 1.0f, 0, 100);
+                    }
+                }
+            }
+            if (api->WasKeyPressed(DIK_E)) {
+                PhysicsObject* physicsObj = playerObject->physics_object;
+
+                if (physicsObj != nullptr) {
+
+                    // Read Y Velocity
+                    float trueVelY = physicsObj->velocity_y;
+
+                    // Ground Check
+                    float tolerance = 0.5f;
+
+                    if (trueVelY > -tolerance && trueVelY < tolerance) {
+                        // Apply the jump force
+                        api->ApplyForce(playerObject, 0, .8, 0, 100);
+                    }
+                }
+            }
+
         }
     }
 };

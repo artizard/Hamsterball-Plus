@@ -85,7 +85,7 @@ public:
     void onGameUpdate() override {
         // p for print
         if (api->WasKeyPressed(DIK_P)) {
-            App* app = api->GetApp();
+            /*App* app = api->GetApp();
             std::ofstream logFile("C:\\Users\\artiz\\Documents\\hbModStuff\\loader_log.txt", std::ios::app);
             if (logFile.is_open()) {
                 logFile << "App hex:     0x" << std::hex << app << std::dec << "\n";
@@ -112,7 +112,8 @@ public:
                 logFile << "sensitivity: " << app->sensitivity << "\n";
                 logFile << "-----------------------------------------\n";
                 logFile.close();
-            }
+            }*/
+            printf("scene: %x\n", api->GetScene());
         }
         
         // q for quit 

@@ -31,11 +31,6 @@ public:
             ApplyNoFallDamage(newState); 
         }
     }
-    void onGameUpdate() override {
-        if (api->WasKeyPressed(DIK_W)) {
-            CallFast(0x9050, api->GetPlayer());
-        }
-    }
 
     void ApplyNoFallDamage(bool enable) {
         DWORD baseAddr = (DWORD)GetModuleHandle(NULL);

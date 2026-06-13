@@ -46,6 +46,7 @@ inline std::vector<Ball*> g_Enemies; // 8 ball or ball on sky race
 extern App* g_App; 
 inline std::vector<HamsterballAPI*> g_Mods; 
 inline std::map<std::string, int> g_CustomControls; // <controlID, dikCode> 
+extern int* g_Timer; 
 
 struct ThemeConfig {
     float MenuBodyR, MenuBodyG, MenuBodyB, MenuBodyA;

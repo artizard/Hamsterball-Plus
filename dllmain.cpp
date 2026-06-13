@@ -22,6 +22,7 @@ Ball* g_Player = nullptr;
 Ball* g_Player2 = nullptr;
 Ball* g_Player3 = nullptr;
 Ball* g_Player4 = nullptr;
+int* g_Timer = nullptr;
 
 FindRespawnPointFunc Original_FindRespawn = nullptr;
 PlayerUpdateFunc Original_PlayerUpdate = nullptr;
@@ -69,6 +70,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     // Get base address
     DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
     g_App = (App*)(baseAddr + 0xFD680); 
+    g_Timer = (int*)(baseAddr + 0xFDC68); 
     SaveConfig = (SaveConfigFunc)(baseAddr + 0x284c0);
     ApplyForce = (ApplyForceFunc)(baseAddr + 0x02650);
 
@@ -225,4 +227,8 @@ void loadMods() {
             }
         }
     }
+}
+
+int GetTimer() {
+    return 
 }

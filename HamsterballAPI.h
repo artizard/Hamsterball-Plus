@@ -6,6 +6,7 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 
+/// A general color struct to be used with some of the functions. The default constructor sets rgba all to 1.0f.
 struct Color {
 	float r, g, b, a;
 	// default (white)
@@ -19,13 +20,31 @@ struct Ball;
 struct Scene;
 struct Vec3;
 
+
+/// This class is how you will retrieve values and call functions on the game. 
 class IModAPI {
 public:
+	/// @brief Deconstructor for IModAPI. Only worry about this if you need to free up memory when the game closes.
 	virtual ~IModAPI() {}
-
 	
+	/// @brief Create a custom hook. You should use the preexisting functions like onGameUpdate when possible, but if the 
+	/// hook is not already created, then you'll have to do it using this. This can cause issues if another mod also hooks 
+	/// into the same function. This is one of the more complicated aspect of this modding API, so there will be examples
+	/// for using this. (There is some boilerplate code you will have to use in conjunction with this function)
+	/// @param targetAddress Address of the function to hook into. 
+	/// @param hookFunction The function that the original function will redirect to.
+	/// @param original The original game's function, you can call this to get back the original functionality.
 	virtual void RegisterCustomHook(DWORD targetAddress, void* hookFunction, void** original) = 0;
+
+	/// @brief Create an id for a custom control that the user can remap on their own. Using this as opposed to hardcoding the
+	/// keycodes allows the user to remap in case the default value you give conflicts with another mod. 
+	/// @param controlID The id for the control; use a unique name that other mods are unlikely to use. 
+	/// @param default_dik The default DirectInput keycode that maps to your control. The user can rebind this, this will just be the default. 
 	virtual void RegisterCustomControl(const char* controlID, int default_dik) = 0;
+
+	/// @brief 
+	/// @param controlID 
+	/// @return 
 	virtual int GetCustomControlKey(const char* controlID) = 0;
 
 
@@ -64,9 +83,20 @@ public:
 	virtual void* AllocateMem(unsigned int size) = 0;
 	virtual void CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance=200, float chase_distance=300, float radius=35, float spin_distance=45) = 0;
 	virtual void ReloadIniFile() = 0;
-	
+
+	/// Returns the current time on the game's timer (the value when called, not a pointer). This number counts up in time trials
+	/// and down in tournament. This also counts up for the arenas, but it isn't really used for anything in the actual game. 
+	/// @return The current timer time
+	virtual int GetTimerTime() = 0; 
+
+	/// Sets the time on the in game timer. In time trials this is the amount of time passed, while in tournament this is the amount of
+	/// time left.
+	/// @param time The time you want to set the timer to. Note that this "1000" is 10 seconds, and "575" is 5.75 seconds. 
+	virtual void SetTimerTime(int time) = 0;
 };
 
+/// This includes functions that you can override in order to add logic on certain events such as onPlayerUpdate,
+/// onButtonToggle, onGameUpdate(), etc. 
 class HamsterballAPI {
 public:
 	virtual ~HamsterballAPI() {}
@@ -81,28 +111,48 @@ public:
 
 typedef HamsterballAPI* (*CreateModFunct)();
 
-// --- Vector3 ---
 
-// Simple 3D Vector struct
+
+/// Simple 3D Vector struct
 struct Vec3 {
 	float x, y, z;
 	Vec3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
 };
 
-// Math Helpers
+/// Vector subtraction helper function
+/// @param a first vector
+/// @param b second vector
+/// @return difference of the two vectors
 inline Vec3 Subtract(Vec3 a, Vec3 b) { return Vec3(a.x - b.x, a.y - b.y, a.z - b.z); }
+
+/// Vector cross product helper function
+/// @param a first vector
+/// @param b second vector
+/// @return cross product of the two vectors
 inline Vec3 Cross(Vec3 a, Vec3 b) {
 	return Vec3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
 }
 
+/// Vector dot product helper function
+/// @param a first vector
+/// @param b second vector
+/// @return dot product of the two vectors
 inline float Dot(Vec3 a, Vec3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+
+/// Helper function to normalize a vector
+/// @param v the vector to be normalized
+/// @return Normalized version of the vector
 inline Vec3 Normalize(Vec3 v) {
 	float length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
 	if (length == 0.0f) return Vec3(0, 0, 0);
 	return Vec3(v.x / length, v.y / length, v.z / length);
 }
 
-// Builds a DirectX 8 compatible View Matrix (16 floats)
+/// Builds a DirectX 8 compatible View Matrix (16 floats)
+/// @param outMatrix A pointer to the game's matrix
+/// @param eye The position of the camera 
+/// @param target The position in the world that the camera is looking at 
+/// @param up The vector defining what is "up"
 inline void BuildCustomViewMatrix(float* outMatrix, Vec3 eye, Vec3 target, Vec3 up) {
 	Vec3 zaxis = Normalize(Subtract(target, eye));
 	Vec3 xaxis = Normalize(Cross(up, zaxis));
@@ -114,7 +164,12 @@ inline void BuildCustomViewMatrix(float* outMatrix, Vec3 eye, Vec3 target, Vec3 
 	outMatrix[12] = -Dot(xaxis, eye); outMatrix[13] = -Dot(yaxis, eye); outMatrix[14] = -Dot(zaxis, eye); outMatrix[15] = 1.0f;
 }
 
-// for __cdecl functions 
+/// @brief A generic function to call game functions that use "__cdecl" by their memory addresses. 
+/// @tparam ReturnType The data type of the value returned by the game's function.
+/// @tparam ...Args The data types of the arguments called with the game's function. 
+/// @param offset The offset (relative to the game's exe) where the function is located
+/// @param ...args The function's arguments
+/// @return Whatever was returned by the function you call. 
 template <typename ReturnType = void, typename... Args>
 ReturnType Call(DWORD offset, Args... args) {
 	DWORD realAddress = (DWORD)GetModuleHandle(NULL) + offset;
@@ -123,7 +178,12 @@ ReturnType Call(DWORD offset, Args... args) {
 	return func(args...);
 }
 
-// for __thiscall methods
+/// @brief A generic function to call game methods that use "__thiscall" by their memory addresses. 
+/// @tparam ReturnType The data type of the value returned by the game's method.
+/// @tparam ...Args The data types of the arguments called with the game's method. 
+/// @param offset The offset (relative to the game's exe) where the method is located
+/// @param ...args The method's arguments
+/// @return Whatever was returned by the method you call. 
 template <typename ReturnType = void, class ObjectType, typename... Args>
 ReturnType CallMethod(DWORD offset, ObjectType* objPointer, Args... args) {
 	DWORD realAddress = (DWORD)GetModuleHandle(NULL) + offset;
@@ -132,7 +192,12 @@ ReturnType CallMethod(DWORD offset, ObjectType* objPointer, Args... args) {
 	return func(objPointer, args...);
 }
 
-// for __fastcall functions 
+/// @brief A generic function to call game functions that use "__fastcall" by their memory addresses. 
+/// @tparam ReturnType The data type of the value returned by the game's function.
+/// @tparam ...Args The data types of the arguments called with the game's function. 
+/// @param offset The offset (relative to the game's exe) where the function is located
+/// @param ...args The function's arguments
+/// @return Whatever was returned by the function you call. 
 template <typename ReturnType = void, typename... Args>
 ReturnType CallFast(DWORD offset, Args... args) {
 	DWORD realAddress = (DWORD)GetModuleHandle(NULL) + offset;
@@ -142,6 +207,8 @@ ReturnType CallFast(DWORD offset, Args... args) {
 }
 
 #pragma pack(push, 1)
+/// @brief A struct representing some different physics constants that the game uses. Note that many of these
+/// are unknown, so if you figure out what they do, please let me know. 
 struct PhysicsConstants {
 	// unverified means i don't know for sure that memory address is what i think it is
 	float unknown; // 0x4CF368
@@ -165,6 +232,10 @@ struct PhysicsConstants {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+/// @brief A struct representing the game's Ball object. The Ball object represents players, as well as 8balls (badballs).
+/// Fields labeled unverifed mean that the field may be wrong.
+/// Keep in mind that not only is the struct likely missing some fields, but some of them cannot be edited in the way 
+/// that you may hope. Some can only be read, while others will allow you to change the value. 
 struct Ball {
 	// unverified means i don't know for sure that memory address is what i think it is
 	void** vtable; // +0x000
@@ -243,6 +314,10 @@ struct Ball {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+/// @brief A struct representing the game's Scene object. A Scene is the current level in play. 
+/// Fields labeled unverifed mean that the field may be wrong.
+/// Keep in mind that not only is the struct likely missing some fields, but some of them cannot be edited in the way 
+/// that you may hope. Some can only be read, while others will allow you to change the value. 
 struct Scene {
 	void** vtable; // +0x000
 	std::uint8_t pad_004[0x014 - 0x004];
@@ -276,10 +351,24 @@ struct Scene {
 	float cam_offset_x; // +0x434C
 	float cam_offset_y; // +0x4350 
 	float cam_offset_z; // +0x4354
+	std::uint8_t pad_4358[0x47AC - 0x4358];
+	int arena_timer; // +0x47AC
+	bool timer_started; // +0x47B0
+	std::uint8_t pad_47B1[0x47B4 - 0x47B1];
+	int p1Score; // +0x47B4
+	int p2Score; // +0x47B8
+	int p3Score; // +0x47BC
+	int p4Score; // +0x47C0
+	bool weird_camera; // +0x47C4
+	bool is_tiebreaker; // +0x47C5
 };
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+/// @brief A struct representing the game's PhysicsObject. This is a sub-struct of the Ball struct. 
+/// Fields labeled unverifed mean that the field may be wrong.
+/// Keep in mind that not only is the struct likely missing some fields, but some of them cannot be edited in the way 
+/// that you may hope. Some can only be read, while others will allow you to change the value. 
 struct PhysicsObject {
 	void** vtable; // +0x000
 	std::uint8_t pad_004[0x010 - 0x004];
@@ -302,6 +391,11 @@ struct PhysicsObject {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+/// @brief A struct representing the game's App object. This contains a lot of fields about basic game things such as settings
+/// and unlocks. 
+/// Fields labeled unverifed mean that the field may be wrong.
+/// Keep in mind that not only is the struct likely missing some fields, but some of them cannot be edited in the way 
+/// that you may hope. Some can only be read, while others will allow you to change the value. 
 struct App {
 	// unverified means i don't know for sure that memory address is what i think it is
 	void** vtable; // +0x000
@@ -379,6 +473,7 @@ struct App {
 };
 #pragma pack(pop)
 
+// These are just to ensure I did the structs right, don't mind these 
 static_assert(offsetof(Ball, vtable) == 0x000);
 static_assert(offsetof(Ball, scene) == 0x014);
 static_assert(offsetof(Ball, playerID) == 0x018);
@@ -492,6 +587,14 @@ static_assert(offsetof(Scene, cam_offset_y) == 0x4350);
 static_assert(offsetof(Scene, cam_offset_z) == 0x4354);
 static_assert(offsetof(Scene, path_follow_mode) == 0x3F1C);
 static_assert(offsetof(Scene, cam_time_to_zoom) == 0x3F2C);
+static_assert(offsetof(Scene, arena_timer) == 0x47AC);
+static_assert(offsetof(Scene, timer_started) == 0x47B0);
+static_assert(offsetof(Scene, p1Score) == 0x47B4);
+static_assert(offsetof(Scene, p2Score) == 0x47B8);
+static_assert(offsetof(Scene, p3Score) == 0x47BC);
+static_assert(offsetof(Scene, p4Score) == 0x47C0);
+static_assert(offsetof(Scene, weird_camera) == 0x47C4);
+static_assert(offsetof(Scene, is_tiebreaker) == 0x47C5);
 
 static_assert(offsetof(PhysicsConstants, unknown) == 0x00);
 static_assert(offsetof(PhysicsConstants, dizzyForceMult) == 0x04);
