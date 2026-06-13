@@ -23,6 +23,7 @@ public:
         //api->RegisterCustomHook((baseAddr + 0x0C5D0), &Hooked_currFunc, (void**)&Original_currFunc);
         api->PatchMemory(baseAddr + 0x29d23, "\x01", 1);
         api->PatchMemory(baseAddr + 0x29d0a, "\x01", 1);
+        api->RegisterCustomControl("fly", DIK_W);
     }
 
     //static void __fastcall Hooked_currFunc(void* param_1, void* edx_dummy, Ball* param_2, int* param_3) {
@@ -128,7 +129,7 @@ public:
         }
         Ball* player = api->GetPlayer(); 
 
-        if (api->IsKeyDown(DIK_W)) {
+        if (api->IsControlDown("fly")) {
             api->GetPhysicsObj()->velocity_y = 2.0f;
         }
         if (api->IsKeyDown(DIK_1)) {
@@ -139,6 +140,9 @@ public:
         }
         if (api->IsKeyDown(DIK_3)) {
             api->GetPlayer()->pos_y = 650.0f;
+        }
+        if (api->WasKeyPressed(DIK_R)) {
+            api->ReloadIniFile(); 
         }
 
         if (api->WasKeyPressed(DIK_S)) {

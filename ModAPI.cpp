@@ -3,6 +3,7 @@
 #include "InputManager.h"
 #include "MinHook.h"
 #include "GameEngine.h"
+#include "Hooks.h"
 
 DWORD ModAPI::GetGameBaseAddress() {
 	return (DWORD)GetModuleHandle(NULL);
@@ -21,6 +22,34 @@ bool ModAPI::WasKeyPressed(int dik) {
 }
 bool ModAPI::WasKeyReleased(int dik) {
 	return ::WasKeyReleased(dik);
+}
+
+bool ModAPI::IsControlDown(const char* controlID) {
+	int key = GetCustomControlKey(controlID);
+	if (key != -1) {
+		return IsKeyDown(key);
+	}
+	else {
+		return false; 
+	}
+}
+bool ModAPI::WasControlPressed(const char* controlID) {
+	int key = GetCustomControlKey(controlID);
+	if (key != -1) {
+		return WasKeyPressed(key);
+	}
+	else {
+		return false;
+	}
+}
+bool ModAPI::WasControlReleased(const char* controlID) {
+	int key = GetCustomControlKey(controlID);
+	if (key != -1) {
+		return WasKeyReleased(key);
+	}
+	else {
+		return false;
+	}
 }
 
 void ModAPI::CreateToggleButton(const char* id, const char* displayText, bool defaultState, Color color) {
@@ -204,4 +233,24 @@ void ModAPI::CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance, f
 	*((uint8_t*)badball + 0x281) = 0; // unsure if this one matters 
 	CallMethod(0x53780, &scene->ball_list, badball);  // append ball to ball_list 
 	CallMethod(0x53780, (char*)scene + 0x2DEC, badball); // unsure if this is required, but the original function calls this, not removing in case it causes memory leaks or whatever 
+}
+
+void ModAPI::RegisterCustomControl(const char* controlID, int default_dik) {
+	std::string controlString(controlID); 
+	g_CustomControls[controlString] = default_dik; 
+}
+
+int ModAPI::GetCustomControlKey(const char* controlID) {
+	std::string controlString(controlID);
+	auto val = g_CustomControls.find(controlString);
+	if (val != g_CustomControls.end()) {
+		return val->second; 
+	}
+	else {
+		return -1; // couldn't find it 
+	}
+}
+
+void ModAPI::ReloadIniFile() {
+	ReloadINI(); 
 }

@@ -9,6 +9,7 @@
 #include "ModAPI.h"
 #include <vector>
 #include "UniversalObjects.h"
+#include <map>
 
 ThemeConfig g_Theme;
 std::vector<LevelConfig> g_LevelConfigs = {};
@@ -56,6 +57,53 @@ void ReloadINI() {
 
     g_ShowCheats = GetPrivateProfileIntA("Config", "ShowCheats", 1, path) != 0;
     g_ShowConsole = GetPrivateProfileIntA("Config", "ShowConsole", 0, path) != 0;
+
+    // load/store custom controls
+    for (auto& [key, value] : g_CustomControls) {
+        UINT curr = GetPrivateProfileIntA("Custom Controls", key.c_str(), 0xFFFFFFFF, path); 
+        if (curr == -1) { // not in main controls
+            UINT backup = GetPrivateProfileIntA("Unused Controls", key.c_str(), 0xFFFFFFFF, path);
+            if (backup == -1) { // not in backup either, so write to controls
+                char hexBuffer[8];
+                sprintf_s(hexBuffer, "0x%02X", value);
+                WritePrivateProfileStringA("Custom Controls", key.c_str(), hexBuffer, path);
+            }
+            else { // in backup so we move to custom controls
+                value = backup;
+                char hexBuffer[8];
+                sprintf_s(hexBuffer, "0x%02X", value);
+                WritePrivateProfileStringA("Custom Controls", key.c_str(), hexBuffer, path);
+                WritePrivateProfileStringA("Unused Controls", key.c_str(), NULL, path); // remove from unused 
+            }
+            
+        }
+        else { // found, so just read in value
+            value = curr; 
+        }
+    }
+    // move unused controls to the unused section; I decided on doing this, that way the main controls section doesn't get overly
+    // bloated if the user installs and uninstalls a bunch of mods. This way, if they uninstall and reinstall a mod, they will not 
+    // lose their custom keybinds.
+    std::vector<char> sectionBuffer(32768);
+    DWORD bytesRead = GetPrivateProfileSectionA("Custom Controls", sectionBuffer.data(), 32768, path);
+    if (bytesRead > 0) {
+        char* currentString = sectionBuffer.data();
+        while (*currentString != '\0') {
+            std::string entry(currentString);
+            size_t eqPos = entry.find('=');
+            if (eqPos != std::string::npos) {
+                std::string key = entry.substr(0, eqPos);
+                std::string value = entry.substr(eqPos + 1);
+                // if control is in section, but not actually used, then move to unused section
+                if (g_CustomControls.find(key) == g_CustomControls.end()) {
+                    WritePrivateProfileStringA("Unused Controls", key.c_str(), value.c_str(), path); // add to unused
+                    WritePrivateProfileStringA("Custom Controls", key.c_str(), NULL, path); // remove from custom controls
+                }
+            }
+            currentString += entry.length() + 1; 
+        }
+    }
+    
 
     g_LevelConfigs.clear();
     for (int i = 0; i < 15; i++) {

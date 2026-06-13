@@ -25,9 +25,19 @@ public:
 
 	
 	virtual void RegisterCustomHook(DWORD targetAddress, void* hookFunction, void** original) = 0;
+	virtual void RegisterCustomControl(const char* controlID, int default_dik) = 0;
+	virtual int GetCustomControlKey(const char* controlID) = 0;
+
+
+	// raw key checks
 	virtual bool IsKeyDown(int dik) = 0;
 	virtual bool WasKeyPressed(int dik) = 0;
 	virtual bool WasKeyReleased(int dik) = 0;
+	// custom control checks
+	virtual bool IsControlDown(const char* controlID) = 0;
+	virtual bool WasControlPressed(const char* controlID) = 0;
+	virtual bool WasControlReleased(const char* controlID) = 0;
+
 	virtual void CreateToggleButton(const char* id, const char* displayText, bool defaultState, Color color = Color()) = 0;
 	
 	virtual void PatchMemory(DWORD address, const char* bytes, size_t size) = 0;
@@ -53,6 +63,8 @@ public:
 	virtual App* GetApp() = 0;
 	virtual void* AllocateMem(unsigned int size) = 0;
 	virtual void CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance=200, float chase_distance=300, float radius=35, float spin_distance=45) = 0;
+	virtual void ReloadIniFile() = 0;
+	
 };
 
 class HamsterballAPI {

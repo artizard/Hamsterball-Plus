@@ -4,6 +4,7 @@
 #include <string>
 #include <math.h>
 #include "HamsterballAPI.h"
+#include <map>
 
 // --- TYPEDEFS ---
 typedef void(__fastcall* FindRespawnPointFunc)(void* ecx_playerObject, void* edx_dummy);
@@ -38,6 +39,7 @@ typedef void(__fastcall* GameUpdateFunc)(App* app);
 typedef void(__thiscall* ApplyForceFunc)(void* player, float x, float y, float z, float magnitude);
 typedef void(__thiscall* CollisionCheckFunc)(void* this_ptr, Ball* colliding_ball, int* param_3);
 
+
 // --- EXTERN GLOBALS ---
 extern Ball* g_Player;
 extern Ball* g_Player2;
@@ -45,8 +47,8 @@ extern Ball* g_Player3;
 extern Ball* g_Player4;
 inline std::vector<Ball*> g_Enemies; // 8 ball or ball on sky race 
 extern App* g_App; 
-
 inline std::vector<HamsterballAPI*> g_Mods; 
+inline std::map<std::string, int> g_CustomControls; // <controlID, dikCode> 
 
 struct ThemeConfig {
     float MenuBodyR, MenuBodyG, MenuBodyB, MenuBodyA;

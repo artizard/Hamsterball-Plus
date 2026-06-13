@@ -14,7 +14,6 @@
 
 namespace fs = std::filesystem;
 
-extern void ReloadINI();
 ModAPI g_ModApiInstance; 
 void loadMods();
 
@@ -56,9 +55,9 @@ App* g_App = nullptr;
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
 
+    loadMods();
     ReloadINI();
     MH_Initialize();
-    loadMods(); 
 
     if (g_ShowConsole) {
         // Spawn command prompt window

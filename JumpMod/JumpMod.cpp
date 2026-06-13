@@ -9,11 +9,12 @@ public:
     void Initialize(IModAPI* modApi) override {
         api = modApi;
         api->CreateToggleButton("CHEAT_JUMP", "JUMPING", false);
+        api->RegisterCustomControl("jump", DIK_LSHIFT);
     }
 
     void onPlayerUpdate(Ball* playerObject) override {
         if (api->GetButtonState("CHEAT_JUMP")) {
-            if (api->WasKeyPressed(DIK_LSHIFT)) {
+            if (api->WasControlPressed("jump")) {
                 PhysicsObject* physicsObj = playerObject->physics_object; 
 
                 if (physicsObj != nullptr) {

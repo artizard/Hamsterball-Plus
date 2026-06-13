@@ -14,9 +14,14 @@ public:
 	std::map<std::string, ButtonData> optionButtons; 
 
 	void RegisterCustomHook(DWORD targetAddress, void* hookFunction, void** original) override;
+	void RegisterCustomControl(const char* controlID, int default_dik) override;
+	int GetCustomControlKey(const char* controlID) override;
 	bool IsKeyDown(int dik) override;
 	bool WasKeyPressed(int dik) override;
 	bool WasKeyReleased(int dik) override;
+	bool IsControlDown(const char* controlID) override;
+	bool WasControlPressed(const char* controlID) override;
+	bool WasControlReleased(const char* controlID) override;
 	void CreateToggleButton(const char* id, const char* displayText, bool defaultState, Color color) override;
 	PhysicsObject* GetPhysicsObj() override;
 	void PatchMemory(DWORD address, const char* bytes, size_t size) override;
@@ -40,6 +45,7 @@ public:
 	void CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance, float chase_distance, float radius, float spin_distance) override;
 private:
 	void setUnlocks(bool isUnlock);
+	void ReloadIniFile();
 };
 
 extern ModAPI g_ModApiInstance;
