@@ -228,7 +228,3 @@ void loadMods() {
         }
     }
 }
-
-int GetTimer() {
-    return 
-}

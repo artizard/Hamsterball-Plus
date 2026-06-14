@@ -42,45 +42,150 @@ public:
 	/// @param default_dik The default DirectInput keycode that maps to your control. The user can rebind this, this will just be the default. 
 	virtual void RegisterCustomControl(const char* controlID, int default_dik) = 0;
 
-	/// @brief 
-	/// @param controlID 
-	/// @return 
+	/// @brief Returns the DirectInput keycode that corresponds to the control id given. If the user didn't customize the control then
+	/// this will just be the default value you chose. 
+	/// @param controlID The id for the control you want the keycode for
+	/// @return The DirectInput keycode for the control 
 	virtual int GetCustomControlKey(const char* controlID) = 0;
 
-
-	// raw key checks
+	/// @brief USE IsControlDown INSTEAD IN MOST CASES - Checks if a key is currently being pressed down. 
+	/// Use this within onGameUpdate() or onPlayerUpdate()
+	/// @param dik DirectInput keycode to check
+	/// @return Whether the key was pressed down or not
 	virtual bool IsKeyDown(int dik) = 0;
+
+	/// @brief USE WasControlPressed INSTEAD IN MOST CASES - Checks if a key was pressed. This will trigger once per press;
+	/// if the user holds a key down, then this will only return true once. Use this within onGameUpdate() or onPlayerUpdate()
+	/// @param dik DirectInput keycode to check
+	/// @return Whether the key was pressed or not
 	virtual bool WasKeyPressed(int dik) = 0;
+
+	/// @brief USE WasControlReleased IN MOST CASES - Checks if a key was released. This is in the case that the key was
+	/// being held down before, but has now been released. Use this within onGameUpdate() or onPlayerUpdate()
+	/// @param dik DirectInput keycode to check
+	/// @return Whether the key was release or not
 	virtual bool WasKeyReleased(int dik) = 0;
-	// custom control checks
+
+	/// @brief Checks if a control is currently being pressed down. Use this within onGameUpdate() or onPlayerUpdate()
+	/// @param controlID The control id to check
+	/// @return Whether the control was pressed down or not
 	virtual bool IsControlDown(const char* controlID) = 0;
+
+	/// @brief Checks if a control was pressed. This will trigger once per press; if the user holds a control down, then this 
+	/// will only return true once. Use this within onGameUpdate() or onPlayerUpdate()
+	/// @param controlID The control id to check
+	/// @return Whether the control was pressed or not
 	virtual bool WasControlPressed(const char* controlID) = 0;
+
+	/// @brief Checks if a control was released. This is in the case that the control was being held down before, but has 
+	/// now been released. Use this within onGameUpdate() or onPlayerUpdate()
+	/// @param controlID The control id to check
+	/// @return Whether the control was released or not
 	virtual bool WasControlReleased(const char* controlID) = 0;
 
+	/// @brief Create a toggleable option in the game's option menu. 
+	/// @param id ID for the button. Make sure this is unique and unlikely to be an id used in other mods.
+	/// @param displayText The text shown in the options menu. 
+	/// @param defaultState The state you want this option to be when the user first installs the mod. 
+	/// @param color The color of the button. Leave this parameter blank to have it default to white. 
 	virtual void CreateToggleButton(const char* id, const char* displayText, bool defaultState, Color color = Color()) = 0;
 	
+	/// @brief Patches memory within Hamsterball.exe. This is temporary, as it does not alter the actual .exe, it just modifies the 
+	/// current instance of the game in memory. I'd recommend using this within Initialize() or onButtonToggle(). 
+	/// @param address The address to patch from
+	/// @param bytes A char* of the new bytes to patch. An example: "\xC6\x85\xE9\x02\x00\x00\x01"
+	/// @param size How many bytes you want to patch
 	virtual void PatchMemory(DWORD address, const char* bytes, size_t size) = 0;
+
+	/// @brief Unlocks all levels and arenas in the game (plus mirror tournament)
 	virtual void UnlockAll() = 0;
+
+	/// @brief Locks all levels and arenas in the game (plus mirror tournament)
 	virtual void LockAll() = 0;
+
+	/// @brief Quits the game gracefully without a crash message. 
+	/// @return Returns whether it successfully closed. (It realistically should work in all cases)
 	virtual bool QuitGame() = 0; 
+
+	/// @brief Saves the current configs to the registry such as resolution, unlocks, etc. Use this to save new changes to the 
+	/// options that would be in the registry. These will automatically be saved when the game closes (provided it doesn't crash),
+	/// but it's safer to call this right after. 
+	/// @return Whether or not the config was saved. (Should realistically always work)
 	virtual bool SaveConfig() = 0;
-	virtual void ApplyForce(Ball* player, float x, float y, float z, float magnitude) = 0;
-	virtual void SetSpeed(Ball* player, float mult) = 0;
 
+	/// @brief Applies a force to the given ball object. I'm not sure if x,y,z need to add up to 1, so keep that in mind if issues arise.
+	/// @param ball The ball that you want to apply the force to. Use it on api->GetPlayer() to do it to player 1. 
+	/// @param x 0.0-1.0 value for the x direction of the force
+	/// @param y 0.0-1.0 value for the y direction of the force
+	/// @param z 0.0-1.0 value for the z direction of the force
+	/// @param magnitude Strength of the force 
+	virtual void ApplyForce(Ball* ball, float x, float y, float z, float magnitude) = 0;
+
+	/// @brief Sets the given ball's speed (magnitude of its velocity). 
+	/// @param ball The ball you want to set the speed of 
+	/// @param mult The speed multiplier; 1.0 would do nothing, 0.5 would halve speed, 2.0 would double speed, etc. 
+	virtual void SetSpeed(Ball* ball, float mult) = 0;
+
+	/// @brief Gets the state of a option toggle button. 
+	/// @param id ID of button
+	/// @return The bool value of the button's current state 
 	virtual bool GetButtonState(const char* id) = 0;
-	virtual Ball* GetPlayer() = 0;
-	virtual Ball* GetPlayer2() = 0;
-	virtual Ball* GetPlayer3() = 0;
-	virtual Ball* GetPlayer4() = 0;
 
-	// pass in &enemyCount to get the size of the array that is returned 
+	/// @brief Gets player 1. Will be a nullptr if the player doesn't exist (not in level)
+	/// @return The Ball* to player 1
+	virtual Ball* GetPlayer() = 0;
+
+	/// @brief Gets player 2. Will be a nullptr if the player doesn't exist (not in level or wrong number of players)
+	/// @return The Ball* to player 2
+	virtual Ball* GetPlayer2() = 0;
+
+	/// @brief Gets player 3. Will be a nullptr if the player doesn't exist (not in level or wrong number of players)
+	/// @return The Ball* to player 3
+	virtual Ball* GetPlayer3() = 0;
+
+	/// @brief Gets player 4. Will be a nullptr if the player doesn't exist (not in level or wrong number of players)
+	/// @return The Ball* to player 4
+	virtual Ball* GetPlayer4() = 0;
+	
+	/// @brief Get a list of the 8balls currently active. 
+	/// @param enemyCount Pass in a pointer, this is the number of enemies that will be in the returned list. 
+	/// @return Ball** list of the 8balls 
 	virtual Ball** GetEnemies(size_t* enemyCount) = 0;
 
+	/// @brief Shorthand to get the PhysicsObject of player 1. For other players/8balls, you can access them through the
+	/// Ball struct. 
+	/// @return Player 1's PhysicsObject
 	virtual PhysicsObject* GetPhysicsObj() = 0;
+
+	/// @brief Get the current active scene (the level). If there is no active scene, then this will return a nullptr, 
+	/// so make sure to do error handling in your mod. 
+	/// @return The current scene object
 	virtual Scene* GetScene() = 0;
+
+	/// @brief Gets the base address of the game. Use this to get full addresses of function and such, such as when registering a hook. 
+	/// @return The game's base address 
 	virtual DWORD GetGameBaseAddress() = 0;
+
+	/// @brief Get the game's App object. There is only ever one of these created (to my knowledge)
+	/// @return The game's App object
 	virtual App* GetApp() = 0;
+
+	/// @brief WARNING Allocates memory similar to malloc but in such a way that the game can free. Be very careful with this, I do not know exactly 
+	/// how the game frees memory. I personally just used this when I reverse engineered spawning 8balls. This is useful for replacing
+	/// operator_new calls in the decompiled code - but make sure the memory actually gets freed if you use this. 
+	/// @param size Number of bytes to allocate
+	/// @return Pointer to the chunk of memory you allocated 
 	virtual void* AllocateMem(unsigned int size) = 0;
+
+	/// @brief Creates an 8ball (badball) at the given position. The only required parameters are spawn_pos and home_pos, the others can be
+	/// left off, in which case the default game values will be used. If you have too many 8balls active at once, the game will crash  
+	/// (but it can handle a fair amount) 
+	/// @param spawn_pos Position where the ball should spawn.
+	/// @param home_pos Where the ball will go back to when idle. 
+	/// @param home_distance How far the ball is allowed to go from its home. 
+	/// @param chase_distance How far it can see the player from. 
+	/// @param radius How large the ball is. 
+	/// @param spin_distance How big the circles it makes while idle are. 
 	virtual void CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance=200, float chase_distance=300, float radius=35, float spin_distance=45) = 0;
 	virtual void ReloadIniFile() = 0;
 
@@ -99,18 +204,49 @@ public:
 /// onButtonToggle, onGameUpdate(), etc. 
 class HamsterballAPI {
 public:
+	/// @brief Deconstructor for HamsterballAPI. Only worry about this if you need to free up memory when the game closes.
 	virtual ~HamsterballAPI() {}
+
+	/// @brief This is a required function to implement. This should return the name of the mod. 
+	/// @return Name of the mod
 	virtual const char* GetModName() = 0;
+
+	/// Creates instancce of IModAPI. This function isn't necessarily required, but you'll need it if you want to use anything from
+	/// IModAPI. Additionally you can put code in here that you want to run when the mod launches. (Setting up members, etc.)
 	virtual void Initialize(IModAPI* loader) {}
+
+	/// @brief Put logic here that you want to run every player update. This is good for things like handling controls and
+	/// other player related stuff that needs to be done every tick. This does not run while you are in the main menu. 
+	/// This corresponds to the function at 0x405E00
+	/// @param PlayerObject The player that is being updated
 	virtual void onPlayerUpdate(Ball* PlayerObject) {}
+
+	/// @brief Hook for the onRenderApply function (0x454830). 
+	/// @param this_ptr Not exactly sure what this is (came from the original function) 
+	/// @param viewMatrix The camera's viewMatrix
 	virtual void onRenderApply(void* this_ptr, float* viewMatrix) {}
+
+	/// @brief Put logic here that you want to run when an option button is clicked. From there, you can use if statements to see
+	/// if the buttonId matches one of your custom ones, and then carry out logic from there. The hooked function is 0x4434F0
+	/// @param buttonId The ID of the button that was clicked
+	/// @param newState The new state of that button
 	virtual void onButtonToggle(const char* buttonId, bool newState) {}
+
+	/// @brief Put logic here that you want to run every tick. This is good for controls that you want to work whenever,
+	/// not just in levels like with onPlayerUpdate(). The corresponding hooked function is 0x46C170
 	virtual void onGameUpdate() {}
+
+	/// @brief You can put logic for event plane collisions here. This allows you to put logic for different types of event planes.
+	/// For instance, you can add logic for when the player hits the goal. Another massive possibility with this is adding custom event
+	/// planes. If you make a custom one in blender then export as a custom level, you can add an if statement to see if eventPlaneID matches
+	/// the custom plane you made. This has a lot of possibilities such as making the camera move, spawning an 8ball, etc. 
+	/// Corresponding hooked function is 0x40C5D0.
+	/// @param colliding_ball The ball that collided with the event plane
+	/// @param eventPlaneID The ID of event plane that was hit ("N:GOAL", "E:LIMIT", etc.)
 	virtual void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) {}
 };
 
 typedef HamsterballAPI* (*CreateModFunct)();
-
 
 
 /// Simple 3D Vector struct

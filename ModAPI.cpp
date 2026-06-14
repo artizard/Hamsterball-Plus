@@ -261,8 +261,7 @@ void ModAPI::ReloadIniFile() {
 	ReloadINI(); 
 }
 
-// returns the current time on the game's timer (the value when called, not a pointer). This number counts up in time trials
-// and down in tournament. 
+
 int ModAPI::GetTimerTime() {
 	return *g_Timer;
 }
