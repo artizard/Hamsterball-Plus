@@ -5,6 +5,7 @@
 #include <cstddef>
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
+#include <limits>
 
 /// A general color struct to be used with some of the functions. The default constructor sets rgba all to 1.0f.
 struct Color {
@@ -14,6 +15,36 @@ struct Color {
 	// custom color select constructor
 	Color(float _r, float _g, float _b, float _a = 1.0f) : r(_r), g(_g), b(_b), a(_a) {}
 };
+
+/// @brief The struct used for creating custom buttons for the option menu (specifically the yes/no toggleable buttons)
+struct CustomButton {
+	const char* id; // The internal ID for the button. Use a unique name that other mods are unlikely to use
+	const char* displayText; // The name for the button that will be seen in game
+	bool defaultState = false; // The default state when the user uses the mod for the first time (ex. default to off)
+	const char* trueText = "YES"; // The text that will be displayed for the on/true state 
+	const char* falseText = "NO"; // The text that will be displayed for the off/false state 
+	Color color = Color(); // The color of the button text (Will be white if you don't change this)
+
+	CustomButton(const char* id, const char* displayText) : id(id), displayText(displayText) {}
+};
+
+/// @brief The struct used for creating custom sliders in the option menu (these are controlled with the arrow keys). These are
+/// not literal sliders like in the vanilla game's menu, but these show a number instead (due to technical limitations). 
+struct CustomSlider {
+	const char* id; // The internal ID for the slider. Use a unique name that other mods are unlikely to use
+	const char* displayText; // The name for the slider that will be seen in game
+	float startingValue; // The default value for when the user uses the mod for the first time
+	float stepSize = .1; // The increments in which the user can change the slider 
+	int decimalPlaces = 2; // The amount of decimal places you want the slider to show 
+	float lowerBound = -std::numeric_limits<float>::infinity(); // The lowest that the slider can go (defaults to no lower bound) 
+	float upperBound = std::numeric_limits<float>::infinity(); // The highest that the slider can go (defaults to no upper bound)
+	const char* requiredToggle = ""; // The id of a toggle button that will enable this slider. Leave blank to not have this 
+	Color color; // The color of the slider text
+
+	CustomSlider(const char* id, const char* displayText, float startingValue) : 
+		id(id), displayText(displayText), startingValue(startingValue) {}
+};
+
 struct PhysicsObject;
 struct App;
 struct Ball;
@@ -84,11 +115,12 @@ public:
 	virtual bool WasControlReleased(const char* controlID) = 0;
 
 	/// @brief Create a toggleable option in the game's option menu. 
-	/// @param id ID for the button. Make sure this is unique and unlikely to be an id used in other mods.
-	/// @param displayText The text shown in the options menu. 
-	/// @param defaultState The state you want this option to be when the user first installs the mod. 
-	/// @param color The color of the button. Leave this parameter blank to have it default to white. 
-	virtual void CreateToggleButton(const char* id, const char* displayText, bool defaultState, Color color = Color()) = 0;
+	/// @param button The button struct that defines all of the parameters of the button. Read those comments for more information.
+	virtual void CreateToggleButton(CustomButton button) = 0;
+
+	/// @brief Create a slider in the game's option menu.
+	/// @param slider The slider struct that defines all of the parameters of the slider. Read those comments for more information.
+	virtual void CreateSlider(CustomSlider slider) = 0;
 	
 	/// @brief Patches memory within Hamsterball.exe. This is temporary, as it does not alter the actual .exe, it just modifies the 
 	/// current instance of the game in memory. I'd recommend using this within Initialize() or onButtonToggle(). 
@@ -130,6 +162,8 @@ public:
 	/// @param id ID of button
 	/// @return The bool value of the button's current state 
 	virtual bool GetButtonState(const char* id) = 0;
+
+	virtual float GetSliderState(const char* id) = 0;
 
 	/// @brief Gets player 1. Will be a nullptr if the player doesn't exist (not in level)
 	/// @return The Ball* to player 1
@@ -210,6 +244,14 @@ public:
 	/// @brief This is a required function to implement. This should return the name of the mod. 
 	/// @return Name of the mod
 	virtual const char* GetModName() = 0;
+
+	/// @brief This is a required function to implement. This should return the name of the author of the mod. 
+	/// @return Author of the mod
+	virtual const char* GetAuthorName() = 0;
+
+	/// @brief Use this if anyone else helped with the mod. Return their names like this "contributor1, contributor2"
+	/// @return The names of the contributors
+	virtual const char* GetContributors() { return ""; }
 
 	/// Creates instancce of IModAPI. This function isn't necessarily required, but you'll need it if you want to use anything from
 	/// IModAPI. Additionally you can put code in here that you want to run when the mod launches. (Setting up members, etc.)

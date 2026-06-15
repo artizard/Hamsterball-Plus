@@ -46,6 +46,7 @@ PollInputsFunc Original_PollInputs = nullptr;
 GameUpdateFunc Original_GameUpdate = nullptr;
 ApplyForceFunc ApplyForce = nullptr;
 CollisionCheckFunc Original_CollisionCheck = nullptr; 
+SliderOptionHandlerFunc Original_SliderOptionHandler = nullptr;
 
 App* g_App = nullptr;
 
@@ -94,6 +95,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID pollInputsAddr = (LPVOID)(baseAddr + 0x6EBD0);
     LPVOID gameUpdateAddr = (LPVOID)(baseAddr + 0x6C170);
     LPVOID collisionCheckAddr = (LPVOID)(baseAddr + 0x0C5D0);
+    LPVOID sliderOptionHandlerAddr = (LPVOID)(baseAddr + 0x42680);
 
     MH_CreateHook(updateFuncAddr, &Hooked_PlayerUpdate, (LPVOID*)&Original_PlayerUpdate);
     MH_EnableHook(updateFuncAddr);
@@ -137,59 +139,12 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     MH_CreateHook(gameUpdateAddr, &Hooked_GameUpdate, (LPVOID*)&Original_GameUpdate);
     MH_EnableHook(gameUpdateAddr);
 
-    MH_STATUS status = MH_CreateHook(collisionCheckAddr, &Hooked_CollisionCheck, (LPVOID*)&Original_CollisionCheck);
+    MH_CreateHook(collisionCheckAddr, &Hooked_CollisionCheck, (LPVOID*)&Original_CollisionCheck);
     MH_EnableHook(collisionCheckAddr);
 
-    //bool wasJumpKeyPressed = false;
+    MH_CreateHook(sliderOptionHandlerAddr, &Hooked_SliderOptionHandler, (LPVOID*)&Original_SliderOptionHandler);
+    MH_EnableHook(sliderOptionHandlerAddr);
 
-    //// Main Hotkey Loop
-    //while (true) {
-    //    if (GetAsyncKeyState('X') & 0x8000) {
-
-    //        if (g_StolenPlayer != nullptr) {
-    //            // Call the original death function using our passively stolen pointer
-    //            Original_FindRespawn(g_StolenPlayer, nullptr);
-    //        }
-    //        Sleep(500);
-    //    }
-
-    //    //if (g_CheatJump) {
-    //    //    bool isJumpKeyPressed = (GetAsyncKeyState(VK_LSHIFT) & 0x8000);
-    //    //    if (isJumpKeyPressed && !wasJumpKeyPressed) {
-
-    //    //        if (g_StolenPlayer != nullptr) {
-
-    //    //            // Get the player's physics object
-    //    //            DWORD* physicsObjPtr = (DWORD*)((DWORD)g_StolenPlayer + 0x1a4);
-
-    //    //            if (physicsObjPtr != nullptr && *physicsObjPtr != 0) {
-
-    //    //                DWORD physicsObj = *physicsObjPtr;
-
-    //    //                // Read Y Velocity
-    //    //                float* trueVelY = (float*)(physicsObj + 0xca8);
-
-    //    //                // Ground Check
-    //    //                float tolerance = 0.5f;
-
-    //    //                if (*trueVelY > -tolerance && *trueVelY < tolerance) {
-
-    //    //                    // Apply the jump force!
-    //    //                    *trueVelY = 20.0f;
-    //    //                }
-    //    //            }
-    //    //        }
-    //    //    }
-    //    //    wasJumpKeyPressed = isJumpKeyPressed;
-    //    //}
-
-    //    if (GetAsyncKeyState(VK_F5) & 0x8000) {
-    //        ReloadINI();
-    //        Sleep(500);
-    //    }
-
-    //    Sleep(10);
-    //}
     return 0;
 }
 

@@ -5,11 +5,22 @@ private:
     IModAPI* api = nullptr;
 public:
     const char* GetModName() override { return "Jump Cheat"; }
+    const char* GetAuthorName() override { return "arti"; }
+    const char* GetContributors() override { return "BookwormKevin"; }
 
     void Initialize(IModAPI* modApi) override {
         api = modApi;
-        api->CreateToggleButton("CHEAT_JUMP", "JUMPING", false);
+
+        CustomButton jumpButton("CHEAT_JUMP", "JUMPING");
+        api->CreateToggleButton(jumpButton);
+
         api->RegisterCustomControl("jump", DIK_LSHIFT);
+
+        CustomSlider jumpHeightSlider("JUMP_HEIGHT", "JUMP HEIGHT", 10.0f);
+        jumpHeightSlider.stepSize = 0.5f;
+        jumpHeightSlider.lowerBound = 0;
+        jumpHeightSlider.requiredToggle = "CHEAT_JUMP";
+        api->CreateSlider(jumpHeightSlider);
     }
 
     void onPlayerUpdate(Ball* playerObject) override {
@@ -27,7 +38,8 @@ public:
 
                     if (trueVelY > -tolerance && trueVelY < tolerance) {
                         // Apply the jump force
-                        physicsObj->velocity_y = 20.0f; 
+                        //physicsObj->velocity_y = 20.0f; 
+                        physicsObj->velocity_y = api->GetSliderState("JUMP_HEIGHT") * 2; 
                     }
                 }
             }

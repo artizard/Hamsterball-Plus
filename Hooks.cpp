@@ -4,12 +4,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <sstream>
 #include <fstream>
 #include "InputManager.h"
 #include "ModAPI.h"
 #include <vector>
 #include "UniversalObjects.h"
 #include <map>
+#include <iomanip>
 
 ThemeConfig g_Theme;
 std::vector<LevelConfig> g_LevelConfigs = {};
@@ -30,6 +32,12 @@ const char* GetModIniPath() {
     }
 
     return iniPath.c_str();
+}
+
+const std::string sliderToDisplayText(const SliderData& data) {
+    std::stringstream ss;
+    ss << data.displayText << ": " << std::fixed << std::setprecision(data.decimalPlaces) << data.value;
+    return ss.str();
 }
 
 // Helper function to read a float from the INI file
@@ -264,7 +272,22 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
         DWORD vtableAddr = baseAddr + 0xCF300;
 
         for (const auto& [id, data] : g_ModApiInstance.optionButtons) {
-            std::string displayText = data.displayText + (data.isOn ? ": YES" : ": NO");
+            std::string displayText = data.displayText + ": " + (data.isOn ? data.trueText : data.falseText);
+            float r = data.color.r;
+            float g = data.color.g;
+            float b = data.color.b;
+            float a = data.color.a;
+            Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
+        }
+        for (const auto& [id, data] : g_ModApiInstance.optionSliders) {
+            if (data.requiredToggle != "") { 
+                if (g_ModApiInstance.optionButtons.find(id) == g_ModApiInstance.optionButtons.end()) {
+                    printf("NOT ACTIVE\n");
+                    continue;
+                }
+                printf("ACTIVE\n"); 
+            }
+            std::string displayText = sliderToDisplayText(data); 
             float r = data.color.r;
             float g = data.color.g;
             float b = data.color.b;
@@ -280,7 +303,7 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
 // Logic for clicking options menu buttons
 void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char* clicked_id) {
     std::string id(clicked_id);
-
+    printf("OptionsClick: this_ptr: %x | clicked_id: %s\n", this_ptr, clicked_id);
     if (g_ModApiInstance.optionButtons.find(id) != g_ModApiInstance.optionButtons.end()) {
         bool newState = !g_ModApiInstance.optionButtons[id].isOn;
         g_ModApiInstance.optionButtons[id].isOn = newState;
@@ -596,3 +619,24 @@ void __fastcall Hooked_CollisionCheck(void* this_ptr, void* edx_dummy, Ball* col
     }
     Original_CollisionCheck(this_ptr, colliding_ball, param_1); 
 }
+
+void __fastcall Hooked_SliderOptionHandler(void* this_ptr, void* edx_dummy, char* sliderID, int inputDirection) {
+    std::string currID(sliderID);
+
+    auto it = g_ModApiInstance.optionSliders.find(currID);
+    if (it != g_ModApiInstance.optionSliders.end()) {
+        auto& data = it->second; 
+        data.value += data.stepSize * inputDirection;
+        if (data.value < data.lowerBound) {
+            data.value = data.lowerBound;
+        }
+        else if (data.value > data.upperBound) {
+            data.value = data.upperBound; 
+        }
+        std::string displayText = sliderToDisplayText(data);
+        Game_UpdateButtonText(this_ptr, nullptr, displayText.c_str(), currID.c_str());
+    }
+
+    Original_SliderOptionHandler(this_ptr, sliderID, inputDirection);
+}
+

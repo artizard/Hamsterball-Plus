@@ -58,12 +58,27 @@ bool ModAPI::WasControlReleased(const char* controlID) {
 	}
 }
 
-void ModAPI::CreateToggleButton(const char* id, const char* displayText, bool defaultState, Color color) {
+void ModAPI::CreateToggleButton(CustomButton button) {
 	ButtonData data;
-	data.displayText = displayText;
-	data.isOn = defaultState;
-	data.color = color;
-	optionButtons[std::string(id)] = data;
+	data.displayText = button.displayText;
+	data.isOn = button.defaultState;
+	data.color = button.color;
+	data.trueText = button.trueText;
+	data.falseText = button.falseText; 
+	optionButtons[std::string(button.id)] = data;
+}
+
+void ModAPI::CreateSlider(CustomSlider slider) {
+	SliderData data; 
+	data.displayText = slider.displayText;
+	data.value = slider.startingValue;
+	data.stepSize = slider.stepSize;
+	data.color = slider.color; 
+	data.decimalPlaces = slider.decimalPlaces;
+	data.lowerBound = slider.lowerBound;
+	data.upperBound = slider.upperBound;
+	data.requiredToggle = slider.requiredToggle; 
+	optionSliders[std::string(slider.id)] = data; 
 }
 
 bool ModAPI::GetButtonState(const char* id) {
@@ -72,6 +87,14 @@ bool ModAPI::GetButtonState(const char* id) {
 		return optionButtons[idString].isOn; 
 	}
 	return false; // failsafe 
+}
+
+float ModAPI::GetSliderState(const char* id) {
+	std::string idString(id);
+	if (optionSliders.find(idString) != optionSliders.end()) {
+		return optionSliders[idString].value;
+	}
+	return -1.0; 
 }
 
 Ball* ModAPI::GetPlayer() {

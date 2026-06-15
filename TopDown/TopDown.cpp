@@ -8,10 +8,14 @@ private:
     IModAPI* api = nullptr;
 public:
     const char* GetModName() override { return "Top Down"; }
+    const char* GetAuthorName() override { return "arti"; }
+    const char* GetContributors() override { return "BookwormKevin"; }
 
     void Initialize(IModAPI* modApi) override {
         api = modApi;
-        api->CreateToggleButton("CHEAT_TOPDOWN", "TOP-DOWN", false);
+
+        CustomButton topdownButton("CHEAT_TOPDOWN", "TOP-DOWN");
+        api->CreateToggleButton(topdownButton);
     }
 
     void onRenderApply(void* this_ptr, float* viewMatrix) override {
@@ -34,6 +38,10 @@ public:
             // copy new matrix into location of old view matrix 
             std::copy(std::begin(customMatrix), std::end(customMatrix), viewMatrix);
         }
+    }
+
+    void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) {
+        printf("EventPlaneID: %s\n", eventPlaneID);
     }
 };
 

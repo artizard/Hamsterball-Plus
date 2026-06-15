@@ -8,12 +8,23 @@
 //typedef bool(__thiscall* currFunc)(void* param_1, Ball* param_2, int* param_3);
 //currFunc Original_currFunc = nullptr;
 
+typedef void(__fastcall* func_41e70)(int* param_1);
+func_41e70 Original_func_41e70 = nullptr;
+
+typedef void(__thiscall* func_4aa40)(void* this_ptr, void* param_1, char* param_2);
+func_4aa40 Original_func_4aa40 = nullptr;
+
+typedef void(__thiscall* func_4ab00)(void* this_ptr, void* param_1, char* param_2);
+func_4ab00 Original_func_4ab00 = nullptr;
+
 class PrintArgs : public HamsterballAPI {
 private:
     inline static IModAPI* api = nullptr;
     std::set<void*> playerIds; 
+    inline static bool hasPrinted = false;
 public:
     const char* GetModName() override { return "Print Args"; }
+    const char* GetAuthorName() override { return "arti"; }
 
     void Initialize(IModAPI* modApi) override {
         api = modApi;
@@ -21,11 +32,31 @@ public:
         //api->PatchMemory(baseAddr + 0x65447, "\x00", 1); // show event planes 
         
         //api->RegisterCustomHook((baseAddr + 0x0C5D0), &Hooked_currFunc, (void**)&Original_currFunc);
-        api->PatchMemory(baseAddr + 0x29d23, "\x01", 1);
-        api->PatchMemory(baseAddr + 0x29d0a, "\x01", 1);
+        //api->PatchMemory(baseAddr + 0x29d23, "\x01", 1);
+        //api->PatchMemory(baseAddr + 0x29d0a, "\x01", 1);
         api->RegisterCustomControl("fly", DIK_W);
+
+        api->RegisterCustomHook(baseAddr + 0x41e70, &Hooked_func_41e70, (void**)&Original_func_41e70);
+        api->RegisterCustomHook(baseAddr + 0x4aa40, &Hooked_func_4aa40, (void**)&Original_func_4aa40);
+        api->RegisterCustomHook(baseAddr + 0x4ab00, &Hooked_func_4ab00, (void**)&Original_func_4ab00);
     }
 
+    static void __fastcall Hooked_func_41e70(int* param_1) {
+        if (!hasPrinted) {
+            printf("func_41e70 | param_1: %x : %d\n", param_1, *param_1);
+            hasPrinted = true; 
+        }
+        
+        Original_func_41e70(param_1);
+    }
+    static void __fastcall Hooked_func_4aa40(void* this_ptr, void* edx_dummy, void* param_1, char* param_2) {
+        printf("func_4aa40 | this_ptr: %x | param_1: %x | param_2: %s\n", this_ptr, param_1, param_2);
+        Original_func_4aa40(this_ptr, param_1, param_2);
+    }
+    static void __fastcall Hooked_func_4ab00(void* this_ptr, void* edx_dummy, void* param_1, char* param_2) {
+        printf("func_4ab00 | this_ptr: %x | param_1: %x | param_2: %s\n", this_ptr, param_1, param_2);
+        Original_func_4ab00(this_ptr, param_1, param_2);
+    }
     //static void __fastcall Hooked_currFunc(void* param_1, void* edx_dummy, Ball* param_2, int* param_3) {
     //    //DWORD objectPtr = ((DWORD*)param_3)[1];
     //    //std::string eventName(*(char**)(param_3[1] + 0x864));
@@ -113,6 +144,8 @@ public:
                 logFile << "-----------------------------------------\n";
                 logFile.close();
             }*/
+            printf("base addr: %x\n", api->GetGameBaseAddress());
+            printf("app: %x\n", api->GetApp()); 
             printf("scene: %x\n", api->GetScene());
         }
         

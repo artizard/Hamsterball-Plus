@@ -5,13 +5,26 @@
 
 struct ButtonData {
 	std::string displayText;
-	bool isOn = false;
+	std::string trueText;
+	std::string falseText;
+	Color color;
+	bool isOn;
+};
+struct SliderData {
+	std::string displayText;
+	float value;
+	float stepSize;
+	int decimalPlaces;
+	float lowerBound;
+	float upperBound;
+	std::string requiredToggle; 
 	Color color;
 };
 
 class ModAPI : public IModAPI {
 public:
 	std::map<std::string, ButtonData> optionButtons; 
+	std::map<std::string, SliderData> optionSliders;
 
 	void RegisterCustomHook(DWORD targetAddress, void* hookFunction, void** original) override;
 	void RegisterCustomControl(const char* controlID, int default_dik) override;
@@ -22,7 +35,8 @@ public:
 	bool IsControlDown(const char* controlID) override;
 	bool WasControlPressed(const char* controlID) override;
 	bool WasControlReleased(const char* controlID) override;
-	void CreateToggleButton(const char* id, const char* displayText, bool defaultState, Color color) override;
+	void CreateToggleButton(CustomButton button) override;
+	void CreateSlider(CustomSlider slider) override;
 	PhysicsObject* GetPhysicsObj() override;
 	void PatchMemory(DWORD address, const char* bytes, size_t size) override;
 	void UnlockAll() override;
@@ -41,6 +55,7 @@ public:
 	Scene* GetScene() override;
 	App* GetApp() override;
 	bool GetButtonState(const char* id) override;
+	float GetSliderState(const char* id) override;
 	void* AllocateMem(unsigned int size) override;
 	void CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance, float chase_distance, float radius, float spin_distance) override;
 	int GetTimerTime() override; // in game timer for time trials and tournament 

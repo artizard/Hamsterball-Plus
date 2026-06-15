@@ -35,6 +35,7 @@ typedef void(__fastcall* SaveConfigFunc)(App* app);
 typedef void(__fastcall* GameUpdateFunc)(App* app);
 typedef void(__thiscall* ApplyForceFunc)(void* player, float x, float y, float z, float magnitude);
 typedef void(__thiscall* CollisionCheckFunc)(void* this_ptr, Ball* colliding_ball, int* param_3);
+typedef void(__thiscall* SliderOptionHandlerFunc)(void* this_ptr, char* sliderID, int inputDirection);
 
 
 // --- EXTERN GLOBALS ---
@@ -88,5 +89,6 @@ extern PollInputsFunc Original_PollInputs;
 extern GameUpdateFunc Original_GameUpdate; 
 extern ApplyForceFunc ApplyForce; 
 extern CollisionCheckFunc Original_CollisionCheck; 
+extern SliderOptionHandlerFunc Original_SliderOptionHandler;
 
 void UpdateBallReferences(); 

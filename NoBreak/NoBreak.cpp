@@ -15,10 +15,14 @@ private:
     inline static IModAPI* api = nullptr;
 public:
     const char* GetModName() override { return "No Break"; }
+    const char* GetAuthorName() override { return "arti"; }
+    const char* GetContributors() override { return "XRow, BookwormKevin"; }
 
     void Initialize(IModAPI* modApi) override {
         api = modApi;
-        api->CreateToggleButton("CHEAT_NOBREAK", "NO BREAK", false);
+
+        CustomButton noBreakButton("CHEAT_NOBREAK", "NO BREAK");
+        api->CreateToggleButton(noBreakButton);
         
         DWORD baseAddr = api->GetGameBaseAddress();
         api->RegisterCustomHook((baseAddr + 0x8D70), &Hooked_Shatter1, (void**)&Original_Shatter1);

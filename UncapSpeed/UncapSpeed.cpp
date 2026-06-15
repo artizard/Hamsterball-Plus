@@ -5,10 +5,14 @@ private:
     IModAPI* api = nullptr;
 public:
     const char* GetModName() override { return "Uncap Speed"; }
+    const char* GetAuthorName() override { return "arti"; }
+    const char* GetContributors() override { return "BookwormKevin"; }
 
     void Initialize(IModAPI* modApi) override {
         api = modApi;
-        api->CreateToggleButton("CHEAT_SPEED", "UNCAP SPEED", false);
+
+        CustomButton speedButton("CHEAT_SPEED", "UNCAP SPEED");
+        api->CreateToggleButton(speedButton);
     }
 
     void onPlayerUpdate(Ball* playerObject) override {
