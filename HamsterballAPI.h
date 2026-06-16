@@ -38,7 +38,7 @@ struct CustomSlider {
 	int decimalPlaces = 2; // The amount of decimal places you want the slider to show 
 	float lowerBound = -std::numeric_limits<float>::infinity(); // The lowest that the slider can go (defaults to no lower bound) 
 	float upperBound = std::numeric_limits<float>::infinity(); // The highest that the slider can go (defaults to no upper bound)
-	const char* requiredToggle = ""; // The id of a toggle button that will enable this slider. Leave blank to not have this 
+	const char* unitName = ""; // The unit shown after the number. Leave default for no unit. 
 	Color color; // The color of the slider text
 
 	CustomSlider(const char* id, const char* displayText, float startingValue) : 

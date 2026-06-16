@@ -11,6 +11,7 @@
 #include "ModAPI.h"
 #include <filesystem>
 #include <fstream>
+#include "InitHelpers.h"
 
 namespace fs = std::filesystem;
 
@@ -54,15 +55,7 @@ App* g_App = nullptr;
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
 
-    const char* path = GetModIniPath();
-    g_ShowConsole = GetPrivateProfileIntA("Config", "ShowConsole", 0, path) != 0;
-    if (g_ShowConsole) {
-        // Spawn command prompt window
-        AllocConsole();
-        FILE* f;
-        freopen_s(&f, "CONOUT$", "w", stdout);
-        printf("Hamsterball Mod Debug Console\n");
-    }
+    InitDevConsole(); 
 
     MH_Initialize();
     loadMods();

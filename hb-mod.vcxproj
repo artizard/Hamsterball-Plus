@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClInclude Include="BassProxy.h" />
     <ClInclude Include="buffer.h" />
+    <ClInclude Include="InitHelpers.h" />
     <ClInclude Include="ModAPI.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GameEngine.h" />
@@ -171,6 +172,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Hooks.cpp" />
+    <ClCompile Include="InitHelpers.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="ModAPI.cpp" />
     <ClCompile Include="pch.cpp">

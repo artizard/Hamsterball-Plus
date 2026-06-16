@@ -4,6 +4,7 @@
 #include "MinHook.h"
 #include "GameEngine.h"
 #include "Hooks.h"
+#include "InitHelpers.h"
 
 DWORD ModAPI::GetGameBaseAddress() {
 	return (DWORD)GetModuleHandle(NULL);
@@ -77,7 +78,7 @@ void ModAPI::CreateSlider(CustomSlider slider) {
 	data.decimalPlaces = slider.decimalPlaces;
 	data.lowerBound = slider.lowerBound;
 	data.upperBound = slider.upperBound;
-	data.requiredToggle = slider.requiredToggle; 
+	data.unitName = slider.unitName; 
 	optionSliders[std::string(slider.id)] = data; 
 }
 

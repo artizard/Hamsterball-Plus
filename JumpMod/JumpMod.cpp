@@ -17,9 +17,8 @@ public:
         api->RegisterCustomControl("jump", DIK_LSHIFT);
 
         CustomSlider jumpHeightSlider("JUMP_HEIGHT", "JUMP HEIGHT", 10.0f);
-        jumpHeightSlider.stepSize = 0.5f;
+        jumpHeightSlider.stepSize = .25;
         jumpHeightSlider.lowerBound = 0;
-        jumpHeightSlider.requiredToggle = "CHEAT_JUMP";
         api->CreateSlider(jumpHeightSlider);
     }
 

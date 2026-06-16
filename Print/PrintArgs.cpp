@@ -5,17 +5,8 @@
 #include <ctime>
 #include <cstring>
 
-//typedef bool(__thiscall* currFunc)(void* param_1, Ball* param_2, int* param_3);
-//currFunc Original_currFunc = nullptr;
-
-typedef void(__fastcall* func_41e70)(int* param_1);
-func_41e70 Original_func_41e70 = nullptr;
-
-typedef void(__thiscall* func_4aa40)(void* this_ptr, void* param_1, char* param_2);
-func_4aa40 Original_func_4aa40 = nullptr;
-
-typedef void(__thiscall* func_4ab00)(void* this_ptr, void* param_1, char* param_2);
-func_4ab00 Original_func_4ab00 = nullptr;
+typedef void(__thiscall* currFunc)(void* this_ptr, float param_1, float param_2, float param_3);
+currFunc Original_currFunc = nullptr;
 
 class PrintArgs : public HamsterballAPI {
 private:
@@ -36,54 +27,14 @@ public:
         //api->PatchMemory(baseAddr + 0x29d0a, "\x01", 1);
         api->RegisterCustomControl("fly", DIK_W);
 
-        api->RegisterCustomHook(baseAddr + 0x41e70, &Hooked_func_41e70, (void**)&Original_func_41e70);
-        api->RegisterCustomHook(baseAddr + 0x4aa40, &Hooked_func_4aa40, (void**)&Original_func_4aa40);
-        api->RegisterCustomHook(baseAddr + 0x4ab00, &Hooked_func_4ab00, (void**)&Original_func_4ab00);
+        // playsound3d
+        //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
     }
 
-    static void __fastcall Hooked_func_41e70(int* param_1) {
-        if (!hasPrinted) {
-            printf("func_41e70 | param_1: %x : %d\n", param_1, *param_1);
-            hasPrinted = true; 
-        }
-        
-        Original_func_41e70(param_1);
+    static void __fastcall Hooked_currFunc(void* this_ptr, void* edx_dummy, float param_1, float param_2, float param_3) {
+        //printf("this_ptr: %x | param_1: %f | param_2: %f | param_3: %f\n", this_ptr, param_1, param_2, param_3);
+        Original_currFunc(this_ptr, param_1, param_2, param_3);
     }
-    static void __fastcall Hooked_func_4aa40(void* this_ptr, void* edx_dummy, void* param_1, char* param_2) {
-        printf("func_4aa40 | this_ptr: %x | param_1: %x | param_2: %s\n", this_ptr, param_1, param_2);
-        Original_func_4aa40(this_ptr, param_1, param_2);
-    }
-    static void __fastcall Hooked_func_4ab00(void* this_ptr, void* edx_dummy, void* param_1, char* param_2) {
-        printf("func_4ab00 | this_ptr: %x | param_1: %x | param_2: %s\n", this_ptr, param_1, param_2);
-        Original_func_4ab00(this_ptr, param_1, param_2);
-    }
-    //static void __fastcall Hooked_currFunc(void* param_1, void* edx_dummy, Ball* param_2, int* param_3) {
-    //    //DWORD objectPtr = ((DWORD*)param_3)[1];
-    //    //std::string eventName(*(char**)(param_3[1] + 0x864));
-    //    //if (eventName == "E:CAMLEFT") {
-    //    //    //api->GetScene()->camera_angle += 5; 
-    //    //}
-    //    std::string eventName(*(char**)(param_3[1] + 0x864));
-    //    std::ofstream logFile("C:\\Users\\artiz\\Documents\\hbModStuff\\loader_log.txt", std::ios::app);
-    //    if (logFile.is_open()) {
-    //        logFile << "event: " << *(char**)(param_3[1] + 0x864) << "\n";
-    //        logFile << "string version: " << eventName << "\n";
-    //        logFile.close();
-    //    }
-    //    if (eventName == "E:CAMLEFT") {
-    //        param_2->burn_amount = 1.0f;
-    //        param_2->radius += 5;
-    //        float* camera_angle = &api->GetScene()->camera_angle;
-    //        if (*camera_angle == 90) {
-    //            *camera_angle = 180;
-    //        }
-    //        else {
-    //            *camera_angle = 90;
-    //        }
-    //    }
-    //    
-    //    Original_currFunc(param_1, param_2, param_3);
-    //}
 
     void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) override {
         if (strcmp(eventPlaneID, "E:CAMLEFT") == 0) {

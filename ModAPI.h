@@ -17,7 +17,7 @@ struct SliderData {
 	int decimalPlaces;
 	float lowerBound;
 	float upperBound;
-	std::string requiredToggle; 
+	std::string unitName; 
 	Color color;
 };
 
