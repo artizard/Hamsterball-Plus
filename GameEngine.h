@@ -83,7 +83,7 @@ extern RenderApplyFunc Original_RenderApply;
 extern GeometryBinderFunc Original_BindGeometry;
 extern MasterLevelSetupFunc Original_MasterLevelSetup;
 extern RenderDynamic_t Original_RenderDynamic;
-extern SaveConfigFunc SaveConfig; 
+extern SaveConfigFunc Original_SaveConfig; 
 
 extern PollInputsFunc Original_PollInputs;
 extern GameUpdateFunc Original_GameUpdate; 

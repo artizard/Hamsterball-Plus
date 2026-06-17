@@ -62,7 +62,7 @@ bool ModAPI::WasControlReleased(const char* controlID) {
 void ModAPI::CreateToggleButton(CustomButton button) {
 	ButtonData data;
 	data.displayText = button.displayText;
-	data.isOn = button.defaultState;
+	data.isOn = ReadToggleButtonIni(button.id, button.defaultState); 
 	data.color = button.color;
 	data.trueText = button.trueText;
 	data.falseText = button.falseText; 
@@ -72,7 +72,7 @@ void ModAPI::CreateToggleButton(CustomButton button) {
 void ModAPI::CreateSlider(CustomSlider slider) {
 	SliderData data; 
 	data.displayText = slider.displayText;
-	data.value = slider.startingValue;
+	data.value = ReadSliderIni(slider.id, slider.startingValue); 
 	data.stepSize = slider.stepSize;
 	data.color = slider.color; 
 	data.decimalPlaces = slider.decimalPlaces;
@@ -127,7 +127,7 @@ void ModAPI::LockAll() {
 
 bool ModAPI::SaveConfig() {
 	if (g_App) {
-		::SaveConfig(g_App);
+		Original_SaveConfig(g_App); 
 		return true;
 	}
 	else {

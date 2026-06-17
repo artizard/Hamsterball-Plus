@@ -41,7 +41,7 @@ RenderApplyFunc Original_RenderApply = nullptr;
 GeometryBinderFunc Original_BindGeometry = nullptr;
 MasterLevelSetupFunc Original_MasterLevelSetup = nullptr;
 RenderDynamic_t Original_RenderDynamic = nullptr;
-SaveConfigFunc SaveConfig = nullptr; 
+SaveConfigFunc Original_SaveConfig = nullptr; 
 
 PollInputsFunc Original_PollInputs = nullptr;
 GameUpdateFunc Original_GameUpdate = nullptr;
@@ -65,7 +65,6 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
     g_App = (App*)(baseAddr + 0xFD680); 
     g_Timer = (int*)(baseAddr + 0xFDC68); 
-    SaveConfig = (SaveConfigFunc)(baseAddr + 0x284c0);
     ApplyForce = (ApplyForceFunc)(baseAddr + 0x02650);
 
     // The exact function addresses
@@ -89,6 +88,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID gameUpdateAddr = (LPVOID)(baseAddr + 0x6C170);
     LPVOID collisionCheckAddr = (LPVOID)(baseAddr + 0x0C5D0);
     LPVOID sliderOptionHandlerAddr = (LPVOID)(baseAddr + 0x42680);
+    LPVOID saveConfigAddr = (LPVOID)(baseAddr + 0x284c0);
 
     MH_CreateHook(updateFuncAddr, &Hooked_PlayerUpdate, (LPVOID*)&Original_PlayerUpdate);
     MH_EnableHook(updateFuncAddr);
@@ -137,6 +137,9 @@ DWORD WINAPI ModThread(HMODULE hModule) {
 
     MH_CreateHook(sliderOptionHandlerAddr, &Hooked_SliderOptionHandler, (LPVOID*)&Original_SliderOptionHandler);
     MH_EnableHook(sliderOptionHandlerAddr);
+
+    MH_CreateHook(saveConfigAddr, &Hooked_SaveConfig, (LPVOID*)&Original_SaveConfig);
+    MH_EnableHook(saveConfigAddr); 
 
     return 0;
 }

@@ -12,6 +12,7 @@
 #include "UniversalObjects.h"
 #include <map>
 #include <iomanip>
+#include "InitHelpers.h"
 
 ThemeConfig g_Theme;
 std::vector<LevelConfig> g_LevelConfigs = {};
@@ -517,3 +518,7 @@ void __fastcall Hooked_SliderOptionHandler(void* this_ptr, void* edx_dummy, char
     Original_SliderOptionHandler(this_ptr, sliderID, inputDirection);
 }
 
+void __fastcall Hooked_SaveConfig(App* app) {
+    SaveCustomOptions(); 
+    Original_SaveConfig(app);
+}
