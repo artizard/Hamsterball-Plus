@@ -5,7 +5,7 @@
 #include <ctime>
 #include <cstring>
 
-typedef void(__thiscall* currFunc)(void* this_ptr, float param_1, float param_2, float param_3);
+typedef void(__thiscall* currFunc)(void* collision, Vec3* out, Vec3 origin, Vec3 direction, float max_dist);
 currFunc Original_currFunc = nullptr;
 
 class PrintArgs : public HamsterballAPI {
@@ -29,11 +29,20 @@ public:
 
         // playsound3d
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
+        //api->RegisterCustomHook(baseAddr + 0x65D90, &Hooked_currFunc, (void**)&Original_currFunc);
     }
 
-    static void __fastcall Hooked_currFunc(void* this_ptr, void* edx_dummy, float param_1, float param_2, float param_3) {
-        //printf("this_ptr: %x | param_1: %f | param_2: %f | param_3: %f\n", this_ptr, param_1, param_2, param_3);
-        Original_currFunc(this_ptr, param_1, param_2, param_3);
+    static void __fastcall Hooked_currFunc(void* collision, void* edx_dummy, Vec3* out, Vec3 origin, Vec3 direction, float max_dist) {
+        //printf("this_ptr: %x | param_1: %f | param_2: %f | param_3: %f\n", this_ptr, param_1, param_2, param_3
+        printf("collision: %x\n", collision);
+        printf("out: %f, %f, %f\n", out->x, out->y, out->z);
+        printf("origin: %f, %f, %f\n", origin.x, origin.y, origin.z);
+        printf("direction: %f, %f, %f\n", direction.x, direction.y, direction.z);
+        printf("max_dist: %f\n", max_dist); 
+        
+        Original_currFunc(collision, out, origin, direction, max_dist);
+        printf("new out: %f, %f, %f\n", out->x, out->y, out->z);
+        printf("-------------------------------\n");
     }
 
     void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) override {
@@ -98,12 +107,14 @@ public:
             printf("base addr: %x\n", api->GetGameBaseAddress());
             printf("app: %x\n", api->GetApp()); 
             printf("scene: %x\n", api->GetScene());
+            printf("player 1: %x\n", api->GetPlayer());
+            printf("player 1 physics: %x\n", api->GetPhysicsObj()); 
         }
         
         // q for quit 
-        if (api->WasKeyPressed(DIK_Q)) {
+        /*if (api->WasKeyPressed(DIK_Q)) {
             api->QuitGame(); 
-        }
+        }*/
         // u for unlock all
         if (api->WasKeyPressed(DIK_U)) {
             api->UnlockAll();
@@ -118,20 +129,43 @@ public:
             api->GetPhysicsObj()->velocity_y = 2.0f;
         }
         if (api->IsKeyDown(DIK_1)) {
-            api->GetPlayer()->pos_y = 600.0f;
+            Ball* player = api->GetPlayer();
+            Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z); 
+            Vec3 raycast = api->LevelRaycastVec(playerPos, Vec3(0,-1,0), 100.0f);
+            printf("Result: %f, %f, %f\n", raycast.x, raycast.y, raycast.z);
         }
         if (api->IsKeyDown(DIK_2)) {
-            api->GetPlayer()->pos_y = 625.0f;
+            printf("Collision Mesh: %x\n", api->GetScene()->collision_mesh);
         }
         if (api->IsKeyDown(DIK_3)) {
-            api->GetPlayer()->pos_y = 650.0f;
+            Ball* player = api->GetPlayer();
+            Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z);
+            bool isGrounded = api->LevelRaycastHit(playerPos, Vec3(0,-1,0), 26.0f);
+            printf("Is grounded: %s\n", isGrounded ? "true" : "false");
         }
         if (api->WasKeyPressed(DIK_R)) {
             api->ReloadIniFile(); 
         }
 
-        if (api->WasKeyPressed(DIK_S)) {
-            api->ApplyForce(player, 0.0f, 1.0f, 0.0f, 1000);
+        if (api->IsKeyDown(DIK_S)) {
+            Ball* player = api->GetPlayer();
+            PhysicsObject* physics = api->GetPhysicsObj();
+            if (physics == nullptr) {
+                return;
+            }
+            Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z);
+            if (api->LevelRaycastHit(playerPos, Vec3(-1, 0, 0), 100)) {
+                physics->velocity_x += .5;
+            }
+            if (api->LevelRaycastHit(playerPos, Vec3(1, 0, 0), 100)) {
+                physics->velocity_x -= .5;
+            }
+            if (api->LevelRaycastHit(playerPos, Vec3(0, 0, 1), 100)) {
+                physics->velocity_z -= .5;
+            }
+            if (api->LevelRaycastHit(playerPos, Vec3(0, 0, -1), 100)) {
+                physics->velocity_z += .5;
+            }
         }
         if (api->WasKeyPressed(DIK_A)) {
             CallMethod(0x016F0, player, 0.0f, 1.0f, 0.0f, 1000.0f);
@@ -178,9 +212,6 @@ public:
             api->CreateBadBall(pos, home_pos);
         }
 
-        if (api->WasKeyPressed(DIK_6)) {
-            CallMethod(0x19FA0, api->GetScene(), api->GetPlayer(), false);
-        }
         if (api->WasKeyPressed(DIK_7)) {
             CallMethod(0x19FA0, api->GetScene(), api->GetPlayer(), true);
         }

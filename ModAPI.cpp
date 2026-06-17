@@ -293,3 +293,35 @@ int ModAPI::GetTimerTime() {
 void ModAPI::SetTimerTime(int time) {
 	*g_Timer = time;
 }
+
+Vec3 ModAPI::LevelRaycastVec(Vec3 position, Vec3 direction, float max_dist) {
+	Collision* collision = GetScene()->collision_mesh;
+	Vec3 result = Vec3(0, 0, 0);
+	if (!collision) {
+		return result;
+	}
+	LevelRaycast(GetScene()->collision_mesh, &result, position, direction, max_dist);
+	return result; 
+}
+
+bool ModAPI::LevelRaycastHit(Vec3 position, Vec3 direction, float max_dist, float tolerance) {
+	Collision* collision = GetScene()->collision_mesh; 
+	if (!collision) {
+		return false;
+	}
+	Vec3 result = Vec3(0, 0, 0);
+	LevelRaycast(collision, &result, position, direction, 5);
+	float dist_x = result.x - position.x;
+	float dist_y = result.y - position.y;
+	float dist_z = result.z - position.z;
+	float magnitude = sqrtf(dist_x*dist_x + dist_y*dist_y + dist_z*dist_z);
+	printf("Direction: %f, %f, %f\n", direction.x, direction.y, direction.z); 
+	printf("Magnitude: %f\n", magnitude);
+	printf("Position: %f, %f, %f\n", position.x, position.y, position.z); 
+	printf("Result: %f, %f, %f\n", result.x, result.y, result.z);
+	printf("-----------------\n");
+	if (magnitude < max_dist + tolerance) {
+		return true;
+	} 
+	return false;
+}

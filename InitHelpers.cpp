@@ -131,6 +131,7 @@ void ReloadINI() {
     g_ShowCheats = GetPrivateProfileIntA("Config", "ShowCheats", 1, path) != 0;
 
     ControlsINI(path);
+    CleanCustomOptions(); 
 
     g_LevelConfigs.clear();
     for (int i = 0; i < 15; i++) {

@@ -48,6 +48,7 @@ GameUpdateFunc Original_GameUpdate = nullptr;
 ApplyForceFunc ApplyForce = nullptr;
 CollisionCheckFunc Original_CollisionCheck = nullptr; 
 SliderOptionHandlerFunc Original_SliderOptionHandler = nullptr;
+LevelRaycastFunc LevelRaycast = nullptr;
 
 App* g_App = nullptr;
 
@@ -66,6 +67,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     g_App = (App*)(baseAddr + 0xFD680); 
     g_Timer = (int*)(baseAddr + 0xFDC68); 
     ApplyForce = (ApplyForceFunc)(baseAddr + 0x02650);
+    LevelRaycast = (LevelRaycastFunc)(baseAddr + 0x65D90);
 
     // The exact function addresses
     LPVOID updateFuncAddr = (LPVOID)(baseAddr + 0x5E00);

@@ -7,6 +7,8 @@
 #include <dinput.h>
 #include <limits>
 
+struct Collision; 
+
 /// A general color struct to be used with some of the functions. The default constructor sets rgba all to 1.0f.
 struct Color {
 	float r, g, b, a;
@@ -232,6 +234,9 @@ public:
 	/// time left.
 	/// @param time The time you want to set the timer to. Note that this "1000" is 10 seconds, and "575" is 5.75 seconds. 
 	virtual void SetTimerTime(int time) = 0;
+
+	virtual Vec3 LevelRaycastVec(Vec3 position, Vec3 direction, float max_dist) = 0; 
+	virtual bool LevelRaycastHit(Vec3 position, Vec3 direction, float max_dist, float tolerance=0.5f) = 0;
 };
 
 /// This includes functions that you can override in order to add logic on certain events such as onPlayerUpdate,
@@ -446,7 +451,7 @@ struct Ball {
 	std::uint8_t rumble_timer1[0x14]; // +0x264 unverified
 	float bounciness; // +0x278
 	std::uint8_t pad_27C[0x284 - 0x27C];
-	float radius; // +0x284
+	float radius; // +0x284 the player is 26 by default
 	std::uint8_t pad_288[0x290 - 0x288];
 	std::uint8_t rumble_timer2[0x14]; // +0x290 unverified
 	float spin_rate; // +0x2A4 very janky
@@ -504,7 +509,7 @@ struct Scene {
 	char* name; // +0x868 
 	std::uint8_t pad_86C[0x8AC - 0x86C];
 	void* level_ptr; // +0x8AC unverified 
-	void* skybox_ptr; // +0x8B0 unverfied
+	Collision* collision_mesh; // +0x8B0 
 	std::uint8_t pad_8B4[0x29BC - 0x8B4];
 	float camera_angle; // +0x29BC 
 	float camera_distance; // +0x29C0
@@ -749,7 +754,7 @@ static_assert(offsetof(Scene, vtable) == 0x000);
 static_assert(offsetof(Scene, owner_app) == 0x014);
 static_assert(offsetof(Scene, name) == 0x868);
 static_assert(offsetof(Scene, level_ptr) == 0x8AC);
-static_assert(offsetof(Scene, skybox_ptr) == 0x8B0);
+static_assert(offsetof(Scene, collision_mesh) == 0x8B0);
 static_assert(offsetof(Scene, camera_angle) == 0x29BC);
 static_assert(offsetof(Scene, camera_distance) == 0x29C0);
 static_assert(offsetof(Scene, current_ball_ptr) == 0x29D0);

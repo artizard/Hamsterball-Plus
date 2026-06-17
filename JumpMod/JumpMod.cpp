@@ -29,54 +29,25 @@ public:
 
                 if (physicsObj != nullptr) {
 
-                    // Read Y Velocity
-                    float trueVelY = physicsObj->velocity_y;
+                    //// Read Y Velocity
+                    //float trueVelY = physicsObj->velocity_y;
 
-                    // Ground Check
-                    float tolerance = 0.5f;
+                    //// Ground Check
+                    //float tolerance = 0.5f;
 
-                    if (trueVelY > -tolerance && trueVelY < tolerance) {
-                        // Apply the jump force
-                        //physicsObj->velocity_y = 20.0f; 
-                        physicsObj->velocity_y = api->GetSliderState("JUMP_HEIGHT") * 2; 
+                    //if (trueVelY > -tolerance && trueVelY < tolerance) {
+                    //    // Apply the jump force
+                    //    //physicsObj->velocity_y = 20.0f; 
+                    //    physicsObj->velocity_y = api->GetSliderState("JUMP_HEIGHT") * 2; 
+                    //}
+                    Ball* player = api->GetPlayer();
+                    Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z);
+                    bool isGrounded = api->LevelRaycastHit(playerPos, Vec3(0, -1, 0), 26.0f, 15);
+                    if (isGrounded) {
+                        physicsObj->velocity_y = api->GetSliderState("JUMP_HEIGHT") * 2;
                     }
                 }
             }
-            if (api->WasKeyPressed(DIK_W)) {
-                PhysicsObject* physicsObj = playerObject->physics_object;
-
-                if (physicsObj != nullptr) {
-
-                    // Read Y Velocity
-                    float trueVelY = physicsObj->velocity_y;
-
-                    // Ground Check
-                    float tolerance = 0.5f;
-
-                    if (trueVelY > -tolerance && trueVelY < tolerance) {
-                        // Apply the jump force
-                        api->ApplyForce(playerObject, 0, 1.0f, 0, 100);
-                    }
-                }
-            }
-            if (api->WasKeyPressed(DIK_E)) {
-                PhysicsObject* physicsObj = playerObject->physics_object;
-
-                if (physicsObj != nullptr) {
-
-                    // Read Y Velocity
-                    float trueVelY = physicsObj->velocity_y;
-
-                    // Ground Check
-                    float tolerance = 0.5f;
-
-                    if (trueVelY > -tolerance && trueVelY < tolerance) {
-                        // Apply the jump force
-                        api->ApplyForce(playerObject, 0, .8, 0, 100);
-                    }
-                }
-            }
-
         }
     }
 };

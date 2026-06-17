@@ -61,6 +61,8 @@ public:
 	int GetTimerTime() override; // in game timer for time trials and tournament 
 	void ReloadIniFile();
 	void SetTimerTime(int time) override;
+	Vec3 LevelRaycastVec(Vec3 position, Vec3 direction, float max_dist) override;
+	bool LevelRaycastHit(Vec3 position, Vec3 direction, float max_dist, float tolerance) override;
 private:
 	void setUnlocks(bool isUnlock);
 };
