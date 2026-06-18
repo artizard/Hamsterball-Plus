@@ -8,7 +8,7 @@
 #include <limits>
 
 struct Collision; 
-
+class HamsterballAPI;
 /// A general color struct to be used with some of the functions. The default constructor sets rgba all to 1.0f.
 struct Color {
 	float r, g, b, a;
@@ -52,6 +52,7 @@ struct App;
 struct Ball;
 struct Scene;
 struct Vec3;
+struct PhysicsConstants;
 
 
 /// This class is how you will retrieve values and call functions on the game. 
@@ -118,11 +119,11 @@ public:
 
 	/// @brief Create a toggleable option in the game's option menu. 
 	/// @param button The button struct that defines all of the parameters of the button. Read those comments for more information.
-	virtual void CreateToggleButton(CustomButton button) = 0;
+	virtual void CreateToggleButton(CustomButton button, HamsterballAPI* modInstance) = 0;
 
 	/// @brief Create a slider in the game's option menu.
 	/// @param slider The slider struct that defines all of the parameters of the slider. Read those comments for more information.
-	virtual void CreateSlider(CustomSlider slider) = 0;
+	virtual void CreateSlider(CustomSlider slider, HamsterballAPI* modInstance) = 0;
 	
 	/// @brief Patches memory within Hamsterball.exe. This is temporary, as it does not alter the actual .exe, it just modifies the 
 	/// current instance of the game in memory. I'd recommend using this within Initialize() or onButtonToggle(). 
@@ -237,6 +238,8 @@ public:
 
 	virtual Vec3 LevelRaycastVec(Vec3 position, Vec3 direction, float max_dist) = 0; 
 	virtual bool LevelRaycastHit(Vec3 position, Vec3 direction, float max_dist, float tolerance=0.5f) = 0;
+
+	virtual PhysicsConstants* GetPhysicsConstants() = 0;
 };
 
 /// This includes functions that you can override in order to add logic on certain events such as onPlayerUpdate,
@@ -278,6 +281,8 @@ public:
 	/// @param buttonId The ID of the button that was clicked
 	/// @param newState The new state of that button
 	virtual void onButtonToggle(const char* buttonId, bool newState) {}
+
+	virtual void onSliderChange(const char* sliderId, float newValue) {}
 
 	/// @brief Put logic here that you want to run every tick. This is good for controls that you want to work whenever,
 	/// not just in levels like with onPlayerUpdate(). The corresponding hooked function is 0x46C170

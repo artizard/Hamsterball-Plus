@@ -5,6 +5,9 @@
 #include <ctime>
 #include <cstring>
 
+// This mod is a bunch of random stuff I did for debugging purposes, but you may find it useful for seeing how to ]
+// use certain functions from the modding API. 
+
 typedef void(__thiscall* currFunc)(void* collision, Vec3* out, Vec3 origin, Vec3 direction, float max_dist);
 currFunc Original_currFunc = nullptr;
 
@@ -26,7 +29,9 @@ public:
         //api->PatchMemory(baseAddr + 0x29d23, "\x01", 1);
         //api->PatchMemory(baseAddr + 0x29d0a, "\x01", 1);
         api->RegisterCustomControl("fly", DIK_W);
-
+        CustomSlider sizeSlider("HAMSTER_SIZE", "Hamster Size", .037); 
+        sizeSlider.stepSize = .01;
+        api->CreateSlider(sizeSlider, this);
         // playsound3d
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
         //api->RegisterCustomHook(baseAddr + 0x65D90, &Hooked_currFunc, (void**)&Original_currFunc);
@@ -55,6 +60,12 @@ public:
             else {
                 *camera_angle = 90;
             }
+        }
+    }
+
+    void onSliderChange(const char* sliderId, float newValue) override {
+        if (strcmp(sliderId, "HAMSTER_SIZE") == 0) {
+            api->GetPhysicsConstants()->hamsterSize = newValue; 
         }
     }
 
@@ -176,9 +187,6 @@ public:
 
         if (api->WasKeyPressed(DIK_G)) {
             api->GetPhysicsObj()->gravity_x = 1; 
-        }
-        if (api->WasKeyPressed(DIK_E)) {
-            CallMethod(0x029C0, api->GetPhysicsObj(), 1.0f);
         }
         if (api->IsKeyDown(DIK_T)) {
             api->GetPlayer()->playerID = -1; 

@@ -12,7 +12,7 @@ public:
         api = modApi;
 
         CustomButton speedButton("CHEAT_SPEED", "UNCAP SPEED");
-        api->CreateToggleButton(speedButton);
+        api->CreateToggleButton(speedButton, this);
     }
 
     void onPlayerUpdate(Ball* playerObject) override {

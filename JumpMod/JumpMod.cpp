@@ -12,14 +12,14 @@ public:
         api = modApi;
 
         CustomButton jumpButton("CHEAT_JUMP", "JUMPING");
-        api->CreateToggleButton(jumpButton);
+        api->CreateToggleButton(jumpButton, this);
 
         api->RegisterCustomControl("jump", DIK_LSHIFT);
 
         CustomSlider jumpHeightSlider("JUMP_HEIGHT", "JUMP HEIGHT", 10.0f);
         jumpHeightSlider.stepSize = .25;
         jumpHeightSlider.lowerBound = 0;
-        api->CreateSlider(jumpHeightSlider);
+        api->CreateSlider(jumpHeightSlider, this);
     }
 
     void onPlayerUpdate(Ball* playerObject) override {

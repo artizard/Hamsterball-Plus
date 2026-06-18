@@ -505,14 +505,19 @@ void __fastcall Hooked_SliderOptionHandler(void* this_ptr, void* edx_dummy, char
     if (it != g_ModApiInstance.optionSliders.end()) {
         auto& data = it->second; 
         data.value += data.stepSize * inputDirection;
+
+        // clamps
         if (data.value < data.lowerBound) {
             data.value = data.lowerBound;
         }
         else if (data.value > data.upperBound) {
             data.value = data.upperBound; 
         }
+        // update text in game
         std::string displayText = sliderToDisplayText(data);
         Game_UpdateButtonText(this_ptr, nullptr, displayText.c_str(), currID.c_str());
+        // apply logic to mod
+        data.owner->onSliderChange(sliderID, data.value);
     }
 
     Original_SliderOptionHandler(this_ptr, sliderID, inputDirection);

@@ -22,7 +22,8 @@ public:
         api = modApi;
 
         CustomButton noBreakButton("CHEAT_NOBREAK", "NO BREAK");
-        api->CreateToggleButton(noBreakButton);
+        api->CreateToggleButton(noBreakButton, this);
+
         
         DWORD baseAddr = api->GetGameBaseAddress();
         api->RegisterCustomHook((baseAddr + 0x8D70), &Hooked_Shatter1, (void**)&Original_Shatter1);

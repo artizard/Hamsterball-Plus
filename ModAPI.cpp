@@ -59,17 +59,19 @@ bool ModAPI::WasControlReleased(const char* controlID) {
 	}
 }
 
-void ModAPI::CreateToggleButton(CustomButton button) {
+void ModAPI::CreateToggleButton(CustomButton button, HamsterballAPI* modInstance) {
 	ButtonData data;
 	data.displayText = button.displayText;
 	data.isOn = ReadToggleButtonIni(button.id, button.defaultState); 
 	data.color = button.color;
 	data.trueText = button.trueText;
 	data.falseText = button.falseText; 
+	data.owner = modInstance; 
 	optionButtons[std::string(button.id)] = data;
+	modInstance->onButtonToggle(button.id, data.isOn); // update state 
 }
 
-void ModAPI::CreateSlider(CustomSlider slider) {
+void ModAPI::CreateSlider(CustomSlider slider, HamsterballAPI* modInstance) {
 	SliderData data; 
 	data.displayText = slider.displayText;
 	data.value = ReadSliderIni(slider.id, slider.startingValue); 
@@ -79,7 +81,9 @@ void ModAPI::CreateSlider(CustomSlider slider) {
 	data.lowerBound = slider.lowerBound;
 	data.upperBound = slider.upperBound;
 	data.unitName = slider.unitName; 
+	data.owner = modInstance; 
 	optionSliders[std::string(slider.id)] = data; 
+	modInstance->onSliderChange(slider.id, data.value); 
 }
 
 bool ModAPI::GetButtonState(const char* id) {
@@ -325,4 +329,8 @@ bool ModAPI::LevelRaycastHit(Vec3 position, Vec3 direction, float max_dist, floa
 		return true;
 	} 
 	return false;
+}
+
+PhysicsConstants* ModAPI::GetPhysicsConstants() {
+	return g_PhysicsConstants; 
 }

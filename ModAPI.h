@@ -9,6 +9,7 @@ struct ButtonData {
 	std::string falseText;
 	Color color;
 	bool isOn;
+	HamsterballAPI* owner;
 };
 struct SliderData {
 	std::string displayText;
@@ -19,6 +20,7 @@ struct SliderData {
 	float upperBound;
 	std::string unitName; 
 	Color color;
+	HamsterballAPI* owner;
 };
 
 class ModAPI : public IModAPI {
@@ -35,8 +37,8 @@ public:
 	bool IsControlDown(const char* controlID) override;
 	bool WasControlPressed(const char* controlID) override;
 	bool WasControlReleased(const char* controlID) override;
-	void CreateToggleButton(CustomButton button) override;
-	void CreateSlider(CustomSlider slider) override;
+	void CreateToggleButton(CustomButton button, HamsterballAPI* modInstance) override;
+	void CreateSlider(CustomSlider slider, HamsterballAPI* modInstance) override;
 	PhysicsObject* GetPhysicsObj() override;
 	void PatchMemory(DWORD address, const char* bytes, size_t size) override;
 	void UnlockAll() override;
@@ -63,6 +65,7 @@ public:
 	void SetTimerTime(int time) override;
 	Vec3 LevelRaycastVec(Vec3 position, Vec3 direction, float max_dist) override;
 	bool LevelRaycastHit(Vec3 position, Vec3 direction, float max_dist, float tolerance) override;
+	PhysicsConstants* GetPhysicsConstants() override;
 private:
 	void setUnlocks(bool isUnlock);
 };

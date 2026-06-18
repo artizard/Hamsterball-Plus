@@ -51,23 +51,30 @@ SliderOptionHandlerFunc Original_SliderOptionHandler = nullptr;
 LevelRaycastFunc LevelRaycast = nullptr;
 
 App* g_App = nullptr;
-
+PhysicsConstants* g_PhysicsConstants = nullptr;
 
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
 
     InitDevConsole(); 
 
+    DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
+    g_App = (App*)(baseAddr + 0xFD680);
+    g_Timer = (int*)(baseAddr + 0xFDC68);
+    g_PhysicsConstants = (PhysicsConstants*)(baseAddr + 0xCF368);
+    DWORD oldProtect; // unlock memory for constants (causes crashes without if you try to edit the physics constants)
+    if (!VirtualProtect(g_PhysicsConstants, sizeof(PhysicsConstants), PAGE_EXECUTE_READWRITE, &oldProtect)) {
+        printf("ERROR: FAILED TO UNLOCK PHYSICS CONSTANT MEMORY"); 
+    }
+    ApplyForce = (ApplyForceFunc)(baseAddr + 0x02650);
+    LevelRaycast = (LevelRaycastFunc)(baseAddr + 0x65D90);
+
     MH_Initialize();
     loadMods();
     ReloadINI();
 
     // Get base address
-    DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
-    g_App = (App*)(baseAddr + 0xFD680); 
-    g_Timer = (int*)(baseAddr + 0xFDC68); 
-    ApplyForce = (ApplyForceFunc)(baseAddr + 0x02650);
-    LevelRaycast = (LevelRaycastFunc)(baseAddr + 0x65D90);
+    
 
     // The exact function addresses
     LPVOID updateFuncAddr = (LPVOID)(baseAddr + 0x5E00);

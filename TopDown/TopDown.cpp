@@ -15,7 +15,7 @@ public:
         api = modApi;
 
         CustomButton topdownButton("CHEAT_TOPDOWN", "TOP-DOWN");
-        api->CreateToggleButton(topdownButton);
+        api->CreateToggleButton(topdownButton, this);
     }
 
     void onRenderApply(void* this_ptr, float* viewMatrix) override {
