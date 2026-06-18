@@ -128,14 +128,17 @@ public:
         if (api->IsControlDown("fly")) {
             api->GetPhysicsObj()->velocity_y = 2.0f;
         }
-        if (api->IsKeyDown(DIK_1)) {
+        if (api->WasKeyPressed(DIK_1)) {
             Ball* player = api->GetPlayer();
-            Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z); 
-            Vec3 raycast = api->LevelRaycastVec(playerPos, Vec3(0,-1,0), 100.0f);
-            printf("Result: %f, %f, %f\n", raycast.x, raycast.y, raycast.z);
+            PhysicsObject* physics = api->GetPhysicsObj();
+            Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z);
+            api->LevelRaycastHit(playerPos, Vec3(0, 0, 1), 5);
         }
-        if (api->IsKeyDown(DIK_2)) {
-            printf("Collision Mesh: %x\n", api->GetScene()->collision_mesh);
+        if (api->WasKeyPressed(DIK_2)) {
+            Ball* player = api->GetPlayer();
+            PhysicsObject* physics = api->GetPhysicsObj();
+            Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z);
+            api->LevelRaycastHit(playerPos, Vec3(0, 0, 1), 25);
         }
         if (api->IsKeyDown(DIK_3)) {
             Ball* player = api->GetPlayer();
