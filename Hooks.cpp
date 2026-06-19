@@ -182,15 +182,14 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
 // Logic for clicking options menu buttons
 void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char* clicked_id) {
     std::string id(clicked_id);
-    if (g_ModApiInstance.optionButtons.find(id) != g_ModApiInstance.optionButtons.end()) {
-        bool newState = !g_ModApiInstance.optionButtons[id].isOn;
-        g_ModApiInstance.optionButtons[id].isOn = newState;
-        std::string displayText = g_ModApiInstance.optionButtons[id].displayText + (newState ? ": YES" : ": NO");
+    auto it = g_ModApiInstance.optionButtons.find(id);
+    if (it != g_ModApiInstance.optionButtons.end()) {
+        auto& data = it->second; 
+        bool newState = !data.isOn;
+        data.isOn = newState;
+        std::string displayText = data.displayText + ": " + (newState ? data.trueText : data.falseText);
         Game_UpdateButtonText(this_ptr, nullptr, displayText.c_str(), clicked_id);
-        
-        for (HamsterballAPI* mod : g_Mods) {
-            mod->onButtonToggle(id.c_str(), newState);
-        }
+        data.owner->onButtonToggle(id.c_str(), newState);
         return;
     }
 
