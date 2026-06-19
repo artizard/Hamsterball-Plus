@@ -60,19 +60,21 @@ Play3dSoundFunc Play3dSoundEffect = nullptr;
 DWORD WINAPI ModThread(HMODULE hModule) {
 
     InitDevConsole(); 
+    InitResolutions(); 
 
     DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
+
     g_App = (App*)(baseAddr + 0xFD680);
     g_Timer = (int*)(baseAddr + 0xFDC68);
     g_PhysicsConstants = (PhysicsConstants*)(baseAddr + 0xCF368);
-    DWORD oldProtect; // unlock memory for constants (causes crashes without if you try to edit the physics constants)
-    if (!VirtualProtect(g_PhysicsConstants, sizeof(PhysicsConstants), PAGE_EXECUTE_READWRITE, &oldProtect)) {
-        printf("ERROR: FAILED TO UNLOCK PHYSICS CONSTANT MEMORY"); 
-    }
     ApplyForce = (ApplyForceFunc)(baseAddr + 0x02650);
     LevelRaycast = (LevelRaycastFunc)(baseAddr + 0x65D90);
     PlaySoundEffect = (PlaySoundFunc)(baseAddr + 0x597b0);
     Play3dSoundEffect = (Play3dSoundFunc)(baseAddr + 0x59860);
+    DWORD oldProtect; // unlock memory for constants (causes crashes without if you try to edit the physics constants)
+    if (!VirtualProtect(g_PhysicsConstants, sizeof(PhysicsConstants), PAGE_EXECUTE_READWRITE, &oldProtect)) {
+        printf("ERROR: FAILED TO UNLOCK PHYSICS CONSTANT MEMORY");
+    }
 
     MH_Initialize();
     loadMods();

@@ -194,33 +194,32 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
         return;
     }
 
-    
-
     // New resolution button code to add new resolutions
     if (strcmp(clicked_id, "REZ") == 0) {
+        if (g_AvailableResolutions.empty()) return;
 
         // Get direct pointers to the width and height stored in the menu object
         int* currentWidth = (int*)((DWORD)this_ptr + 0xCE4);
         int* currentHeight = (int*)((DWORD)this_ptr + 0xCE8);
+        Resolution currentRes = { *currentWidth, *currentHeight }; 
+
+        auto it = std::find(g_AvailableResolutions.begin(), g_AvailableResolutions.end(), currentRes);
 
         // Custom resolution cycle
-        if (*currentWidth == 800 && *currentHeight == 600) {
-            *currentWidth = 1024; *currentHeight = 768;
-        }
-        else if (*currentWidth == 1024 && *currentHeight == 768) {
-            *currentWidth = 1280; *currentHeight = 720; // Added 720p
-        }
-        else if (*currentWidth == 1280 && *currentHeight == 720) {
-            *currentWidth = 1920; *currentHeight = 1080; // Added 1080p
+        if (it != g_AvailableResolutions.end() && std::next(it) != g_AvailableResolutions.end()) {
+            *currentWidth = std::next(it)->width;
+            *currentHeight = std::next(it)->height; 
         }
         else {
-            // If it's 1080p (or anything else), loop back to 800x600
-            *currentWidth = 800; *currentHeight = 600;
+            *currentWidth = g_AvailableResolutions.begin()->width;
+            *currentHeight = g_AvailableResolutions.begin()->height; 
         }
 
         // Format button text
+        float ratio = (float)*currentWidth / (float)*currentHeight; 
+        const char* aspectRatio = (std::abs(ratio - 1.333f) < .02f) ? "[4:3]" : (std::abs(ratio - 1.778f) < .02f) ? "[16:9]" : (std::abs(ratio - 1.6f) < .02f) ? "[16:10]" : (std::abs(ratio - 1.25f) < .02f) ? "[4:5]" : "";
         char newResText[256];
-        sprintf_s(newResText, "RESOLUTION: %d X %d", *currentWidth, *currentHeight);
+        sprintf_s(newResText, "RESOLUTION: %d X %d %s", *currentWidth, *currentHeight, aspectRatio);
 
         // Redraw button
         Game_UpdateButtonText(this_ptr, nullptr, newResText, "REZ");

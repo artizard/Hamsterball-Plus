@@ -9,3 +9,4 @@ void InitDevConsole();
 void SaveCustomOptions();
 bool ReadToggleButtonIni(const char* id, bool defaultValue);
 float ReadSliderIni(const char* id, float defaultValue);
+void InitResolutions();

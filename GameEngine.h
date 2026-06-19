@@ -6,6 +6,19 @@
 #include "HamsterballAPI.h"
 #include <map>
 
+struct Resolution {
+    int width;
+    int height;
+
+    bool operator==(const Resolution& other) const {
+        return width == other.width && height == other.height;
+    }
+    bool operator<(const Resolution& other) const {
+        if (width == other.width) return height < other.height;
+        return width < other.width; 
+    }
+};
+
 // --- TYPEDEFS ---
 typedef void(__fastcall* FindRespawnPointFunc)(void* ecx_playerObject, void* edx_dummy);
 typedef void(__fastcall* PlayerUpdateFunc)(Ball* ecx_player, void* edx_dummy);
@@ -51,6 +64,7 @@ extern PhysicsConstants* g_PhysicsConstants;
 inline std::vector<HamsterballAPI*> g_Mods; 
 inline std::map<std::string, int> g_CustomControls; // <controlID, dikCode> 
 extern int* g_Timer; 
+inline std::vector<Resolution> g_AvailableResolutions; 
 
 struct ThemeConfig {
     float MenuBodyR, MenuBodyG, MenuBodyB, MenuBodyA;

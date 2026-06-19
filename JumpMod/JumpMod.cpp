@@ -12,6 +12,8 @@ public:
         api = modApi;
 
         CustomButton jumpButton("CHEAT_JUMP", "JUMPING");
+        jumpButton.trueText = "ON";
+        jumpButton.falseText = "OFF"; 
         api->CreateToggleButton(jumpButton, this);
 
         api->RegisterCustomControl("jump", DIK_LSHIFT);

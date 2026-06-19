@@ -2,6 +2,8 @@
 #include "InitHelpers.h"
 #include <string>
 #include "GameEngine.h"
+#include <algorithm>
+#include <set>
 
 const char* GetModIniPath() {
     static std::string iniPath = "";
@@ -236,4 +238,41 @@ void SaveCustomOptions() {
     for (const auto& [key, val] : g_ModApiInstance.optionSliders) {
         WritePrivateProfileStringA("Sliders", key.c_str(), std::to_string(val.value).c_str(), path);
     }
+}
+
+void InitResolutions() {
+    // i'm filtering out the weird resolutions that no one would conceivably use, so the ones i'm leaving in are:
+    std::set<Resolution> allowedResolutions = {
+        {800, 600},
+        {1024, 768},
+        {960, 720},
+        {1280, 720},
+        {1440, 1080}, 
+        {1920, 1080},
+        {1920, 1440},
+        {2560, 1440},
+        {2880, 2160},
+        {3840, 2160}
+    };
+    DEVMODE devMode;
+    ZeroMemory(&devMode, sizeof(DEVMODE)); 
+    devMode.dmSize = sizeof(DEVMODE); 
+
+    // In the case that the player has a resolution outside of the default ones, I'm adding their max resolution plus the 4:3 version of that
+    if (EnumDisplaySettings(NULL, ENUM_REGISTRY_SETTINGS, &devMode)) { 
+        int nativeWidth = devMode.dmPelsWidth;
+        int nativeHeight = devMode.dmPelsHeight;
+        g_AvailableResolutions.push_back({nativeWidth, nativeHeight});
+        int fourByThreeWidth = nativeHeight * 4 / 3;
+        g_AvailableResolutions.push_back({ fourByThreeWidth, nativeHeight });
+    }
+    int i = 0;
+    while (EnumDisplaySettings(NULL, i++, &devMode)) {
+        auto it = allowedResolutions.find(Resolution{ (int)devMode.dmPelsWidth, (int)devMode.dmPelsHeight }); 
+        if (it != allowedResolutions.end()) {
+            g_AvailableResolutions.push_back({ (int)devMode.dmPelsWidth, (int)devMode.dmPelsHeight });
+        }
+    }
+    std::sort(g_AvailableResolutions.begin(), g_AvailableResolutions.end()); 
+    g_AvailableResolutions.erase(std::unique(g_AvailableResolutions.begin(), g_AvailableResolutions.end()), g_AvailableResolutions.end());
 }
