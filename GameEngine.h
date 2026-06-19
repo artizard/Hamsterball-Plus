@@ -37,6 +37,8 @@ typedef void(__thiscall* ApplyForceFunc)(void* player, float x, float y, float z
 typedef void(__thiscall* CollisionCheckFunc)(void* this_ptr, Ball* colliding_ball, int* param_3);
 typedef void(__thiscall* SliderOptionHandlerFunc)(void* this_ptr, char* sliderID, int inputDirection);
 typedef Vec3*(__thiscall* LevelRaycastFunc)(Collision* collision, Vec3* out, Vec3 origin, Vec3 direction, float max_dist);
+typedef void(__fastcall* PlaySoundFunc)(void* soundEffect, float volume);
+typedef void(__thiscall* Play3dSoundFunc)(void* soundEffect, Vec3 position, float volume);
 
 // --- EXTERN GLOBALS ---
 extern Ball* g_Player;
@@ -92,5 +94,8 @@ extern ApplyForceFunc ApplyForce;
 extern CollisionCheckFunc Original_CollisionCheck; 
 extern SliderOptionHandlerFunc Original_SliderOptionHandler;
 extern LevelRaycastFunc LevelRaycast; 
+
+extern PlaySoundFunc PlaySoundEffect;
+extern Play3dSoundFunc Play3dSoundEffect;
 
 void UpdateBallReferences(); 

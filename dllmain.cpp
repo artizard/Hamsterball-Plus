@@ -53,6 +53,9 @@ LevelRaycastFunc LevelRaycast = nullptr;
 App* g_App = nullptr;
 PhysicsConstants* g_PhysicsConstants = nullptr;
 
+PlaySoundFunc PlaySoundEffect = nullptr;
+Play3dSoundFunc Play3dSoundEffect = nullptr;
+
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
 
@@ -68,6 +71,8 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     }
     ApplyForce = (ApplyForceFunc)(baseAddr + 0x02650);
     LevelRaycast = (LevelRaycastFunc)(baseAddr + 0x65D90);
+    PlaySoundEffect = (PlaySoundFunc)(baseAddr + 0x597b0);
+    Play3dSoundEffect = (Play3dSoundFunc)(baseAddr + 0x59860);
 
     MH_Initialize();
     loadMods();

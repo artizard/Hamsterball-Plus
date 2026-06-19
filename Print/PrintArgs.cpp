@@ -8,18 +8,31 @@
 // This mod is a bunch of random stuff I did for debugging purposes, but you may find it useful for seeing how to ]
 // use certain functions from the modding API. 
 
-typedef void(__thiscall* currFunc)(void* collision, Vec3* out, Vec3 origin, Vec3 direction, float max_dist);
+typedef void(__fastcall* currFunc)(int param_1, float volume);
 currFunc Original_currFunc = nullptr;
 
 class PrintArgs : public HamsterballAPI {
 private:
     inline static IModAPI* api = nullptr;
-    std::set<void*> playerIds; 
     inline static bool hasPrinted = false;
 public:
+
     const char* GetModName() override { return "Print Args"; }
     const char* GetAuthorName() override { return "arti"; }
 
+    static LONG WINAPI MyExceptionFilter(EXCEPTION_POINTERS* ExceptionInfo) {
+        FILE* f = nullptr;
+        fopen_s(&f, "crash_log.txt", "w");
+        if (f) {
+            fprintf(f, "Exception: 0x%08X\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
+            fprintf(f, "Fault address: %p\n", ExceptionInfo->ExceptionRecord->ExceptionAddress);
+            fprintf(f, "Exception flags: 0x%08X\n", ExceptionInfo->ExceptionRecord->ExceptionFlags);
+            fclose(f);
+        }
+        // Terminate cleanly rather than continue
+        TerminateProcess(GetCurrentProcess(), 1);
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
     void Initialize(IModAPI* modApi) override {
         api = modApi;
         DWORD baseAddr = api->GetGameBaseAddress();
@@ -28,26 +41,49 @@ public:
         //api->RegisterCustomHook((baseAddr + 0x0C5D0), &Hooked_currFunc, (void**)&Original_currFunc);
         //api->PatchMemory(baseAddr + 0x29d23, "\x01", 1);
         //api->PatchMemory(baseAddr + 0x29d0a, "\x01", 1);
+        SetUnhandledExceptionFilter(MyExceptionFilter);
         api->RegisterCustomControl("fly", DIK_W);
         CustomSlider sizeSlider("HAMSTER_SIZE", "Hamster Size", .037); 
         sizeSlider.stepSize = .01;
         api->CreateSlider(sizeSlider, this);
         // playsound3d
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
-        //api->RegisterCustomHook(baseAddr + 0x65D90, &Hooked_currFunc, (void**)&Original_currFunc);
+        api->RegisterCustomHook(baseAddr + 0x597b0, &Hooked_currFunc, (void**)&Original_currFunc);
     }
 
-    static void __fastcall Hooked_currFunc(void* collision, void* edx_dummy, Vec3* out, Vec3 origin, Vec3 direction, float max_dist) {
+    static void __fastcall Hooked_currFunc(int param_1, float volume) {
+        printf("[Hook] tid=%lu sound=%d\n", GetCurrentThreadId(), param_1);
+
         //printf("this_ptr: %x | param_1: %f | param_2: %f | param_3: %f\n", this_ptr, param_1, param_2, param_3
-        printf("collision: %x\n", collision);
-        printf("out: %f, %f, %f\n", out->x, out->y, out->z);
-        printf("origin: %f, %f, %f\n", origin.x, origin.y, origin.z);
-        printf("direction: %f, %f, %f\n", direction.x, direction.y, direction.z);
-        printf("max_dist: %f\n", max_dist); 
+        //printf("param_1: %x\n", &param_1);
+        /*if (!hasCalled) {
+            return;
+        }*/
+        printf("param_1 int: %d\n", param_1);
+        printf("sounds: %x\n", &api->GetApp()->sounds);
+        printf("sound id: %d", api->GetApp()->sounds.whistle);
+        printf("volume: %f", volume);
+        //printf("sound offset: %x\n", ((char*)&param_1 - (char*) &api->GetApp()->sounds));
+        printf("-----------------------\n"); 
+        //hasCalled = true;
+        //CallFast(0x597b0, param_1);
         
-        Original_currFunc(collision, out, origin, direction, max_dist);
-        printf("new out: %f, %f, %f\n", out->x, out->y, out->z);
-        printf("-------------------------------\n");
+        /*if (stolenSound == -1) {
+            CallFast(0x597b0, (int)api->GetApp()->sounds.whistle);
+        }*/
+        
+        /*if (stolenSound == -1) {
+            stolenSound = param_1;
+            printf("NO STOLEN\n"); 
+            Original_currFunc(param_1);
+        }
+        else {
+            printf("Stolen: %d\n", stolenSound);
+            Original_currFunc(stolenSound);
+        }*/
+        
+        //Original_currFunc(param_1);
+        Original_currFunc(param_1, volume);
     }
 
     void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) override {
@@ -146,17 +182,28 @@ public:
             api->LevelRaycastHit(playerPos, Vec3(0, 0, 1), 5);
         }
         if (api->WasKeyPressed(DIK_2)) {
-            Ball* player = api->GetPlayer();
-            PhysicsObject* physics = api->GetPhysicsObj();
-            Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z);
-            api->LevelRaycastHit(playerPos, Vec3(0, 0, 1), 25);
+            /*CallFast(0x597b0, (int)api->GetApp()->sounds.whistle);*/
+            //CallFast(0x597b0, (int)api->GetApp()->sounds.whistle, 1.0f);
+            CallFast(0x59860, api->GetApp()->sounds.whistle, player->pos_x, player->pos_y, player->pos_z, 1.0f);
         }
-        if (api->IsKeyDown(DIK_3)) {
-            Ball* player = api->GetPlayer();
-            Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z);
-            bool isGrounded = api->LevelRaycastHit(playerPos, Vec3(0,-1,0), 26.0f);
-            printf("Is grounded: %s\n", isGrounded ? "true" : "false");
+        if (api->WasKeyPressed(DIK_3)) {
+            //printf("Stolen: %d\n", stolenSound);
+            ////CallFast(0x597b0, api->GetApp()->sounds.whistle);
+            //Original_currFunc(stolenSound);
+            size_t num;
+            Ball* player = api->GetEnemies(&num)[0];
+            api->PlaySoundEffect(api->GetApp()->sounds.whistle, 0.5f);
         }
+        if (api->IsKeyDown(DIK_4)) {
+            //printf("Stolen: %d\n", stolenSound);
+            //Ball* player = api->GetPlayer();
+            //CallFast(0x59860, stolenSound, player->pos_x, player->pos_y, player->pos_z);
+            ////Original_currFunc(stolenSound);
+            size_t num;
+            Ball* player = api->GetEnemies(&num)[0]; 
+            api->Play3dSoundEffect(api->GetApp()->sounds.whistle, Vec3(player->pos_x, player->pos_y, player->pos_z), 1.0f);
+        }
+
         if (api->WasKeyPressed(DIK_R)) {
             api->ReloadIniFile(); 
         }

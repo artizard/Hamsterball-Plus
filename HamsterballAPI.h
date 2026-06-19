@@ -53,7 +53,7 @@ struct Ball;
 struct Scene;
 struct Vec3;
 struct PhysicsConstants;
-
+struct Sounds;
 
 /// This class is how you will retrieve values and call functions on the game. 
 class IModAPI {
@@ -240,6 +240,9 @@ public:
 	virtual bool LevelRaycastHit(Vec3 position, Vec3 direction, float max_dist, float tolerance=0.5f) = 0;
 
 	virtual PhysicsConstants* GetPhysicsConstants() = 0;
+
+	virtual void PlaySoundEffect(void* soundEffect, float volume) = 0;
+	virtual void Play3dSoundEffect(void* soundEffect, Vec3 position, float volume) = 0;
 };
 
 /// This includes functions that you can override in order to add logic on certain events such as onPlayerUpdate,
@@ -579,6 +582,72 @@ struct PhysicsObject {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+struct Sounds {
+	void* collide;          // +0x000  (App+0x43C)
+	void* roll;             // +0x004
+	void* whistle;          // +0x008
+	void* bumper;           // +0x00C
+	void* ballbreak;        // +0x010
+	void* ballbreaksmall;   // +0x014
+	void* thwomp;           // +0x018
+	void* snap;             // +0x01C
+	void* popup;            // +0x020
+	void* dropin;           // +0x024
+	void* dropinshort;      // +0x028
+	void* popout;           // +0x02C
+	void* pipebump1;		// +0x030  
+	void* pipebump2;		// +0x034
+	void* pipebump3;		// +0x038
+	void* gearclank;        // +0x03C
+	void* bridgeslam;       // +0x040
+	void* platformtick;     // +0x044
+	void* gluestuck;        // +0x048
+	void* bubble1;          // +0x04C
+	void* bubble2;          // +0x050
+	void* wheelcreak;       // +0x054
+	void* catapult;         // +0x058
+	void* trapdoor;         // +0x05C
+	void* fwing;            // +0x060
+	void* clink;            // +0x064
+	void* whoosh;           // +0x068
+	void* chomp;            // +0x06C
+	void* fan_start;        // +0x070
+	void* fan_blow;         // +0x074
+	void* crack;            // +0x078
+	void* crumble;          // +0x07C
+	void* sawstartup;       // +0x080
+	void* sawcut;           // +0x084
+	void* minipop;          // +0x088
+	void* bell;             // +0x08C
+	void* zip;              // +0x090
+	void* ting;             // +0x094
+	void* shrink;           // +0x098
+	void* grow;             // +0x09C
+	void* tweet;            // +0x0A0
+	void* creakyplatform;   // +0x0A4
+	void* wubba;            // +0x0A8
+	void* saw;              // +0x0AC
+	void* sawspeedy;        // +0x0B0
+	void* dawgstep1;        // +0x0B4
+	void* dawgstep2;        // +0x0B8
+	void* dawgsmash;        // +0x0BC
+	void* sizzle;           // +0x0C0
+	void* explode;          // +0x0C4
+	void* vac_o_sux;        // +0x0C8
+	void* speedcylinder;    // +0x0CC
+	void* bonuspop;         // +0x0D0
+	void* buzzbonus;        // +0x0D4
+	void* breakbridge;      // +0x0D8
+	void* unlock;           // +0x0DC
+	void* NeonRide;         // +0x0E0
+	void* NeonFlicker;      // +0x0E4
+	void* ZoopDown;         // +0x0E8
+	void* LightsOff;        // +0x0EC
+	void* GlassBonus;       // +0x0F0 
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 /// @brief A struct representing the game's App object. This contains a lot of fields about basic game things such as settings
 /// and unlocks. 
 /// Fields labeled unverifed mean that the field may be wrong.
@@ -602,11 +671,13 @@ struct App {
 	void* gameUpdateObj; // +0x184 unverified
 	std::uint8_t pad_188[0x238 - 0x188];
 	bool rightButtonPauseEnabled; // +0x238
-	std::uint8_t pad_239[0x534 - 0x239];
+	std::uint8_t pad_239[0x43C - 0x239];
+	Sounds sounds; // +0x43C
+	std::uint8_t pad_530[0x534 - 0x530];
 	void* musicHandle; // +0x534 unverified
 	void* musicChannel1; // +0x538 unverified
 	void* musicChannel2; // +0x53C unverified
-	std::uint8_t pad540[0x10];
+	std::uint8_t pad_540[0x10];
 
 	// take these ones with a massive grain of salt, i'm just mapping them out for good measure
 	void* gameMode1; // +0x550 unverified; something about 1 player mode object
@@ -616,7 +687,7 @@ struct App {
 
 	std::uint8_t pad_560[0x84C - 0x560];
 	float sensitivity; // +0x84C
-	bool unlockMirrorTournament; // +0x850
+	bool unlockMirrorTournament;// +0x850
 	bool unlockDizzyRace;       // +0x851
 	bool unlockTowerRace;       // +0x852
 	bool unlockUpRace;          // +0x853
@@ -660,6 +731,8 @@ struct App {
 	// there are definitely some more, but i don't know if there is anything useful
 };
 #pragma pack(pop)
+
+
 
 // These are just to ensure I did the structs right, don't mind these 
 static_assert(offsetof(Ball, vtable) == 0x000);
@@ -737,6 +810,8 @@ static_assert(offsetof(App, audioSystem) == 0x17C);
 static_assert(offsetof(App, inputHandler) == 0x180);
 static_assert(offsetof(App, gameUpdateObj) == 0x184);
 static_assert(offsetof(App, rightButtonPauseEnabled) == 0x238);
+static_assert(offsetof(App, sounds) == 0x43C);
+static_assert(sizeof(Sounds) == 0xF4);
 static_assert(offsetof(App, musicHandle) == 0x534);
 static_assert(offsetof(App, musicChannel1) == 0x538);
 static_assert(offsetof(App, musicChannel2) == 0x53C);
@@ -794,3 +869,4 @@ static_assert(offsetof(PhysicsConstants, unknown4) == 0x80);
 static_assert(offsetof(PhysicsConstants, cameraDamping) == 0x88);
 static_assert(offsetof(PhysicsConstants, unknown5) == 0x11C);
 static_assert(offsetof(PhysicsConstants, unknown6) == 0x124);
+

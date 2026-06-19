@@ -334,3 +334,10 @@ bool ModAPI::LevelRaycastHit(Vec3 position, Vec3 direction, float max_dist, floa
 PhysicsConstants* ModAPI::GetPhysicsConstants() {
 	return g_PhysicsConstants; 
 }
+
+void ModAPI::PlaySoundEffect(void* soundEffect, float volume) {
+	::PlaySoundEffect(soundEffect, volume);
+}
+void ModAPI::Play3dSoundEffect(void* soundEffect, Vec3 position, float volume) {
+	::Play3dSoundEffect(soundEffect, position, volume);
+}

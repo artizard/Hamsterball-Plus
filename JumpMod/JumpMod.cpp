@@ -39,11 +39,13 @@ public:
                     //    // Apply the jump force
                     //    //physicsObj->velocity_y = 20.0f; 
                     //    physicsObj->velocity_y = api->GetSliderState("JUMP_HEIGHT") * 2; 
-                    //}
+                    
                     Ball* player = api->GetPlayer();
+                    Sounds sounds = api->GetApp()->sounds; 
                     Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z);
                     bool isGrounded = api->LevelRaycastHit(playerPos, Vec3(0, -1, 0), 26.0f, 15);
                     if (isGrounded) {
+                        api->PlaySoundEffect(sounds.bubble1, 1.0f);
                         physicsObj->velocity_y = api->GetSliderState("JUMP_HEIGHT") * 2;
                     }
                 }
