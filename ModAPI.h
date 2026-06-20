@@ -63,13 +63,13 @@ public:
 	int GetTimerTime() override; // in game timer for time trials and tournament 
 	void ReloadIniFile();
 	void SetTimerTime(int time) override;
-	Vec3 LevelRaycastVec(Vec3 position, Vec3 direction, float max_dist) override;
-	bool LevelRaycastHit(Vec3 position, Vec3 direction, float max_dist, float tolerance) override;
+	Vec3 LevelRaycastVec(Vec3 position, Vec3 direction, float radius) override;
+	bool LevelRaycastHit(Vec3 position, Vec3 direction, float radius, float max_dist) override;
 	PhysicsConstants* GetPhysicsConstants() override;
 	void PlaySoundEffect(void* soundEffect, float volume) override;
 	void Play3dSoundEffect(void* soundEffect, Vec3 position, float volume) override;
 	void ShowBallMessage(Ball* ball, char* message) override;
-	void RespawnPlayer() override;
+	void RespawnPlayer(Ball* player) override;
 private:
 	void setUnlocks(bool isUnlock);
 };

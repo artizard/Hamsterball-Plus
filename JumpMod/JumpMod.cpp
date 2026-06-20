@@ -40,7 +40,7 @@ public:
                 // a level with gravity in multiple directions. 
                 Vec3 playerPos = Vec3(playerObject->pos_x, playerObject->pos_y, playerObject->pos_z);
                 Vec3 playerGravity(physicsObj->gravity_x, physicsObj->gravity_y, physicsObj->gravity_z); 
-                bool isGrounded = api->LevelRaycastHit(playerPos, playerGravity, 26.0f, 15);
+                bool isGrounded = api->LevelRaycastHit(playerPos, playerGravity, 26.0f, 35);
                 if (isGrounded) {
                     api->PlaySoundEffect(sounds.bubble1, 1.0f);
                     float jumpHeight = api->GetSliderState("JUMP_HEIGHT");

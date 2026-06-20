@@ -65,7 +65,7 @@ public:
 	
 	/// @brief Create a custom hook. You should use the preexisting functions like onGameUpdate when possible, but if the 
 	/// hook is not already created, then you'll have to do it using this. This can cause issues if another mod also hooks 
-	/// into the same function. This is one of the more complicated aspect of this modding API, so there will be examples
+	/// into the same function. This is one of the more complicated aspects of this modding API, so there will be examples
 	/// for using this. (There is some boilerplate code you will have to use in conjunction with this function)
 	/// @param targetAddress Address of the function to hook into. 
 	/// @param hookFunction The function that the original function will redirect to.
@@ -81,7 +81,7 @@ public:
 	/// @brief Returns the DirectInput keycode that corresponds to the control id given. If the user didn't customize the control then
 	/// this will just be the default value you chose. 
 	/// @param controlID The id for the control you want the keycode for
-	/// @return The DirectInput keycode for the control 
+	/// @return The DirectInput keycode for the control, -1 if the control was not found
 	virtual int GetCustomControlKey(const char* controlID) = 0;
 
 	/// @brief USE IsControlDown INSTEAD IN MOST CASES - Checks if a key is currently being pressed down. 
@@ -168,6 +168,9 @@ public:
 	/// @return The bool value of the button's current state 
 	virtual bool GetButtonState(const char* id) = 0;
 
+	/// @brief Gets the current value of a custom slider on the option menu. 
+	/// @param id ID of the slider
+	/// @return The value of the chosen slider 
 	virtual float GetSliderState(const char* id) = 0;
 
 	/// @brief Gets player 1. Will be a nullptr if the player doesn't exist (not in level)
@@ -226,6 +229,9 @@ public:
 	/// @param radius How large the ball is. 
 	/// @param spin_distance How big the circles it makes while idle are. 
 	virtual void CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance=200, float chase_distance=300, float radius=35, float spin_distance=45) = 0;
+	
+	/// @brief Reloads the ModConfig.ini file. This means it will update controls, colors, etc. This will not load in the values stored for the 
+	/// toggle/slider options, those are applied at launch. 
 	virtual void ReloadIniFile() = 0;
 
 	/// Returns the current time on the game's timer (the value when called, not a pointer). This number counts up in time trials
@@ -238,12 +244,38 @@ public:
 	/// @param time The time you want to set the timer to. Note that this "1000" is 10 seconds, and "575" is 5.75 seconds. 
 	virtual void SetTimerTime(int time) = 0;
 
-	virtual Vec3 LevelRaycastVec(Vec3 position, Vec3 direction, float max_dist) = 0; 
-	virtual bool LevelRaycastHit(Vec3 position, Vec3 direction, float max_dist, float tolerance=0.5f) = 0;
+	/// @brief Sends out a ray (actually a spehere) and returns the vector of where the ray hit. If it doesn't hit anything, then the distance 
+	/// will be roughly 994.45f. I would generally recommend to use LevelRaycastHit instead, this returns just the vector, so you have to process
+	/// it yourself. THIS ONLY ACCOUNTS FOR LEVEL GEOMETRY, THE RAYS WILL IGNORE BADBALLS, PLAYERS, ETC.
+	/// @param position Where the ray should be cast from
+	/// @param direction What direction the ray should go in (ex. (0,-1,0))
+	/// @param radius The size of the sphere; generally small values are better, but larger values can represent the player better as the ray can't fit through small gaps
+	/// @return Vector of where the ray hits
+	virtual Vec3 LevelRaycastVec(Vec3 position, Vec3 direction, float radius) = 0; 
 
+	/// @brief Sends out a ray (actually a spehere) and returns whether or not the ray hit anything within a given distance. 
+	/// THIS ONLY ACCOUNTS FOR LEVEL GEOMETRY, THE RAYS WILL IGNORE BADBALLS, PLAYERS, ETC.
+	/// @param position Where the ray should be cast from
+	/// @param direction What direction the ray should go in (ex. (0,-1,0))
+	/// @param radius The size of the sphere; generally small values are better, but larger values can represent the player better as the ray can't fit through small gaps
+	/// @param max_dist The max distance you want the ray to travel. Leave default/-1 to leave the distance uncapped. 
+	/// @return Vector of where the ray hits
+	virtual bool LevelRaycastHit(Vec3 position, Vec3 direction, float radius, float max_dist=-1) = 0;
+
+	/// @brief Gives a pointer to the physics constants struct. You can change different values which affect the game globally such as glass friction and hamster size.
+	/// @return Pointer the the game's physics constants
 	virtual PhysicsConstants* GetPhysicsConstants() = 0;
 
+	/// @brief Plays the given sound effect. You can find the sound effects to use from the sound struct within the App struct. 
+	/// @param soundEffect The sound to play
+	/// @param volume The volume at which to play the sound. The range is from 0-1.
 	virtual void PlaySoundEffect(void* soundEffect, float volume) = 0;
+
+	/// @brief Plays a given sound effect at a certain position in 3d space. This means that the volume will be dependent on the distance from the player.
+	/// Don't expect directional sound or anything, this is the same as PlaySoundEffect except it scales the volume based on distance from the player. 
+	/// @param soundEffect The sound to play
+	/// @param position Where to play the sound from
+	/// @param volume The volume at which to play the sound. The range is from 0-1.
 	virtual void Play3dSoundEffect(void* soundEffect, Vec3 position, float volume) = 0;
 
 	/// @brief Displays a message above the ball, like when unlocking an arena. THIS ONLY WORKS IN TOURNAMENT MODE
@@ -251,8 +283,9 @@ public:
 	/// @param message The message to display
 	virtual void ShowBallMessage(Ball* ball, char* message) = 0;
 
-	/// @brief Respawns the player when called.
-	virtual void RespawnPlayer() = 0;
+	/// @brief Respawns the provided player when called.
+	/// @param The player you want to respawn. This technically works on badballs, but breaks their AIs and collision.
+	virtual void RespawnPlayer(Ball* player) = 0;
 };
 
 /// This includes functions that you can override in order to add logic on certain events such as onPlayerUpdate,

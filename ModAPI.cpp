@@ -298,31 +298,36 @@ void ModAPI::SetTimerTime(int time) {
 	*g_Timer = time;
 }
 
-Vec3 ModAPI::LevelRaycastVec(Vec3 position, Vec3 direction, float max_dist) {
+Vec3 ModAPI::LevelRaycastVec(Vec3 position, Vec3 direction, float radius) {
 	Collision* collision = GetScene()->collision_mesh;
 	Vec3 result = Vec3(0, 0, 0);
 	if (!collision) {
 		return result;
 	}
-	LevelRaycast(GetScene()->collision_mesh, &result, position, direction, max_dist);
+	LevelRaycast(GetScene()->collision_mesh, &result, position, direction, radius);
 	return result; 
 }
 
-bool ModAPI::LevelRaycastHit(Vec3 position, Vec3 direction, float max_dist, float tolerance) {
+bool ModAPI::LevelRaycastHit(Vec3 position, Vec3 direction, float radius, float max_dist) {
 	Collision* collision = GetScene()->collision_mesh; 
 	if (!collision) {
 		return false;
 	}
 	Vec3 result = Vec3(0, 0, 0);
-	LevelRaycast(collision, &result, position, direction, 26.0f);
+	LevelRaycast(collision, &result, position, direction, radius);
 	float dist_x = result.x - position.x;
 	float dist_y = result.y - position.y;
 	float dist_z = result.z - position.z;
 	float magnitude = sqrtf(dist_x*dist_x + dist_y*dist_y + dist_z*dist_z);
-	if (magnitude < max_dist + tolerance) {
-		return true;
-	} 
-	return false;
+
+	const char* resultString = (max_dist == -1.0f) ? (magnitude >= 994.0f) ? "False" : "True" : (magnitude < max_dist) ? "True" : "False";
+	printf("Result vector: %f, %f, %f, Dist: %f, %f, %f, Result: %s\n", result.x, result.y, result.z, dist_x, dist_y, dist_z, resultString);
+	if (max_dist == -1.0f) {
+		// based on testing, it seems like if the ray doesn't hit anything, then the distance is roughly 994.45
+		if (magnitude >= 994.0f) return false;
+		return true; 
+	}
+	return magnitude < max_dist;
 }
 
 PhysicsConstants* ModAPI::GetPhysicsConstants() {
@@ -338,8 +343,8 @@ void ModAPI::Play3dSoundEffect(void* soundEffect, Vec3 position, float volume) {
 void ModAPI::ShowBallMessage(Ball* ball, char* message) {
 	::ShowBallMessage(ball, message);
 }
-void ModAPI::RespawnPlayer() {
-	if (g_Player != nullptr) {
-		Original_FindRespawn(g_Player, nullptr);
+void ModAPI::RespawnPlayer(Ball* player) {
+	if (player != nullptr) {
+		Original_FindRespawn(player, nullptr);
 	}
 }

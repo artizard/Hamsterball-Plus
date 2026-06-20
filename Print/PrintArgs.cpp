@@ -5,10 +5,11 @@
 #include <ctime>
 #include <cstring>
 
-// This mod is a bunch of random stuff I did for debugging purposes, but you may find it useful for seeing how to ]
-// use certain functions from the modding API. 
+// This mod is a bunch of random stuff I did for debugging purposes, but you may find it useful for seeing how to 
+// use certain functions from the modding API (it is very messy though). Many of the mods/keybinds in here are debug/proof of concepts
+// which have no error handling or are unstable so keep that in mind. 
 
-typedef void(__thiscall* currFunc)(void* this_ptr, char* param_1);
+typedef void(__thiscall* currFunc)(void* this_ptr, char* text, int x, int y, int shadowOffsetX, int shadowOffsetY, DWORD vtable, Color c1, DWORD vtable2, Color c2);
 currFunc Original_currFunc = nullptr;
 
 class PrintArgs : public HamsterballAPI {
@@ -35,12 +36,12 @@ public:
         api->CreateSlider(sizeSlider, this);
         // playsound3d
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
-        api->RegisterCustomHook(baseAddr + 0x01660, &Hooked_currFunc, (void**)&Original_currFunc);
+        //api->RegisterCustomHook(baseAddr + 0x09C60, &Hooked_currFunc, (void**)&Original_currFunc);
     }
 
-    static void __fastcall Hooked_currFunc(void* this_ptr, void* edx_dummy, char* param_1) {
-        printf("this_ptr: %x, param_1: %s\n", this_ptr, param_1);
-        Original_currFunc(this_ptr, param_1);
+    static void __fastcall Hooked_currFunc(void* this_ptr, void* edx_dummy, char* text, int x, int y, int shadowOffsetX, int shadowOffsetY, DWORD vtable, Color c1, DWORD vtable2, Color c2) {
+        printf("this_ptr: %x, text: %s, x: %d, y: %d, shadowX: %d, shadowY: %d, vtable1: %x, c1: (%f, %f, %f, %f), vtable2: %x, c2: (%f, %f, %f, %f)\n", this_ptr, text, x, y, shadowOffsetX, shadowOffsetY, vtable, c1.r, c1.g, c1.b, c1.a, vtable2, c2.r, c2.g, c2.b, c2.a);
+        Original_currFunc(this_ptr, text, x, y, shadowOffsetX, shadowOffsetY, vtable, c1, vtable2, c2);
     }
 
     void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) override {
@@ -142,15 +143,12 @@ public:
             api->GetPhysicsObj()->velocity_y = 2.0f;
         }
         if (api->WasKeyPressed(DIK_1)) {
-            Ball* player = api->GetPlayer();
-            PhysicsObject* physics = api->GetPhysicsObj();
-            Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z);
-            api->LevelRaycastHit(playerPos, Vec3(0, 0, 1), 5);
+            CallFast(0x59860, api->GetApp()->sounds.whistle, player->pos_x, player->pos_y, player->pos_z, 1.0f);
         }
         if (api->WasKeyPressed(DIK_2)) {
             /*CallFast(0x597b0, (int)api->GetApp()->sounds.whistle);*/
             //CallFast(0x597b0, (int)api->GetApp()->sounds.whistle, 1.0f);
-            CallFast(0x59860, api->GetApp()->sounds.whistle, player->pos_x, player->pos_y, player->pos_z, 1.0f);
+            CallFast(0x59860, api->GetApp()->sounds.whistle, player->pos_x, player->pos_y, player->pos_z, 10.0f);
         }
         if (api->WasKeyPressed(DIK_3)) {
             //printf("Stolen: %d\n", stolenSound);
@@ -158,7 +156,7 @@ public:
             //Original_currFunc(stolenSound);
             size_t num;
             Ball* player = api->GetEnemies(&num)[0];
-            api->PlaySoundEffect(api->GetApp()->sounds.whistle, 0.5f);
+            api->PlaySoundEffect(api->GetApp()->sounds.whistle, 100.0f);
         }
         if (api->IsKeyDown(DIK_4)) {
             //printf("Stolen: %d\n", stolenSound);
@@ -253,6 +251,24 @@ public:
                 physics->gravity_y = -1;
             }
         }
+        if (api->WasKeyPressed(DIK_V)) {
+            Ball* player = api->GetPlayer();
+            PhysicsObject* physics = api->GetPhysicsObj();
+            Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z);
+            api->LevelRaycastHit(playerPos, Vec3(1, 0, 0), 1);
+        }
+        if (api->WasKeyPressed(DIK_B)) {
+            Ball* player = api->GetPlayer();
+            PhysicsObject* physics = api->GetPhysicsObj();
+            Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z);
+            api->LevelRaycastHit(playerPos, Vec3(0, 1, 0), 1);
+        }
+        if (api->WasKeyPressed(DIK_N)) {
+            Ball* player = api->GetPlayer();
+            PhysicsObject* physics = api->GetPhysicsObj();
+            Vec3 playerPos = Vec3(player->pos_x, player->pos_y, player->pos_z);
+            api->LevelRaycastHit(playerPos, Vec3(0, 0, 1), 1);
+        }
 
         if (api->IsKeyDown(DIK_T)) {
             api->GetPlayer()->playerID = -1; 
@@ -268,10 +284,17 @@ public:
             enemy->radius = 100.0f;
         }
 
-        if (api->WasKeyPressed(DIK_F)) {
-            api->GetPhysicsObj()->velocity_y = 100.0f;
+        if (api->WasKeyPressed(DIK_J)) {
+            api->RespawnPlayer(api->GetPlayer2());
         }
+
         DWORD baseAddr = api->GetGameBaseAddress();
+        if (api->WasKeyPressed(DIK_F)) {
+            printf("TEST"); 
+            DWORD vtable = baseAddr + 0xCF300;
+            Original_currFunc((void*)0xd740440, (char*)"69420", 437, 0, 5, 5, vtable, Color(.5f, .5f, .5f, .8f), vtable, Color(0.0f, 0.0f, 0.0f, 1.0f));
+        }
+        
         //if (api->WasKeyPressed(DIK_9)) {
         //    //api->PatchMemory(baseAddr + 0x08412, "\x83\x7F\x18\x01", 4);
         //    api->PatchMemory(baseAddr + 0x08416, "\x0F\x85\xAA", 3);

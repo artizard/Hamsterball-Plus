@@ -23,7 +23,7 @@ void CoreFeatures::onPlayerUpdate(Ball* playerObject) {
     if (playerObject->playerID != 0) return; // only affect player 1
     if (api->GetButtonState("RESPAWN_PLAYER_STATE_ML")) { // if cheat_jump is enabled
         if (api->WasControlPressed("RESPAWN_PLAYER_ML")) { // if the jump control was pressed 
-            api->RespawnPlayer(); 
+            api->RespawnPlayer(api->GetPlayer()); 
         }
     }
 }
