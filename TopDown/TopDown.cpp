@@ -10,6 +10,7 @@ public:
     const char* GetModName() override { return "Top Down"; }
     const char* GetAuthorName() override { return "arti"; }
     const char* GetContributors() override { return "BookwormKevin"; }
+    int GetApiVersion() override { return HAMSTERBALL_API_VERSION; }
 
     void Initialize(IModAPI* modApi) override {
         api = modApi;

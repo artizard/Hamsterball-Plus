@@ -68,6 +68,8 @@ public:
 	PhysicsConstants* GetPhysicsConstants() override;
 	void PlaySoundEffect(void* soundEffect, float volume) override;
 	void Play3dSoundEffect(void* soundEffect, Vec3 position, float volume) override;
+	void ShowBallMessage(Ball* ball, char* message) override;
+	void RespawnPlayer() override;
 private:
 	void setUnlocks(bool isUnlock);
 };

@@ -130,13 +130,6 @@ void __fastcall Hooked_PlayerUpdate(Ball* ecx_player, void* edx_dummy) {
     if (ecx_player->playerID == 0) {
         g_Player = ecx_player; 
         UpdateBallReferences();
-
-        // respawn logic
-        if (WasKeyPressed(0x2D)) {
-            if (g_Player != nullptr) {
-                Original_FindRespawn(g_Player, nullptr);
-            }
-        }
     }
 
     Original_PlayerUpdate(ecx_player, edx_dummy);

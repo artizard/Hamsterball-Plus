@@ -8,7 +8,7 @@
 // This mod is a bunch of random stuff I did for debugging purposes, but you may find it useful for seeing how to ]
 // use certain functions from the modding API. 
 
-typedef void(__fastcall* currFunc)(int param_1, float volume);
+typedef void(__thiscall* currFunc)(void* this_ptr, char* param_1);
 currFunc Original_currFunc = nullptr;
 
 class PrintArgs : public HamsterballAPI {
@@ -19,6 +19,7 @@ public:
 
     const char* GetModName() override { return "Print Args"; }
     const char* GetAuthorName() override { return "arti"; }
+    int GetApiVersion() override { return HAMSTERBALL_API_VERSION; }
 
     void Initialize(IModAPI* modApi) override {
         api = modApi;
@@ -34,42 +35,12 @@ public:
         api->CreateSlider(sizeSlider, this);
         // playsound3d
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
-        //api->RegisterCustomHook(baseAddr + 0x597b0, &Hooked_currFunc, (void**)&Original_currFunc);
+        api->RegisterCustomHook(baseAddr + 0x01660, &Hooked_currFunc, (void**)&Original_currFunc);
     }
 
-    static void __fastcall Hooked_currFunc(int param_1, float volume) {
-        printf("[Hook] tid=%lu sound=%d\n", GetCurrentThreadId(), param_1);
-
-        //printf("this_ptr: %x | param_1: %f | param_2: %f | param_3: %f\n", this_ptr, param_1, param_2, param_3
-        //printf("param_1: %x\n", &param_1);
-        /*if (!hasCalled) {
-            return;
-        }*/
-        printf("param_1 int: %d\n", param_1);
-        printf("sounds: %x\n", &api->GetApp()->sounds);
-        printf("sound id: %d", api->GetApp()->sounds.whistle);
-        printf("volume: %f", volume);
-        //printf("sound offset: %x\n", ((char*)&param_1 - (char*) &api->GetApp()->sounds));
-        printf("-----------------------\n"); 
-        //hasCalled = true;
-        //CallFast(0x597b0, param_1);
-        
-        /*if (stolenSound == -1) {
-            CallFast(0x597b0, (int)api->GetApp()->sounds.whistle);
-        }*/
-        
-        /*if (stolenSound == -1) {
-            stolenSound = param_1;
-            printf("NO STOLEN\n"); 
-            Original_currFunc(param_1);
-        }
-        else {
-            printf("Stolen: %d\n", stolenSound);
-            Original_currFunc(stolenSound);
-        }*/
-        
-        //Original_currFunc(param_1);
-        Original_currFunc(param_1, volume);
+    static void __fastcall Hooked_currFunc(void* this_ptr, void* edx_dummy, char* param_1) {
+        printf("this_ptr: %x, param_1: %s\n", this_ptr, param_1);
+        Original_currFunc(this_ptr, param_1);
     }
 
     void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) override {
@@ -203,6 +174,10 @@ public:
             api->ReloadIniFile(); 
         }
 
+        if (api->WasKeyPressed(DIK_H)) {
+            api->ShowBallMessage(api->GetPlayer(),(char*)"Hamsterball 2 Unlocked");
+        }
+
         if (api->IsKeyDown(DIK_S)) {
             Ball* player = api->GetPlayer();
             PhysicsObject* physics = api->GetPhysicsObj();
@@ -269,10 +244,10 @@ public:
         if (api->WasKeyPressed(DIK_G)) {
             PhysicsObject* physics = api->GetPhysicsObj();
             if (physics->gravity_y == -1) {
-                physics->gravity_y = -0.5f;
+                physics->gravity_y = -0.25f;
             }
-            else if (physics->gravity_y == -0.5f) {
-                physics->gravity_y = .5f;
+            else if (physics->gravity_y == -0.25f) {
+                physics->gravity_y = .25f;
             }
             else {
                 physics->gravity_y = -1;

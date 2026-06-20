@@ -7,6 +7,8 @@
 #include <dinput.h>
 #include <limits>
 
+#define HAMSTERBALL_API_VERSION 1
+
 struct Collision; 
 class HamsterballAPI;
 /// A general color struct to be used with some of the functions. The default constructor sets rgba all to 1.0f.
@@ -72,7 +74,7 @@ public:
 
 	/// @brief Create an id for a custom control that the user can remap on their own. Using this as opposed to hardcoding the
 	/// keycodes allows the user to remap in case the default value you give conflicts with another mod. 
-	/// @param controlID The id for the control; use a unique name that other mods are unlikely to use. 
+	/// @param controlID The id for the control; use a unique name that other mods are unlikely to use, but keep it clear as to what it does.
 	/// @param default_dik The default DirectInput keycode that maps to your control. The user can rebind this, this will just be the default. 
 	virtual void RegisterCustomControl(const char* controlID, int default_dik) = 0;
 
@@ -243,6 +245,14 @@ public:
 
 	virtual void PlaySoundEffect(void* soundEffect, float volume) = 0;
 	virtual void Play3dSoundEffect(void* soundEffect, Vec3 position, float volume) = 0;
+
+	/// @brief Displays a message above the ball, like when unlocking an arena. THIS ONLY WORKS IN TOURNAMENT MODE
+	/// @param ball The ball to place the message over
+	/// @param message The message to display
+	virtual void ShowBallMessage(Ball* ball, char* message) = 0;
+
+	/// @brief Respawns the player when called.
+	virtual void RespawnPlayer() = 0;
 };
 
 /// This includes functions that you can override in order to add logic on certain events such as onPlayerUpdate,
@@ -259,6 +269,10 @@ public:
 	/// @brief This is a required function to implement. This should return the name of the author of the mod. 
 	/// @return Author of the mod
 	virtual const char* GetAuthorName() = 0;
+
+	/// @brief Requred function that returns the version of the modding API used in the mod. Use the boilerplate code shown in the tutorial/other mods. 
+	/// @return The version of the mod. 
+	virtual int GetApiVersion() = 0;
 
 	/// @brief Use this if anyone else helped with the mod. Return their names like this "contributor1, contributor2"
 	/// @return The names of the contributors

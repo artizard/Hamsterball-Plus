@@ -335,3 +335,11 @@ void ModAPI::PlaySoundEffect(void* soundEffect, float volume) {
 void ModAPI::Play3dSoundEffect(void* soundEffect, Vec3 position, float volume) {
 	::Play3dSoundEffect(soundEffect, position, volume);
 }
+void ModAPI::ShowBallMessage(Ball* ball, char* message) {
+	::ShowBallMessage(ball, message);
+}
+void ModAPI::RespawnPlayer() {
+	if (g_Player != nullptr) {
+		Original_FindRespawn(g_Player, nullptr);
+	}
+}

@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include "InitHelpers.h"
+#include "CoreFeatures.h"
 
 namespace fs = std::filesystem;
 
@@ -42,19 +43,18 @@ GeometryBinderFunc Original_BindGeometry = nullptr;
 MasterLevelSetupFunc Original_MasterLevelSetup = nullptr;
 RenderDynamic_t Original_RenderDynamic = nullptr;
 SaveConfigFunc Original_SaveConfig = nullptr; 
-
 PollInputsFunc Original_PollInputs = nullptr;
 GameUpdateFunc Original_GameUpdate = nullptr;
 ApplyForceFunc ApplyForce = nullptr;
 CollisionCheckFunc Original_CollisionCheck = nullptr; 
 SliderOptionHandlerFunc Original_SliderOptionHandler = nullptr;
 LevelRaycastFunc LevelRaycast = nullptr;
+PlaySoundFunc PlaySoundEffect = nullptr;
+Play3dSoundFunc Play3dSoundEffect = nullptr;
+ShowBallMessageFunc ShowBallMessage = nullptr;
 
 App* g_App = nullptr;
 PhysicsConstants* g_PhysicsConstants = nullptr;
-
-PlaySoundFunc PlaySoundEffect = nullptr;
-Play3dSoundFunc Play3dSoundEffect = nullptr;
 
 // The Mod Thread
 DWORD WINAPI ModThread(HMODULE hModule) {
@@ -71,6 +71,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LevelRaycast = (LevelRaycastFunc)(baseAddr + 0x65D90);
     PlaySoundEffect = (PlaySoundFunc)(baseAddr + 0x597b0);
     Play3dSoundEffect = (Play3dSoundFunc)(baseAddr + 0x59860);
+    ShowBallMessage = (ShowBallMessageFunc)(baseAddr + 0x01660); 
     DWORD oldProtect; // unlock memory for constants (causes crashes without if you try to edit the physics constants)
     if (!VirtualProtect(g_PhysicsConstants, sizeof(PhysicsConstants), PAGE_EXECUTE_READWRITE, &oldProtect)) {
         printf("ERROR: FAILED TO UNLOCK PHYSICS CONSTANT MEMORY");
@@ -79,9 +80,6 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     MH_Initialize();
     loadMods();
     ReloadINI();
-
-    // Get base address
-    
 
     // The exact function addresses
     LPVOID updateFuncAddr = (LPVOID)(baseAddr + 0x5E00);
@@ -176,6 +174,10 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 }
 
 void loadMods() {
+    HamsterballAPI* coreMod = new CoreFeatures(); 
+    coreMod->Initialize(&g_ModApiInstance);
+    g_Mods.push_back(coreMod); 
+
     std::string modFolderPath = "Mods";
 
     for (const auto& entry : fs::directory_iterator(modFolderPath)) {
@@ -187,6 +189,7 @@ void loadMods() {
                 if (factory) {
                     HamsterballAPI* newMod = factory();
                     if (newMod) {
+                        if (g_ShowConsole) printf("Mod Loaded: %s, Author: %s, API Version: %d\n", newMod->GetModName(), newMod->GetAuthorName(), newMod->GetApiVersion());
                         newMod->Initialize(&g_ModApiInstance); 
                         g_Mods.push_back(newMod);
                     }

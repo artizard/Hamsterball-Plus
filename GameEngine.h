@@ -52,6 +52,7 @@ typedef void(__thiscall* SliderOptionHandlerFunc)(void* this_ptr, char* sliderID
 typedef Vec3*(__thiscall* LevelRaycastFunc)(Collision* collision, Vec3* out, Vec3 origin, Vec3 direction, float max_dist);
 typedef void(__fastcall* PlaySoundFunc)(void* soundEffect, float volume);
 typedef void(__thiscall* Play3dSoundFunc)(void* soundEffect, Vec3 position, float volume);
+typedef void(__thiscall* ShowBallMessageFunc)(Ball* ball, char* message); 
 
 // --- EXTERN GLOBALS ---
 extern Ball* g_Player;
@@ -111,5 +112,6 @@ extern LevelRaycastFunc LevelRaycast;
 
 extern PlaySoundFunc PlaySoundEffect;
 extern Play3dSoundFunc Play3dSoundEffect;
+extern ShowBallMessageFunc ShowBallMessage;
 
 void UpdateBallReferences(); 
