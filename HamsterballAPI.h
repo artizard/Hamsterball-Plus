@@ -432,7 +432,7 @@ struct Ball {
 	void** vtable; // +0x000
 	std::uint8_t pad_004[0x014 - 0x004];
 	Scene* scene; // +0x014 unverified
-	int playerID; // +0x018 
+	int playerID; // +0x018 -1: badball, 0: player 1, 1: player 2, 2: player3, 3:player4
 	std::uint8_t pad_01C[0x158 - 0x01C];
 	float prev_pos_x; // +0x158
 	float prev_pos_y; // +0x15C
@@ -450,7 +450,7 @@ struct Ball {
 	std::uint8_t pad_194[0x1A0 - 0x194];
 	float speed_mult; // +0x1A0
 	PhysicsObject* physics_object; // +0x1A4 
-	float gravity_vec[3]; // +0x1A8 can't change this, it always changes back to default 
+	float gravity_vec[3]; // +0x1A8 can't change this, it always changes back to default. I've seen weird cases where this is between 0 and 1, I would recommend just using the gravity params within PhysicsObject. 
 	std::uint8_t pad_1B4[0x1C8 - 0x1B4];
 	float ball_outline_opacity; // +0x1C8
 	std::uint8_t pad_1CC[0x260 - 0x1CC];
@@ -486,7 +486,7 @@ struct Ball {
 	std::uint8_t pad_74C[0x768 - 0x74C];
 	bool cam_active; // +0x768
 	std::uint8_t pad_769[0xC4C - 0x769];
-	bool low_gravity_mode; // +0xC4C
+	bool low_gravity_mode; // +0xC4C This is not exactly what it seems, I would recommend altering gravity_y instead of using this. 
 	std::uint8_t pad_C4D[0xC50 - 0xC4D];
 	float burn_amount; // +0xC50 how burnt the ball is (from the magnifying glass), 1 kills the player normally, but setting manually doesn't seem to do this
 	std::uint8_t pad_C54[0xC60 - 0xC54];
@@ -571,9 +571,9 @@ struct PhysicsObject {
 	std::uint8_t pad_0C6C[0x0C7C - 0x0C6C];
 	bool noclip; // +0x0C7C requires no break mod otherwise
 	std::uint8_t pad_0C7D[0x0C8C - 0x0C7D];
-	float gravity_x; // +0x0C8C
-	float gravity_y; // +0x0C90
-	float gravity_z; // +0x0C94
+	float gravity_x; // +0x0C8C I would use this as opposed to the vector in Ball
+	float gravity_y; // +0x0C90 I would use this as opposed to the vector in Ball
+	float gravity_z; // +0x0C94 I would use this as opposed to the vector in Ball
 	std::uint8_t pad_0C98[0x0CA4 - 0x0C98];
 	float velocity_x; // +0x0CA4
 	float velocity_y; // +0x0CA8

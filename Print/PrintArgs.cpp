@@ -20,19 +20,6 @@ public:
     const char* GetModName() override { return "Print Args"; }
     const char* GetAuthorName() override { return "arti"; }
 
-    static LONG WINAPI MyExceptionFilter(EXCEPTION_POINTERS* ExceptionInfo) {
-        FILE* f = nullptr;
-        fopen_s(&f, "crash_log.txt", "w");
-        if (f) {
-            fprintf(f, "Exception: 0x%08X\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
-            fprintf(f, "Fault address: %p\n", ExceptionInfo->ExceptionRecord->ExceptionAddress);
-            fprintf(f, "Exception flags: 0x%08X\n", ExceptionInfo->ExceptionRecord->ExceptionFlags);
-            fclose(f);
-        }
-        // Terminate cleanly rather than continue
-        TerminateProcess(GetCurrentProcess(), 1);
-        return EXCEPTION_EXECUTE_HANDLER;
-    }
     void Initialize(IModAPI* modApi) override {
         api = modApi;
         DWORD baseAddr = api->GetGameBaseAddress();
@@ -41,14 +28,13 @@ public:
         //api->RegisterCustomHook((baseAddr + 0x0C5D0), &Hooked_currFunc, (void**)&Original_currFunc);
         //api->PatchMemory(baseAddr + 0x29d23, "\x01", 1);
         //api->PatchMemory(baseAddr + 0x29d0a, "\x01", 1);
-        SetUnhandledExceptionFilter(MyExceptionFilter);
         api->RegisterCustomControl("fly", DIK_W);
         CustomSlider sizeSlider("HAMSTER_SIZE", "Hamster Size", .037); 
         sizeSlider.stepSize = .01;
         api->CreateSlider(sizeSlider, this);
         // playsound3d
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
-        api->RegisterCustomHook(baseAddr + 0x597b0, &Hooked_currFunc, (void**)&Original_currFunc);
+        //api->RegisterCustomHook(baseAddr + 0x597b0, &Hooked_currFunc, (void**)&Original_currFunc);
     }
 
     static void __fastcall Hooked_currFunc(int param_1, float volume) {
@@ -120,6 +106,8 @@ public:
     //    }
     //}
 
+    // for anyone reading this, note that it is better to do player related keybinds in onPlayerUpdate(). If you do something to the player from this
+    // function, you need to make sure the player exists in the first place (it won't during the menu which can cause crashes)
     void onGameUpdate() override {
         // p for print
         if (api->WasKeyPressed(DIK_P)) {
@@ -151,11 +139,18 @@ public:
                 logFile << "-----------------------------------------\n";
                 logFile.close();
             }*/
+            Ball* player = api->GetPlayer();
+            PhysicsObject* physics = api->GetPhysicsObj(); 
             printf("base addr: %x\n", api->GetGameBaseAddress());
             printf("app: %x\n", api->GetApp()); 
             printf("scene: %x\n", api->GetScene());
-            printf("player 1: %x\n", api->GetPlayer());
+            printf("player 1: %x\n", player);
             printf("player 1 physics: %x\n", api->GetPhysicsObj()); 
+            printf("gravity x: %f\n", physics->gravity_x);
+            printf("gravity y: %f\n", physics->gravity_y);
+            printf("gravity z: %f\n", physics->gravity_z);
+            printf("gravity vec: [%f, %f, %f]\n", player->gravity_vec[0], player->gravity_vec[1], player->gravity_vec[2]);
+            printf("gravity type: %d\n", player->gravity_type); 
         }
         
         // q for quit 
@@ -232,9 +227,58 @@ public:
             CallMethod(0x016F0, player, 0.0f, 1.0f, 0.0f, 1000.0f);
         }
 
-        if (api->WasKeyPressed(DIK_G)) {
-            api->GetPhysicsObj()->gravity_x = 1; 
+        if (api->WasKeyPressed(DIK_C)) {
+            PhysicsObject* physics = api->GetPhysicsObj();
+            if (physics->gravity_x == 0) {
+                physics->gravity_x = -1;
+            }
+            else if (physics->gravity_x == -1) {
+                physics->gravity_x = 1;
+            }
+            else {
+                physics->gravity_x = 0;
+            }
         }
+
+        if (api->WasKeyPressed(DIK_Y)) {
+            PhysicsObject* physics = api->GetPhysicsObj();
+            if (physics->gravity_y == 0) {
+                physics->gravity_y = -1;
+            }
+            else if (physics->gravity_y == -1) {
+                physics->gravity_y = 1;
+            }
+            else {
+                physics->gravity_y = 0;
+            }
+        }
+
+        if (api->WasKeyPressed(DIK_Z)) {
+            PhysicsObject* physics = api->GetPhysicsObj();
+            if (physics->gravity_z == 0) {
+                physics->gravity_z = -1;
+            }
+            else if (physics->gravity_z == -1) {
+                physics->gravity_z = 1;
+            }
+            else {
+                physics->gravity_z = 0;
+            }
+        }
+
+        if (api->WasKeyPressed(DIK_G)) {
+            PhysicsObject* physics = api->GetPhysicsObj();
+            if (physics->gravity_y == -1) {
+                physics->gravity_y = -0.5f;
+            }
+            else if (physics->gravity_y == -0.5f) {
+                physics->gravity_y = .5f;
+            }
+            else {
+                physics->gravity_y = -1;
+            }
+        }
+
         if (api->IsKeyDown(DIK_T)) {
             api->GetPlayer()->playerID = -1; 
             CallFast(0x08390, api->GetPlayer());
@@ -329,6 +373,7 @@ public:
                 api->PatchMemory(baseAddr + 0x61B60, "\x01", 1);
             }
         }
+
     }
 };
 

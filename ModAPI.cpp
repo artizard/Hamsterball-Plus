@@ -319,12 +319,6 @@ bool ModAPI::LevelRaycastHit(Vec3 position, Vec3 direction, float max_dist, floa
 	float dist_y = result.y - position.y;
 	float dist_z = result.z - position.z;
 	float magnitude = sqrtf(dist_x*dist_x + dist_y*dist_y + dist_z*dist_z);
-	printf("max_dist: %f\n", max_dist); 
-	printf("Direction: %f, %f, %f\n", direction.x, direction.y, direction.z); 
-	printf("Magnitude: %f\n", magnitude);
-	printf("Position: %f, %f, %f\n", position.x, position.y, position.z); 
-	printf("Result: %f, %f, %f\n", result.x, result.y, result.z);
-	printf("-----------------\n");
 	if (magnitude < max_dist + tolerance) {
 		return true;
 	} 

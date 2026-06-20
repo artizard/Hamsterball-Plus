@@ -243,6 +243,7 @@ void SaveCustomOptions() {
 void InitResolutions() {
     // i'm filtering out the weird resolutions that no one would conceivably use, so the ones i'm leaving in are:
     std::set<Resolution> allowedResolutions = {
+        {640, 480},
         {800, 600},
         {1024, 768},
         {960, 720},
