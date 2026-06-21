@@ -52,6 +52,9 @@ LevelRaycastFunc LevelRaycast = nullptr;
 PlaySoundFunc PlaySoundEffect = nullptr;
 Play3dSoundFunc Play3dSoundEffect = nullptr;
 ShowBallMessageFunc ShowBallMessage = nullptr;
+RenderTextLoopFunc Original_RenderTextLoop = nullptr;
+DrawTextNoShadowFunc DrawTextNoShadow = nullptr;
+DrawGameTextFunc DrawGameText = nullptr;
 
 App* g_App = nullptr;
 PhysicsConstants* g_PhysicsConstants = nullptr;
@@ -72,6 +75,8 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     PlaySoundEffect = (PlaySoundFunc)(baseAddr + 0x597b0);
     Play3dSoundEffect = (Play3dSoundFunc)(baseAddr + 0x59860);
     ShowBallMessage = (ShowBallMessageFunc)(baseAddr + 0x01660); 
+    DrawTextNoShadow = (DrawTextNoShadowFunc)(baseAddr + 0x2C870);
+    DrawGameText = (DrawGameTextFunc)(baseAddr + 0x09C60);
     DWORD oldProtect; // unlock memory for constants (causes crashes without if you try to edit the physics constants)
     if (!VirtualProtect(g_PhysicsConstants, sizeof(PhysicsConstants), PAGE_EXECUTE_READWRITE, &oldProtect)) {
         printf("ERROR: FAILED TO UNLOCK PHYSICS CONSTANT MEMORY");
@@ -103,6 +108,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID collisionCheckAddr = (LPVOID)(baseAddr + 0x0C5D0);
     LPVOID sliderOptionHandlerAddr = (LPVOID)(baseAddr + 0x42680);
     LPVOID saveConfigAddr = (LPVOID)(baseAddr + 0x284c0);
+    LPVOID renderTextLoopAddr = (LPVOID)(baseAddr + 0x6C250);
 
     MH_CreateHook(updateFuncAddr, &Hooked_PlayerUpdate, (LPVOID*)&Original_PlayerUpdate);
     MH_EnableHook(updateFuncAddr);
@@ -154,6 +160,10 @@ DWORD WINAPI ModThread(HMODULE hModule) {
 
     MH_CreateHook(saveConfigAddr, &Hooked_SaveConfig, (LPVOID*)&Original_SaveConfig);
     MH_EnableHook(saveConfigAddr); 
+
+    MH_CreateHook(renderTextLoopAddr, &Hooked_RenderTextLoop, (LPVOID*)&Original_RenderTextLoop);
+    MH_EnableHook(renderTextLoopAddr);
+
 
     return 0;
 }

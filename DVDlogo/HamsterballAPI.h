@@ -729,14 +729,12 @@ struct Sounds {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-/// @brief This contains the different fonts you can use for custom text. WARNING: if you try to get a reference to this in your mod's initalize function,
-/// the font will likely not be initalized yet, giving you an invalid reference. 
 struct Fonts {
 	void* showcardGothic28;		// +0x0  (App+0x318)
 	void* showcardGothic14;		// +0x4
 	void* showcardGothic16;		// +0x8
 	void* arialNarrow12bold;	// +0xC
-	void* showcardGothic72;		// +0x10 ONLY HAS 0-9
+	void* showcardGothic72;		// +0x10
 };
 #pragma pack(pop)
 

@@ -59,7 +59,7 @@ bool ModAPI::WasControlReleased(const char* controlID) {
 	}
 }
 
-void ModAPI::CreateToggleButton(CustomButton button, HamsterballAPI* modInstance) {
+void ModAPI::CreateToggleButton(const CustomButton& button, HamsterballAPI* modInstance) {
 	ButtonData data;
 	data.displayText = button.displayText;
 	data.isOn = ReadToggleButtonIni(button.id, button.defaultState); 
@@ -71,7 +71,7 @@ void ModAPI::CreateToggleButton(CustomButton button, HamsterballAPI* modInstance
 	modInstance->onButtonToggle(button.id, data.isOn); // update state 
 }
 
-void ModAPI::CreateSlider(CustomSlider slider, HamsterballAPI* modInstance) {
+void ModAPI::CreateSlider(const CustomSlider& slider, HamsterballAPI* modInstance) {
 	SliderData data; 
 	data.displayText = slider.displayText;
 	data.value = ReadSliderIni(slider.id, slider.startingValue); 
@@ -346,5 +346,20 @@ void ModAPI::ShowBallMessage(Ball* ball, char* message) {
 void ModAPI::RespawnPlayer(Ball* player) {
 	if (player != nullptr) {
 		Original_FindRespawn(player, nullptr);
+	}
+}
+
+void ModAPI::DrawCustomText(const CustomText& t) {
+	if (t.font == nullptr) { // prevents crash if text is drawn right when game is first loading 
+		printf("INVALID FONT REFERENCE\n"); 
+		return;
+	}
+	if (t.enable_shadow) {
+		DrawGameText(t.font, (char*)t.text, t.x, t.y, t.shadow_x, t.shadow_y, 
+			0, t.text_color.r, t.text_color.g, t.text_color.b, t.text_color.a, 
+			0, t.shadow_color.r, t.shadow_color.g, t.shadow_color.b, t.shadow_color.a);
+	}
+	else {
+		DrawTextNoShadow(t.font, (char*)t.text, t.x, t.y, 0, t.text_color.r, t.text_color.g, t.text_color.b, t.text_color.a);
 	}
 }

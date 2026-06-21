@@ -53,6 +53,9 @@ typedef Vec3*(__thiscall* LevelRaycastFunc)(Collision* collision, Vec3* out, Vec
 typedef void(__fastcall* PlaySoundFunc)(void* soundEffect, float volume);
 typedef void(__thiscall* Play3dSoundFunc)(void* soundEffect, Vec3 position, float volume);
 typedef void(__thiscall* ShowBallMessageFunc)(Ball* ball, char* message); 
+typedef void(__fastcall* RenderTextLoopFunc)(void* this_ptr); 
+typedef void(__thiscall* DrawTextNoShadowFunc)(void* font, char* text, int x, int y, void* vtable, float r, float g, float b, float a);
+typedef void(__thiscall* DrawGameTextFunc)(void* font, char* text, int x, int y, int shadow_x, int shadow_y, void* vtable1, float t_r, float t_g, float t_b, float t_a, void* vtable2, float s_r, float s_g, float s_b, float s_a);
 
 // --- EXTERN GLOBALS ---
 extern Ball* g_Player;
@@ -113,5 +116,8 @@ extern LevelRaycastFunc LevelRaycast;
 extern PlaySoundFunc PlaySoundEffect;
 extern Play3dSoundFunc Play3dSoundEffect;
 extern ShowBallMessageFunc ShowBallMessage;
+extern RenderTextLoopFunc Original_RenderTextLoop; 
+extern DrawTextNoShadowFunc DrawTextNoShadow;
+extern DrawGameTextFunc DrawGameText; 
 
 void UpdateBallReferences(); 

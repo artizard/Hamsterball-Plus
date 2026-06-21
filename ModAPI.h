@@ -37,8 +37,8 @@ public:
 	bool IsControlDown(const char* controlID) override;
 	bool WasControlPressed(const char* controlID) override;
 	bool WasControlReleased(const char* controlID) override;
-	void CreateToggleButton(CustomButton button, HamsterballAPI* modInstance) override;
-	void CreateSlider(CustomSlider slider, HamsterballAPI* modInstance) override;
+	void CreateToggleButton(const CustomButton& button, HamsterballAPI* modInstance) override;
+	void CreateSlider(const CustomSlider& slider, HamsterballAPI* modInstance) override;
 	PhysicsObject* GetPhysicsObj() override;
 	void PatchMemory(DWORD address, const char* bytes, size_t size) override;
 	void UnlockAll() override;
@@ -70,6 +70,7 @@ public:
 	void Play3dSoundEffect(void* soundEffect, Vec3 position, float volume) override;
 	void ShowBallMessage(Ball* ball, char* message) override;
 	void RespawnPlayer(Ball* player) override;
+	void DrawCustomText(const CustomText& customText) override;
 private:
 	void setUnlocks(bool isUnlock);
 };

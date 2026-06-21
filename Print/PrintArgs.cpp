@@ -4,6 +4,7 @@
 #include <set>
 #include <ctime>
 #include <cstring>
+#include <string>
 
 // This mod is a bunch of random stuff I did for debugging purposes, but you may find it useful for seeing how to 
 // use certain functions from the modding API (it is very messy though). Many of the mods/keybinds in here are debug/proof of concepts
@@ -12,10 +13,14 @@
 typedef void(__thiscall* currFunc)(void* this_ptr, char* text, int x, int y, int shadowOffsetX, int shadowOffsetY, DWORD vtable, Color c1, DWORD vtable2, Color c2);
 currFunc Original_currFunc = nullptr;
 
+typedef void(__fastcall* renderFunc)(void* this_ptr);
+renderFunc original_renderFunc; 
+
 class PrintArgs : public HamsterballAPI {
 private:
     inline static IModAPI* api = nullptr;
     inline static bool hasPrinted = false;
+    inline static bool showText = false;
 public:
 
     const char* GetModName() override { return "Print Args"; }
@@ -37,11 +42,32 @@ public:
         // playsound3d
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
         //api->RegisterCustomHook(baseAddr + 0x09C60, &Hooked_currFunc, (void**)&Original_currFunc);
+        //api->RegisterCustomHook(baseAddr + 0x6C250, &Hooked_renderFunc, (void**)&original_renderFunc); 
     }
 
     static void __fastcall Hooked_currFunc(void* this_ptr, void* edx_dummy, char* text, int x, int y, int shadowOffsetX, int shadowOffsetY, DWORD vtable, Color c1, DWORD vtable2, Color c2) {
         printf("this_ptr: %x, text: %s, x: %d, y: %d, shadowX: %d, shadowY: %d, vtable1: %x, c1: (%f, %f, %f, %f), vtable2: %x, c2: (%f, %f, %f, %f)\n", this_ptr, text, x, y, shadowOffsetX, shadowOffsetY, vtable, c1.r, c1.g, c1.b, c1.a, vtable2, c2.r, c2.g, c2.b, c2.a);
         Original_currFunc(this_ptr, text, x, y, shadowOffsetX, shadowOffsetY, vtable, c1, vtable2, c2);
+    }
+
+    static void __fastcall Hooked_renderFunc(void* this_ptr) {
+        original_renderFunc(this_ptr);
+        if (showText) {
+            void* font = *(void**)((char*)api->GetApp() + 0x318);
+            Color tc = Color(.5f, .5f, .9f, 1.0f);
+            Color sc = Color(0.0f, 0.0f, 0.2f, 1.0f);
+            if (font) {
+                CallMethod(0x09C60, font, "Test 123", 300, 50, 5, 5, 0, tc.r, tc.g, tc.b, tc.a, 0, sc.r, sc.g, sc.b, sc.a);
+            }
+
+        }
+    }
+
+    void onTextRenderLoop() override {
+        if (showText) {
+            CustomText text(api->GetApp()->fonts.arialNarrow12bold, "TESTING TESTING", 500, 500, Color(.8f, .2f, .2f, 1.0f), true);
+            api->DrawCustomText(text);
+        }
     }
 
     void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) override {
@@ -270,10 +296,6 @@ public:
             api->LevelRaycastHit(playerPos, Vec3(0, 0, 1), 1);
         }
 
-        if (api->IsKeyDown(DIK_T)) {
-            api->GetPlayer()->playerID = -1; 
-            CallFast(0x08390, api->GetPlayer());
-        }
         if (api->IsKeyDown(DIK_D)) {
             api->SetSpeed(player, 10.0f);
         }
@@ -284,26 +306,29 @@ public:
             enemy->radius = 100.0f;
         }
 
-        if (api->WasKeyPressed(DIK_J)) {
-            api->RespawnPlayer(api->GetPlayer2());
-        }
-
         DWORD baseAddr = api->GetGameBaseAddress();
-        if (api->WasKeyPressed(DIK_F)) {
-            printf("TEST"); 
-            DWORD vtable = baseAddr + 0xCF300;
-            Original_currFunc((void*)0xd740440, (char*)"69420", 437, 0, 5, 5, vtable, Color(.5f, .5f, .5f, .8f), vtable, Color(0.0f, 0.0f, 0.0f, 1.0f));
-        }
-        
-        //if (api->WasKeyPressed(DIK_9)) {
-        //    //api->PatchMemory(baseAddr + 0x08412, "\x83\x7F\x18\x01", 4);
-        //    api->PatchMemory(baseAddr + 0x08416, "\x0F\x85\xAA", 3);
-        //}
-        //if (api->WasKeyPressed(DIK_0)) {
-        //    //api->PatchMemory(baseAddr + 0x08412, "\x83\x7F\x18\xFF", 4);
-        //    api->PatchMemory(baseAddr + 0x08416, "\x0F\x84\xAA", 3);
-        //}
 
+        if (api->WasKeyPressed(DIK_J)) {
+            printf("TEST");
+            DWORD vtable = baseAddr + 0xCF300;
+            void* font = *(void**)((char*)api->GetApp() + 0x318);
+            Color tc = Color(.5f, .5f, .5f, .8f);
+            CallMethod(0x2C870, font, "Test 123", 300, 50, vtable, tc.r, tc.g, tc.b, tc.a);
+        }
+
+        if (api->WasKeyPressed(DIK_F)) {
+            showText = !showText;
+            printf("New value: %s\n", (showText) ? "True" : "False");
+        }
+
+        if (api->WasKeyPressed(DIK_T)) {
+            printf("TEST");
+            DWORD vtable = baseAddr + 0xCF300;
+            void* font = *(void**)((char*)api->GetApp() + 0x318);
+            Color tc = Color(.5f, .5f, .5f, .8f);
+            Color sc = Color(0.0f, 0.0f, 0.0f, 1.0f);
+            CallMethod(0x09B90, font, "Test 123", 300, 50, 5, 5, vtable, tc.r, tc.g, tc.b, tc.a, vtable, tc.r, tc.g, tc.b, tc.a);
+        }
 
         if (api->WasKeyPressed(DIK_5)) {
             Ball* p = api->GetPlayer();

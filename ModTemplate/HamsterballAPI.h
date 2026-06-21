@@ -5,14 +5,12 @@
 #include <cstddef>
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
-#include <cstdio>
+#include <limits>
 
 #define HAMSTERBALL_API_VERSION 1
 
-struct Collision;
+struct Collision; 
 class HamsterballAPI;
-
-#pragma pack(push, 1)
 /// A general color struct to be used with some of the functions. The default constructor sets rgba all to 1.0f.
 struct Color {
 	float r, g, b, a;
@@ -31,8 +29,6 @@ struct CustomButton {
 	const char* falseText = "NO"; // The text that will be displayed for the off/false state 
 	Color color = Color(); // The color of the button text (Will be white if you don't change this)
 
-	CustomButton() = default;
-
 	CustomButton(const char* id, const char* displayText) : id(id), displayText(displayText) {}
 };
 
@@ -44,37 +40,14 @@ struct CustomSlider {
 	float startingValue; // The default value for when the user uses the mod for the first time
 	float stepSize = .1; // The increments in which the user can change the slider 
 	int decimalPlaces = 2; // The amount of decimal places you want the slider to show 
-	float lowerBound = -INFINITY; // The lowest that the slider can go (defaults to no lower bound) 
-	float upperBound = INFINITY; // The highest that the slider can go (defaults to no upper bound)
+	float lowerBound = -std::numeric_limits<float>::infinity(); // The lowest that the slider can go (defaults to no lower bound) 
+	float upperBound = std::numeric_limits<float>::infinity(); // The highest that the slider can go (defaults to no upper bound)
 	const char* unitName = ""; // The unit shown after the number. Leave default for no unit. 
 	Color color; // The color of the slider text
 
-	CustomSlider() = default;
-
-	CustomSlider(const char* id, const char* displayText, float startingValue) :
-		id(id), displayText(displayText), startingValue(startingValue) {
-	}
+	CustomSlider(const char* id, const char* displayText, float startingValue) : 
+		id(id), displayText(displayText), startingValue(startingValue) {}
 };
-
-/// @brief A struct used when calling the text drawing functions. This is just how you input the parameters. 
-struct CustomText {
-	void* font; // use a value from the Fonts struct
-	const char* text; // The text you want to display
-	int x = 0; // x position of text
-	int y = 0; // y position of text
-	bool enable_shadow = true; // whether or not you want a text shadow, if false, then just leave the shadow related fields default 
-	int shadow_x = 5; // x offset for the text shadow
-	int shadow_y = 5; // y offset for the text shadow
-	Color text_color = Color(1, 1, 1, 1);
-	Color shadow_color = Color(0, 0, 0, 1); // defaults to black 
-
-	CustomText() = default;
-
-	CustomText(void* font, const char* text, int x, int y, Color text_color, bool enable_shadow) :
-		font(font), text(text), x(x), y(y), text_color(text_color), enable_shadow(enable_shadow) {
-	}
-};
-#pragma pack(pop)
 
 struct PhysicsObject;
 struct App;
@@ -83,14 +56,13 @@ struct Scene;
 struct Vec3;
 struct PhysicsConstants;
 struct Sounds;
-struct Fonts;
 
 /// This class is how you will retrieve values and call functions on the game. 
 class IModAPI {
 public:
 	/// @brief Deconstructor for IModAPI. Only worry about this if you need to free up memory when the game closes.
 	virtual ~IModAPI() {}
-
+	
 	/// @brief Create a custom hook. You should use the preexisting functions like onGameUpdate when possible, but if the 
 	/// hook is not already created, then you'll have to do it using this. This can cause issues if another mod also hooks 
 	/// into the same function. This is one of the more complicated aspects of this modding API, so there will be examples
@@ -149,14 +121,12 @@ public:
 
 	/// @brief Create a toggleable option in the game's option menu. 
 	/// @param button The button struct that defines all of the parameters of the button. Read those comments for more information.
-	/// @param this Just pass in 'this' as the parameter
-	virtual void CreateToggleButton(const CustomButton& button, HamsterballAPI* modInstance) = 0;
+	virtual void CreateToggleButton(CustomButton button, HamsterballAPI* modInstance) = 0;
 
 	/// @brief Create a slider in the game's option menu.
 	/// @param slider The slider struct that defines all of the parameters of the slider. Read those comments for more information.
-	/// @param this Just pass in 'this' as the parameter
-	virtual void CreateSlider(const CustomSlider& slider, HamsterballAPI* modInstance) = 0;
-
+	virtual void CreateSlider(CustomSlider slider, HamsterballAPI* modInstance) = 0;
+	
 	/// @brief Patches memory within Hamsterball.exe. This is temporary, as it does not alter the actual .exe, it just modifies the 
 	/// current instance of the game in memory. I'd recommend using this within Initialize() or onButtonToggle(). 
 	/// @param address The address to patch from
@@ -172,7 +142,7 @@ public:
 
 	/// @brief Quits the game gracefully without a crash message. 
 	/// @return Returns whether it successfully closed. (It realistically should work in all cases)
-	virtual bool QuitGame() = 0;
+	virtual bool QuitGame() = 0; 
 
 	/// @brief Saves the current configs to the registry such as resolution, unlocks, etc. Use this to save new changes to the 
 	/// options that would be in the registry. These will automatically be saved when the game closes (provided it doesn't crash),
@@ -218,7 +188,7 @@ public:
 	/// @brief Gets player 4. Will be a nullptr if the player doesn't exist (not in level or wrong number of players)
 	/// @return The Ball* to player 4
 	virtual Ball* GetPlayer4() = 0;
-
+	
 	/// @brief Get a list of the 8balls currently active. 
 	/// @param enemyCount Pass in a pointer, this is the number of enemies that will be in the returned list. 
 	/// @return Ball** list of the 8balls 
@@ -258,8 +228,8 @@ public:
 	/// @param chase_distance How far it can see the player from. 
 	/// @param radius How large the ball is. 
 	/// @param spin_distance How big the circles it makes while idle are. 
-	virtual void CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance = 200, float chase_distance = 300, float radius = 35, float spin_distance = 45) = 0;
-
+	virtual void CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance=200, float chase_distance=300, float radius=35, float spin_distance=45) = 0;
+	
 	/// @brief Reloads the ModConfig.ini file. This means it will update controls, colors, etc. This will not load in the values stored for the 
 	/// toggle/slider options, those are applied at launch. 
 	virtual void ReloadIniFile() = 0;
@@ -267,7 +237,7 @@ public:
 	/// Returns the current time on the game's timer (the value when called, not a pointer). This number counts up in time trials
 	/// and down in tournament. This also counts up for the arenas, but it isn't really used for anything in the actual game. 
 	/// @return The current timer time
-	virtual int GetTimerTime() = 0;
+	virtual int GetTimerTime() = 0; 
 
 	/// Sets the time on the in game timer. In time trials this is the amount of time passed, while in tournament this is the amount of
 	/// time left.
@@ -281,7 +251,7 @@ public:
 	/// @param direction What direction the ray should go in (ex. (0,-1,0))
 	/// @param radius The size of the sphere; generally small values are better, but larger values can represent the player better as the ray can't fit through small gaps
 	/// @return Vector of where the ray hits
-	virtual Vec3 LevelRaycastVec(Vec3 position, Vec3 direction, float radius) = 0;
+	virtual Vec3 LevelRaycastVec(Vec3 position, Vec3 direction, float radius) = 0; 
 
 	/// @brief Sends out a ray (actually a spehere) and returns whether or not the ray hit anything within a given distance. 
 	/// THIS ONLY ACCOUNTS FOR LEVEL GEOMETRY, THE RAYS WILL IGNORE BADBALLS, PLAYERS, ETC.
@@ -290,7 +260,7 @@ public:
 	/// @param radius The size of the sphere; generally small values are better, but larger values can represent the player better as the ray can't fit through small gaps
 	/// @param max_dist The max distance you want the ray to travel. Leave default/-1 to leave the distance uncapped. 
 	/// @return Vector of where the ray hits
-	virtual bool LevelRaycastHit(Vec3 position, Vec3 direction, float radius, float max_dist = -1) = 0;
+	virtual bool LevelRaycastHit(Vec3 position, Vec3 direction, float radius, float max_dist=-1) = 0;
 
 	/// @brief Gives a pointer to the physics constants struct. You can change different values which affect the game globally such as glass friction and hamster size.
 	/// @return Pointer the the game's physics constants
@@ -316,8 +286,6 @@ public:
 	/// @brief Respawns the provided player when called.
 	/// @param The player you want to respawn. This technically works on badballs, but breaks their AIs and collision.
 	virtual void RespawnPlayer(Ball* player) = 0;
-
-	virtual void DrawCustomText(const CustomText& customText) = 0;
 };
 
 /// This includes functions that you can override in order to add logic on certain events such as onPlayerUpdate,
@@ -378,8 +346,6 @@ public:
 	/// @param colliding_ball The ball that collided with the event plane
 	/// @param eventPlaneID The ID of event plane that was hit ("N:GOAL", "E:LIMIT", etc.)
 	virtual void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) {}
-
-	virtual void onTextRenderLoop() {}
 };
 
 typedef HamsterballAPI* (*CreateModFunct)();
@@ -729,18 +695,6 @@ struct Sounds {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-/// @brief This contains the different fonts you can use for custom text. WARNING: if you try to get a reference to this in your mod's initalize function,
-/// the font will likely not be initalized yet, giving you an invalid reference. 
-struct Fonts {
-	void* showcardGothic28;		// +0x0  (App+0x318)
-	void* showcardGothic14;		// +0x4
-	void* showcardGothic16;		// +0x8
-	void* arialNarrow12bold;	// +0xC
-	void* showcardGothic72;		// +0x10 ONLY HAS 0-9
-};
-#pragma pack(pop)
-
-#pragma pack(push, 1)
 /// @brief A struct representing the game's App object. This contains a lot of fields about basic game things such as settings
 /// and unlocks. 
 /// Fields labeled unverifed mean that the field may be wrong.
@@ -758,15 +712,13 @@ struct App {
 	int gameHeight; // +0x160 
 	std::uint8_t pad_164[0x10];
 	void* graphics; // +0x174 unverified
-	std::uint8_t pad_178[0x17C - 0x178];
+	std::uint8_t pad_178[0x17C-0x178];
 	void* audioSystem; // +0x17C unverified
 	void* inputHandler; // +0x180 unverified
 	void* gameUpdateObj; // +0x184 unverified
 	std::uint8_t pad_188[0x238 - 0x188];
 	bool rightButtonPauseEnabled; // +0x238
-	std::uint8_t pad_239[0x318 - 0x239];
-	Fonts fonts; // +0x318
-	std::uint8_t pad_32C[0x43C - 0x32C];
+	std::uint8_t pad_239[0x43C - 0x239];
 	Sounds sounds; // +0x43C
 	std::uint8_t pad_530[0x534 - 0x530];
 	void* musicHandle; // +0x534 unverified
@@ -905,8 +857,6 @@ static_assert(offsetof(App, audioSystem) == 0x17C);
 static_assert(offsetof(App, inputHandler) == 0x180);
 static_assert(offsetof(App, gameUpdateObj) == 0x184);
 static_assert(offsetof(App, rightButtonPauseEnabled) == 0x238);
-static_assert(sizeof(Fonts) == 0x14);
-static_assert(offsetof(App, fonts) == 0x318);
 static_assert(offsetof(App, sounds) == 0x43C);
 static_assert(sizeof(Sounds) == 0xF4);
 static_assert(offsetof(App, musicHandle) == 0x534);
@@ -966,3 +916,4 @@ static_assert(offsetof(PhysicsConstants, unknown4) == 0x80);
 static_assert(offsetof(PhysicsConstants, cameraDamping) == 0x88);
 static_assert(offsetof(PhysicsConstants, unknown5) == 0x11C);
 static_assert(offsetof(PhysicsConstants, unknown6) == 0x124);
+

@@ -518,3 +518,10 @@ void __fastcall Hooked_SaveConfig(App* app) {
     SaveCustomOptions(); 
     Original_SaveConfig(app);
 }
+
+void __fastcall Hooked_RenderTextLoop(void* this_ptr) {
+    Original_RenderTextLoop(this_ptr); 
+    for (HamsterballAPI* mod : g_Mods) {
+        mod->onTextRenderLoop(); 
+    }
+}
