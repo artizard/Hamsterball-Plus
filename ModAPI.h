@@ -70,7 +70,10 @@ public:
 	void Play3dSoundEffect(void* soundEffect, Vec3 position, float volume) override;
 	void ShowBallMessage(Ball* ball, char* message) override;
 	void RespawnPlayer(Ball* player) override;
-	void DrawCustomText(const CustomText& customText) override;
+	void DrawCustomText(const char* text, const CustomText& params) override;
+	float GetBallSpeed(Ball* ball) override;
+	void ShatterBall(Ball* ball) override;
+	void DrawTimedMessage(const char* text, const CustomText& params, float messageDuration) override;
 private:
 	void setUnlocks(bool isUnlock);
 };

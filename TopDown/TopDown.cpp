@@ -40,10 +40,6 @@ public:
             std::copy(std::begin(customMatrix), std::end(customMatrix), viewMatrix);
         }
     }
-
-    void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) {
-        printf("EventPlaneID: %s\n", eventPlaneID);
-    }
 };
 
 extern "C" __declspec(dllexport) HamsterballAPI* CreateModInstance() {

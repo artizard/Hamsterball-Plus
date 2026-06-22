@@ -124,6 +124,38 @@ const int GetLevelIdFromHUDText(const char* text, bool& isArena) {
 // Hooked Player Update Loop (for getting player object pointer)
 void __fastcall Hooked_PlayerUpdate(Ball* ecx_player, void* edx_dummy) {
 
+    // check for ball to ball collisions 
+    Scene* scene = ecx_player->scene;
+    int ball_count = scene->ball_list_count;
+    PhysicsObject* player_physics = ecx_player->physics_object;
+    for (int i = 0; i < ball_count; i++) {
+        Ball* other_ball = scene->ball_array[i];
+        if (other_ball == ecx_player) continue; // don't check collisions between a ball and itself
+        PhysicsObject* other_physics = other_ball->physics_object; 
+        /*float dx = (ecx_player->pos_x + player_physics->velocity_x) - (other_ball->pos_x + other_physics->velocity_x);
+        float dy = (ecx_player->pos_y + player_physics->velocity_y) - (other_ball->pos_y + other_physics->velocity_y);
+        float dz = (ecx_player->pos_z + player_physics->velocity_z) - (other_ball->pos_z + other_physics->velocity_z);*/
+        float dx = ecx_player->pos_x - other_ball->pos_x;
+        float dy = ecx_player->pos_y - other_ball->pos_y;
+        float dz = ecx_player->pos_z - other_ball->pos_z;
+        float distance = dx * dx + dy * dy + dz * dz; // not squaring the magnitude for optimization
+        float collision_radius = ecx_player->radius + other_ball->radius;
+        collision_radius *= collision_radius; // square to match distance 
+
+        if (distance < collision_radius + 500) printf("PLAYER %d, distance: %f, radius check: %f, distanceToCollide: %f\n", ecx_player->playerID,distance, collision_radius, distance-collision_radius);
+        if (distance < collision_radius) { // if collided 
+
+            /*if (ecx_player->radius != )
+            float this_speed = GetBallSpeed(ecx_player);
+            float other_speed = GetBallSpeed(other_ball);
+            bool bumpedOther = this_speed > other_speed;*/
+            for (HamsterballAPI* mod : g_Mods) {
+                mod->onBallBump((Ball*)ecx_player, (Ball*)other_ball);
+            }
+        }
+    }
+
+
     for (HamsterballAPI* mod : g_Mods) {
         mod->onPlayerUpdate((Ball*)ecx_player);
     }
@@ -133,6 +165,12 @@ void __fastcall Hooked_PlayerUpdate(Ball* ecx_player, void* edx_dummy) {
     }
 
     Original_PlayerUpdate(ecx_player, edx_dummy);
+
+    
+    //PhysicsObject* physics = ecx_player->physics_object; 
+    ////int count = (int)((char*)physics + 0x1c);
+    //int count = *reinterpret_cast<int*>(reinterpret_cast<char*>(physics) + 0x1c);
+    //printf("count: %d\n", count); 
 }
 
 // Adding custom option
@@ -523,5 +561,21 @@ void __fastcall Hooked_RenderTextLoop(void* this_ptr) {
     Original_RenderTextLoop(this_ptr); 
     for (HamsterballAPI* mod : g_Mods) {
         mod->onTextRenderLoop(); 
+    }
+
+    // process timed messages
+    ULONGLONG currTime = GetTickCount64(); 
+    for (int i = 0; i < g_TimedMessages.size(); i++) {
+        if (currTime >= g_TimedMessages[i].endTime) { // expired
+            // remove message 
+            g_TimedMessages[i] = g_TimedMessages.back();
+            g_TimedMessages.pop_back(); 
+            i--; // don't skip the swapped one 
+        }
+        else { // still valid so draw it
+            const CustomText& params = g_TimedMessages[i].params;
+            char* text = (char*) g_TimedMessages[i].text.c_str();
+            g_ModApiInstance.DrawCustomText(text, params);
+        }
     }
 }

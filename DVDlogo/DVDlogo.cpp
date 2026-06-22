@@ -23,8 +23,6 @@ public:
         CustomButton onButton("DVD_BOUNCE_ON", "TOGGLE DVD BOUNCE");
         api->CreateToggleButton(onButton, this);
 
-        dvdLogo.text = "HB2";
-
         posX = dvdLogo.x = 523;
         posY = dvdLogo.y = 492;
         velX = 1.5;
@@ -51,7 +49,7 @@ public:
                 velY *= -1;
                 changeLogoColor();
             }
-            api->DrawCustomText(dvdLogo);
+            api->DrawCustomText("HB2", dvdLogo);
 
             posX += velX;
             posY += velY;

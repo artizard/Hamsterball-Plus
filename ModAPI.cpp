@@ -349,17 +349,37 @@ void ModAPI::RespawnPlayer(Ball* player) {
 	}
 }
 
-void ModAPI::DrawCustomText(const CustomText& t) {
+void ModAPI::DrawCustomText(const char* text, const CustomText& t) {
 	if (t.font == nullptr) { // prevents crash if text is drawn right when game is first loading 
 		printf("INVALID FONT REFERENCE\n"); 
 		return;
 	}
 	if (t.enable_shadow) {
-		DrawGameText(t.font, (char*)t.text, t.x, t.y, t.shadow_x, t.shadow_y, 
+		DrawGameText(t.font, (char*)text, t.x, t.y, t.shadow_x, t.shadow_y, 
 			0, t.text_color.r, t.text_color.g, t.text_color.b, t.text_color.a, 
 			0, t.shadow_color.r, t.shadow_color.g, t.shadow_color.b, t.shadow_color.a);
 	}
 	else {
-		DrawTextNoShadow(t.font, (char*)t.text, t.x, t.y, 0, t.text_color.r, t.text_color.g, t.text_color.b, t.text_color.a);
+		DrawTextNoShadow(t.font, (char*)text, t.x, t.y, 0, t.text_color.r, t.text_color.g, t.text_color.b, t.text_color.a);
 	}
+}
+
+float ModAPI::GetBallSpeed(Ball* ball) {
+	PhysicsObject* physics = ball->physics_object;
+	float vx = physics->velocity_x;
+	float vy = physics->velocity_y;
+	float vz = physics->velocity_z;
+	return sqrtf(vx * vx + vy * vy + vz * vz);
+}
+
+void ModAPI::ShatterBall(Ball* ball) {
+	CallFast(0x9050, ball);
+}
+
+void ModAPI::DrawTimedMessage(const char* text, const CustomText& params, float messageDuration) {
+	TimedMessage message;
+	message.endTime = GetTickCount64() + static_cast<ULONGLONG>(messageDuration * 1000.0f);
+	message.params = params;
+	message.text = text;
+	g_TimedMessages.push_back(message); 
 }

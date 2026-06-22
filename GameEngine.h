@@ -80,12 +80,20 @@ struct LevelConfig {
     std::string RaceName;
     std::string ArenaName;
 };
+struct TimedMessage {
+    ULONGLONG endTime; 
+    std::string text; 
+    CustomText params;
+};
 
 extern ThemeConfig g_Theme;
 extern std::vector<LevelConfig> g_LevelConfigs;
 extern bool g_ShowCheats;
 extern bool g_ShowConsole;
 
+// So theres a function that modders can use that displays a message for x amount of time. I need to store this between renders so I'm using this data structure.
+// I'm using swap and pop method for caching efficiency to hopefully avoid performance issues. 
+inline std::vector<TimedMessage> g_TimedMessages; 
 
 // Function Pointers
 extern FindRespawnPointFunc Original_FindRespawn;

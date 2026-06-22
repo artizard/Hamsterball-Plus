@@ -21,6 +21,7 @@ private:
     inline static IModAPI* api = nullptr;
     inline static bool hasPrinted = false;
     inline static bool showText = false;
+    inline static int y = 200;
 public:
 
     const char* GetModName() override { return "Print Args"; }
@@ -65,10 +66,11 @@ public:
 
     void onTextRenderLoop() override {
         if (showText) {
-            CustomText text(api->GetApp()->fonts.arialNarrow12bold, "TESTING TESTING", 500, 500, Color(.8f, .2f, .2f, 1.0f), true);
-            api->DrawCustomText(text);
+            CustomText text(api->GetApp()->fonts.arialNarrow12bold, 500, 500, Color(.8f, .2f, .2f, 1.0f), true);
+            api->DrawCustomText("TESTING TESTING", text);
         }
     }
+
 
     void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) override {
         if (strcmp(eventPlaneID, "E:CAMLEFT") == 0) {
@@ -322,12 +324,12 @@ public:
         }
 
         if (api->WasKeyPressed(DIK_T)) {
-            printf("TEST");
-            DWORD vtable = baseAddr + 0xCF300;
-            void* font = *(void**)((char*)api->GetApp() + 0x318);
-            Color tc = Color(.5f, .5f, .5f, .8f);
-            Color sc = Color(0.0f, 0.0f, 0.0f, 1.0f);
-            CallMethod(0x09B90, font, "Test 123", 300, 50, 5, 5, vtable, tc.r, tc.g, tc.b, tc.a, vtable, tc.r, tc.g, tc.b, tc.a);
+            CustomText text(api->GetApp()->fonts.arialNarrow12bold, 300, y, Color(.35f, .35f, .8f, 1.0f), true);
+            api->DrawTimedMessage("TIMED MESSAGE", text, 3);
+            y += 30;
+            if (y > 500) {
+                y = 10;
+            }
         }
 
         if (api->WasKeyPressed(DIK_5)) {
@@ -353,6 +355,16 @@ public:
                 api->PatchMemory(api->GetGameBaseAddress() + 0x1a394, "\x01", 1);
             }
             
+        }
+        if (api->WasKeyPressed(DIK_E)) {
+            api->ShatterBall(api->GetPlayer());
+
+        }
+        if (api->WasKeyPressed(DIK_O)) {
+            size_t enemyCount;
+            Ball* enemy = api->GetEnemies(&enemyCount)[0];
+            api->ShatterBall(enemy);
+
         }
         if (api->IsKeyDown(DIK_NUMPAD7)) {
             api->GetScene()->camera_angle += .8;
@@ -397,6 +409,13 @@ public:
             }
         }
 
+    }
+
+    void onBallBump(Ball* ball1, Ball* ball2) override {
+        printf("COLLISION, ball1: %x, ball2: %x, ", ball1, ball2);
+        Scene* scene = api->GetScene();
+        if (scene != nullptr)
+            printf("time: %d\n-----------------------------\n", scene->frame_counter);
     }
 };
 

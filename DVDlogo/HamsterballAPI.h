@@ -59,7 +59,6 @@ struct CustomSlider {
 /// @brief A struct used when calling the text drawing functions. This is just how you input the parameters. 
 struct CustomText {
 	void* font; // use a value from the Fonts struct
-	const char* text; // The text you want to display
 	int x = 0; // x position of text
 	int y = 0; // y position of text
 	bool enable_shadow = true; // whether or not you want a text shadow, if false, then just leave the shadow related fields default 
@@ -70,8 +69,8 @@ struct CustomText {
 
 	CustomText() = default;
 
-	CustomText(void* font, const char* text, int x, int y, Color text_color, bool enable_shadow) :
-		font(font), text(text), x(x), y(y), text_color(text_color), enable_shadow(enable_shadow) {
+	CustomText(void* font, int x, int y, Color text_color, bool enable_shadow) :
+		font(font), x(x), y(y), text_color(text_color), enable_shadow(enable_shadow) {
 	}
 };
 #pragma pack(pop)
@@ -276,7 +275,7 @@ public:
 
 	/// @brief Sends out a ray (actually a spehere) and returns the vector of where the ray hit. If it doesn't hit anything, then the distance 
 	/// will be roughly 994.45f. I would generally recommend to use LevelRaycastHit instead, this returns just the vector, so you have to process
-	/// it yourself. THIS ONLY ACCOUNTS FOR LEVEL GEOMETRY, THE RAYS WILL IGNORE BADBALLS, PLAYERS, ETC.
+	/// it yourself. THIS ONLY ACCOUNTS FOR LEVEL GEOMETRY AND SOME ENEMIES, THE RAYS WILL IGNORE BADBALLS / OTHER PLAYERS.
 	/// @param position Where the ray should be cast from
 	/// @param direction What direction the ray should go in (ex. (0,-1,0))
 	/// @param radius The size of the sphere; generally small values are better, but larger values can represent the player better as the ray can't fit through small gaps
@@ -317,7 +316,14 @@ public:
 	/// @param The player you want to respawn. This technically works on badballs, but breaks their AIs and collision.
 	virtual void RespawnPlayer(Ball* player) = 0;
 
-	virtual void DrawCustomText(const CustomText& customText) = 0;
+	virtual void DrawCustomText(const char* text, const CustomText& params) = 0;
+
+
+	virtual void DrawTimedMessage(const char* text, const CustomText& params, float messageDuration) = 0;
+
+	virtual float GetBallSpeed(Ball* ball) = 0;
+
+	virtual void ShatterBall(Ball* ball) = 0;
 };
 
 /// This includes functions that you can override in order to add logic on certain events such as onPlayerUpdate,
@@ -380,6 +386,11 @@ public:
 	virtual void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) {}
 
 	virtual void onTextRenderLoop() {}
+
+	/// @brief Runs when two balls collide with each other
+	/// @param ball1 The first ball involved in the collision
+	/// @param ball2 The first ball involved in the collision
+	virtual void onBallBump(Ball* ball1, Ball* ball2) {}
 };
 
 typedef HamsterballAPI* (*CreateModFunct)();
@@ -729,12 +740,14 @@ struct Sounds {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+/// @brief This contains the different fonts you can use for custom text. WARNING: if you try to get a reference to this in your mod's initalize function,
+/// the font will likely not be initalized yet, giving you an invalid reference. 
 struct Fonts {
 	void* showcardGothic28;		// +0x0  (App+0x318)
 	void* showcardGothic14;		// +0x4
 	void* showcardGothic16;		// +0x8
 	void* arialNarrow12bold;	// +0xC
-	void* showcardGothic72;		// +0x10
+	void* showcardGothic72;		// +0x10 ONLY HAS 0-9
 };
 #pragma pack(pop)
 
