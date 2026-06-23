@@ -31,32 +31,34 @@ bool ModAPI::WasKeyReleased(int dik) {
 	return ::WasKeyReleased(dik);
 }
 
+bool IsCtrlDown() {
+	return IsKeyDown(DIK_LCONTROL) || IsKeyDown(DIK_RCONTROL);
+}
+
 bool ModAPI::IsControlDown(const char* controlID) {
-	int key = GetCustomControlKey(controlID);
-	if (key != -1) {
-		return IsKeyDown(key);
+	CustomControl control = GetCustomControlKey(controlID);
+	if (control.dikCode == -1) return false; // invalid control 
+	if (control.requiresCtrl) {
+		return IsKeyDown(control.dikCode) && IsCtrlDown();
 	}
 	else {
-		return false; 
+		return IsKeyDown(control.dikCode) && !IsCtrlDown();
 	}
 }
 bool ModAPI::WasControlPressed(const char* controlID) {
-	int key = GetCustomControlKey(controlID);
-	if (key != -1) {
-		return WasKeyPressed(key);
+	CustomControl control = GetCustomControlKey(controlID);
+	if (control.dikCode == -1) return false; // invalid control 
+	if (control.requiresCtrl) {
+		return WasKeyPressed(control.dikCode) && IsCtrlDown();
 	}
 	else {
-		return false;
+		return WasKeyPressed(control.dikCode) && !IsCtrlDown();
 	}
 }
 bool ModAPI::WasControlReleased(const char* controlID) {
-	int key = GetCustomControlKey(controlID);
-	if (key != -1) {
-		return WasKeyReleased(key);
-	}
-	else {
-		return false;
-	}
+	CustomControl control = GetCustomControlKey(controlID);
+	if (control.dikCode == -1) return false; // invalid control 
+	return WasKeyReleased(control.dikCode);
 }
 
 void ModAPI::CreateToggleButton(const CustomButton& button, HamsterballAPI* modInstance) {
@@ -269,24 +271,24 @@ void ModAPI::CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance, f
 	CallMethod(0x53780, (char*)scene + 0x2DEC, badball); // unsure if this is required, but the original function calls this, not removing in case it causes memory leaks or whatever 
 }
 
-void ModAPI::RegisterCustomControl(const char* controlID, int default_dik) {
+void ModAPI::RegisterCustomControl(const char* controlID, CustomControl defaultControl) {
 	std::string controlString(controlID); 
-	g_CustomControls[controlString] = default_dik; 
+	g_CustomControls[controlString] = defaultControl; 
 }
 
-int ModAPI::GetCustomControlKey(const char* controlID) {
-	std::string controlString(controlID);
-	auto val = g_CustomControls.find(controlString);
+CustomControl ModAPI::GetCustomControlKey(const char* controlID) {
+	auto val = g_CustomControls.find(controlID);
 	if (val != g_CustomControls.end()) {
 		return val->second; 
 	}
 	else {
-		return -1; // couldn't find it 
+		return CustomControl(-1); // couldn't find it 
 	}
 }
 
 void ModAPI::ReloadIniFile() {
 	ReloadINI(); 
+	printf("ModConfig.ini Reloaded\n"); 
 }
 
 

@@ -27,28 +27,55 @@ float ReadIniFloat(const char* section, const char* key, float defaultValue, con
     return (float)atof(buffer);
 }
 
+CustomControl ParseIniControl(std::string controlString) {
+    CustomControl control; 
+    std::string dikString = controlString;
+    if (controlString.find("CTRL+") != std::string::npos) {
+        control.requiresCtrl = true;
+        dikString = controlString.substr(5);
+    }
+    try {
+        control.dikCode = std::stoi(dikString, nullptr, 16); 
+    }
+    catch (...) {
+        control.dikCode = -1; 
+    }
+    return control;
+}
+
+std::string FormatControlForIni(CustomControl control) {
+    char hexBuffer[16];
+    if (control.requiresCtrl) {
+        sprintf_s(hexBuffer, "CTRL+0x%02X", control.dikCode);
+    }
+    else {
+        sprintf_s(hexBuffer, "0x%02X", control.dikCode);
+    }
+    return std::string(hexBuffer);
+}
+
 void ControlsINI(const char* path) {
     // load/store custom controls
+    char controlBuffer[16];
     for (auto& [key, value] : g_CustomControls) {
-        UINT curr = GetPrivateProfileIntA("Custom Controls", key.c_str(), 0xFFFFFFFF, path);
-        if (curr == 0xFFFFFFFF) { // not in main controls
-            UINT backup = GetPrivateProfileIntA("Unused Controls", key.c_str(), 0xFFFFFFFF, path);
-            if (backup == 0xFFFFFFFF) { // not in backup either, so write to controls
-                char hexBuffer[8];
-                sprintf_s(hexBuffer, "0x%02X", value);
-                WritePrivateProfileStringA("Custom Controls", key.c_str(), hexBuffer, path);
+        DWORD bytesRead = GetPrivateProfileStringA("Custom Controls", key.c_str(), "", controlBuffer, sizeof(controlBuffer), path);
+        if (bytesRead == 0) { // not in main controls
+            bytesRead = GetPrivateProfileStringA("Unused Controls", key.c_str(), "", controlBuffer, sizeof(controlBuffer), path);
+            if (bytesRead == 0) { // not in backup either, so write to controls
+                std::string formatted = FormatControlForIni(value);
+                WritePrivateProfileStringA("Custom Controls", key.c_str(), formatted.c_str(), path);
             }
             else { // in backup so we move to custom controls
-                value = backup;
-                char hexBuffer[8];
-                sprintf_s(hexBuffer, "0x%02X", value);
-                WritePrivateProfileStringA("Custom Controls", key.c_str(), hexBuffer, path);
+                CustomControl control = ParseIniControl(controlBuffer);
+                if (control.dikCode != -1) value = control;
+                std::string formatted = FormatControlForIni(value);
+                WritePrivateProfileStringA("Custom Controls", key.c_str(), formatted.c_str(), path);
                 WritePrivateProfileStringA("Unused Controls", key.c_str(), NULL, path); // remove from unused 
             }
-
         }
         else { // found, so just read in value
-            value = curr;
+            CustomControl control = ParseIniControl(controlBuffer);
+            if (control.dikCode != -1) value = control;
         }
     }
     // move unused controls to the unused section; I decided on doing this, that way the main controls section doesn't get overly

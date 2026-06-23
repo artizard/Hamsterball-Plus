@@ -73,6 +73,16 @@ struct CustomText {
 		font(font), x(x), y(y), text_color(text_color), enable_shadow(enable_shadow) {
 	}
 };
+
+/// @brief Struct used when registering a custom control. 
+struct CustomControl {
+	int dikCode;
+	bool requiresCtrl = false;
+
+	CustomControl() = default;
+	CustomControl(int dikCode) : dikCode(dikCode) {}
+	CustomControl(int dikCode, bool requiresCtrl) : dikCode(dikCode), requiresCtrl(requiresCtrl) {}
+};
 #pragma pack(pop)
 
 struct PhysicsObject;
@@ -103,13 +113,14 @@ public:
 	/// keycodes allows the user to remap in case the default value you give conflicts with another mod. 
 	/// @param controlID The id for the control; use a unique name that other mods are unlikely to use, but keep it clear as to what it does.
 	/// @param default_dik The default DirectInput keycode that maps to your control. The user can rebind this, this will just be the default. 
-	virtual void RegisterCustomControl(const char* controlID, int default_dik) = 0;
+	virtual void RegisterCustomControl(const char* controlID, CustomControl defaultControl) = 0;
 
-	/// @brief Returns the DirectInput keycode that corresponds to the control id given. If the user didn't customize the control then
+	/// @brief Returns a CustomControl struct which contains the DirectInput 8 DIK code that corresponds to the control id given as well as whether or not
+	/// the control also requires ctrl to be pressed down (for keybinds like ctrl+r). If the user didn't customize the control then
 	/// this will just be the default value you chose. 
 	/// @param controlID The id for the control you want the keycode for
 	/// @return The DirectInput keycode for the control, -1 if the control was not found
-	virtual int GetCustomControlKey(const char* controlID) = 0;
+	virtual CustomControl GetCustomControlKey(const char* controlID) = 0;
 
 	/// @brief USE IsControlDown INSTEAD IN MOST CASES - Checks if a key is currently being pressed down. 
 	/// Use this within onGameUpdate() or onBallUpdate()

@@ -5,6 +5,7 @@
 #include <math.h>
 #include "HamsterballAPI.h"
 #include <map>
+#include <functional>
 
 struct Resolution {
     int width;
@@ -66,7 +67,6 @@ inline std::vector<Ball*> g_Enemies; // 8 ball or ball on sky race
 extern App* g_App; 
 extern PhysicsConstants* g_PhysicsConstants; 
 inline std::vector<HamsterballAPI*> g_Mods; 
-inline std::map<std::string, int> g_CustomControls; // <controlID, dikCode> 
 extern int* g_Timer; 
 inline std::vector<Resolution> g_AvailableResolutions; 
 
@@ -86,6 +86,8 @@ struct TimedMessage {
     CustomText params;
 };
 
+// using std::less<> here to be able to look up controls from the map without converting char* to string, which requires memory allocation (optimization thing)
+inline std::map<std::string, CustomControl, std::less<>> g_CustomControls; // <controlID, CustomControl struct> 
 extern ThemeConfig g_Theme;
 extern std::vector<LevelConfig> g_LevelConfigs;
 extern bool g_ShowCheats;

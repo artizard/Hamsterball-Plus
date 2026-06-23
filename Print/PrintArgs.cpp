@@ -37,6 +37,7 @@ public:
         //api->PatchMemory(baseAddr + 0x29d23, "\x01", 1);
         //api->PatchMemory(baseAddr + 0x29d0a, "\x01", 1);
         api->RegisterCustomControl("fly", DIK_W);
+        api->RegisterCustomControl("PRINT_ARGS_R_TEST", DIK_R); 
         CustomSlider sizeSlider("HAMSTER_SIZE", "Hamster Size", .037); 
         sizeSlider.stepSize = .01;
         api->CreateSlider(sizeSlider, this);
@@ -206,8 +207,9 @@ public:
             api->Play3dSoundEffect(api->GetApp()->sounds.whistle, Vec3(player->pos_x, player->pos_y, player->pos_z), 1.0f);
         }
 
-        if (api->WasKeyPressed(DIK_R)) {
-            api->ReloadIniFile(); 
+        if (api->WasControlPressed("PRINT_ARGS_R_TEST")) {
+            CustomText text(api->GetApp()->fonts.showcardGothic28, 450, 450, Color(.9f, .5f, .5f, 1.0f), true);
+            api->DrawTimedMessage("R WAS PRESSED", text, 5);
         }
 
         if (api->WasKeyPressed(DIK_H)) {

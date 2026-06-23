@@ -11,4 +11,5 @@ public:
     int GetApiVersion() override;
     void Initialize(IModAPI* modApi) override;
     void onBallUpdate(Ball* playerObject) override;
+    void onGameUpdate() override;
 };

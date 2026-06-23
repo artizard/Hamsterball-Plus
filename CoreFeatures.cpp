@@ -12,6 +12,7 @@ void CoreFeatures::Initialize(IModAPI* modApi) {
     api = modApi;
 
     api->RegisterCustomControl("RESPAWN_PLAYER_ML", DIK_X);
+    api->RegisterCustomControl("RELOAD_INI_ML", { DIK_R, true });
 
     CustomButton respawnButton("RESPAWN_PLAYER_STATE_ML", "RESPAWN BUTTON");
     respawnButton.trueText = "ON";
@@ -25,5 +26,11 @@ void CoreFeatures::onBallUpdate(Ball* playerObject) {
         if (api->WasControlPressed("RESPAWN_PLAYER_ML")) { // if the jump control was pressed 
             api->RespawnPlayer(api->GetPlayer()); 
         }
+    }
+}
+
+void CoreFeatures::onGameUpdate() {
+    if (api->WasControlPressed("RELOAD_INI_ML")) {
+        api->ReloadIniFile(); 
     }
 }

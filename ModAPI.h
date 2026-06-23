@@ -29,8 +29,8 @@ public:
 	std::map<std::string, SliderData> optionSliders;
 
 	void RegisterCustomHook(DWORD targetAddress, void* hookFunction, void** original) override;
-	void RegisterCustomControl(const char* controlID, int default_dik) override;
-	int GetCustomControlKey(const char* controlID) override;
+	void RegisterCustomControl(const char* controlID, CustomControl defaultControl) override;
+	CustomControl GetCustomControlKey(const char* controlID) override;
 	bool IsKeyDown(int dik) override;
 	bool WasKeyPressed(int dik) override;
 	bool WasKeyReleased(int dik) override;

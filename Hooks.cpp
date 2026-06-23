@@ -480,7 +480,6 @@ void UpdateBallReferences() {
         for (int i = 0; i < ball_count; i++) {
             current_checksum += (uintptr_t)scene->ball_array[i]; 
         }
-
         // don't repopulate vector if the balls haven't changed 
         if (scene->ball_list_count == last_ball_count && current_checksum == last_checksum) return; 
 
