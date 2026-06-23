@@ -112,36 +112,36 @@ public:
 	virtual int GetCustomControlKey(const char* controlID) = 0;
 
 	/// @brief USE IsControlDown INSTEAD IN MOST CASES - Checks if a key is currently being pressed down. 
-	/// Use this within onGameUpdate() or onPlayerUpdate()
+	/// Use this within onGameUpdate() or onBallUpdate()
 	/// @param dik DirectInput keycode to check
 	/// @return Whether the key was pressed down or not
 	virtual bool IsKeyDown(int dik) = 0;
 
 	/// @brief USE WasControlPressed INSTEAD IN MOST CASES - Checks if a key was pressed. This will trigger once per press;
-	/// if the user holds a key down, then this will only return true once. Use this within onGameUpdate() or onPlayerUpdate()
+	/// if the user holds a key down, then this will only return true once. Use this within onGameUpdate() or onBallUpdate()
 	/// @param dik DirectInput keycode to check
 	/// @return Whether the key was pressed or not
 	virtual bool WasKeyPressed(int dik) = 0;
 
 	/// @brief USE WasControlReleased IN MOST CASES - Checks if a key was released. This is in the case that the key was
-	/// being held down before, but has now been released. Use this within onGameUpdate() or onPlayerUpdate()
+	/// being held down before, but has now been released. Use this within onGameUpdate() or onBallUpdate()
 	/// @param dik DirectInput keycode to check
 	/// @return Whether the key was release or not
 	virtual bool WasKeyReleased(int dik) = 0;
 
-	/// @brief Checks if a control is currently being pressed down. Use this within onGameUpdate() or onPlayerUpdate()
+	/// @brief Checks if a control is currently being pressed down. Use this within onGameUpdate() or onBallUpdate()
 	/// @param controlID The control id to check
 	/// @return Whether the control was pressed down or not. Defaults to false if the control ID is invalid
 	virtual bool IsControlDown(const char* controlID) = 0;
 
 	/// @brief Checks if a control was pressed. This will trigger once per press; if the user holds a control down, then this 
-	/// will only return true once. Use this within onGameUpdate() or onPlayerUpdate()
+	/// will only return true once. Use this within onGameUpdate() or onBallUpdate()
 	/// @param controlID The control id to check
 	/// @return Whether the control was pressed or not. Defaults to false if the control ID is invalid
 	virtual bool WasControlPressed(const char* controlID) = 0;
 
 	/// @brief Checks if a control was released. This is in the case that the control was being held down before, but has 
-	/// now been released. Use this within onGameUpdate() or onPlayerUpdate()
+	/// now been released. Use this within onGameUpdate() or onBallUpdate()
 	/// @param controlID The control id to check
 	/// @return Whether the control was released or not. Defaults to false if the control ID is invalid
 	virtual bool WasControlReleased(const char* controlID) = 0;
@@ -326,7 +326,7 @@ public:
 	virtual void ShatterBall(Ball* ball) = 0;
 };
 
-/// This includes functions that you can override in order to add logic on certain events such as onPlayerUpdate,
+/// This includes functions that you can override in order to add logic on certain events such as onBallUpdate,
 /// onButtonToggle, onGameUpdate(), etc. 
 class HamsterballAPI {
 public:
@@ -353,18 +353,18 @@ public:
 	/// IModAPI. Additionally you can put code in here that you want to run when the mod launches. (Setting up members, etc.)
 	virtual void Initialize(IModAPI* loader) {}
 
-	/// @brief Put logic here that you want to run every player update. This is good for things like handling controls and
-	/// other player related stuff that needs to be done every tick. This does not run while you are in the main menu. 
+	/// @brief Put logic here that you want to run every ball (player or badballs) update. This is good for things like handling controls and
+	/// other player related stuff that needs to be done every tick. This does not run while you are in the main menu. Keep in mind this runs for each ball. 
 	/// This corresponds to the function at 0x405E00
-	/// @param PlayerObject The player that is being updated
-	virtual void onPlayerUpdate(Ball* PlayerObject) {}
+	/// @param ball The player that is being updated
+	virtual void onBallUpdate(Ball* ball) {}
 
 	/// @brief Hook for the onRenderApply function (0x454830). 
 	/// @param this_ptr Not exactly sure what this is (came from the original function) 
 	/// @param viewMatrix The camera's viewMatrix
 	virtual void onRenderApply(void* this_ptr, float* viewMatrix) {}
 
-	/// @brief Put logic here that you want to run when an option button is clicked. From there, you can use if statements to see
+	/// @brief Put logic here that you want to run when a toggle button option is enabled or disabled. From there, you can use if statements to see
 	/// if the buttonId matches one of your custom ones, and then carry out logic from there. The hooked function is 0x4434F0
 	/// @param buttonId The ID of the button that was clicked
 	/// @param newState The new state of that button
@@ -373,7 +373,7 @@ public:
 	virtual void onSliderChange(const char* sliderId, float newValue) {}
 
 	/// @brief Put logic here that you want to run every tick. This is good for controls that you want to work whenever,
-	/// not just in levels like with onPlayerUpdate(). The corresponding hooked function is 0x46C170
+	/// not just in levels like with onBallUpdate(). The corresponding hooked function is 0x46C170
 	virtual void onGameUpdate() {}
 
 	/// @brief You can put logic for event plane collisions here. This allows you to put logic for different types of event planes.
@@ -656,7 +656,11 @@ struct PhysicsObject {
 	void** vtable; // +0x000
 	std::uint8_t pad_004[0x010 - 0x004];
 	Ball* owner_ball; // +0x10
-	std::uint8_t pad_014[0x0C60 - 0x014];
+	std::uint8_t pad_014[0x01C - 0x014];
+	int collision_count; // +0x1C
+	std::uint8_t pad020[0x424 - 0x020];
+	void* collision_arr; // +0x424
+	std::uint8_t pad428[0xC60 - 0x428];
 	int unknown; // +0x0C60
 	float speed_scalar; // +0x0C64 You can't manually change this 
 	float friction; // +0x0C68
@@ -900,6 +904,7 @@ static_assert(offsetof(PhysicsObject, gravity_z) == 0x0C94);
 static_assert(offsetof(PhysicsObject, velocity_x) == 0x0CA4);
 static_assert(offsetof(PhysicsObject, velocity_y) == 0x0CA8);
 static_assert(offsetof(PhysicsObject, velocity_z) == 0x0CAC);
+static_assert(offsetof(PhysicsObject, collision_arr) == 0x424);
 static_assert(sizeof(PhysicsObject) == 0x0CB0);
 
 static_assert(sizeof(void*) == 4, "void* wasnt 4 bytes");

@@ -16,7 +16,7 @@ public:
         api->CreateToggleButton(speedButton, this);
     }
 
-    void onPlayerUpdate(Ball* playerObject) override {
+    void onBallUpdate(Ball* playerObject) override {
         if (api->GetButtonState("CHEAT_SPEED")) {
             float* masterSpeed = (float*)((DWORD)playerObject + 0x188);
             *masterSpeed = 500.0f;

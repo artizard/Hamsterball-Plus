@@ -25,7 +25,7 @@ public:
         api->CreateSlider(jumpHeightSlider, this);
     }
 
-    void onPlayerUpdate(Ball* playerObject) override {
+    void onBallUpdate(Ball* playerObject) override {
         if (playerObject->playerID != 0) return; // only affect player 1
         if (api->GetButtonState("CHEAT_JUMP")) { // if cheat_jump is enabled
             if (api->WasControlPressed("jump")) { // if the jump control was pressed 

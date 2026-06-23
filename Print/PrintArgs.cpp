@@ -6,11 +6,11 @@
 #include <cstring>
 #include <string>
 
-// This mod is a bunch of random stuff I did for debugging purposes, but you may find it useful for seeing how to 
+// This mod is a bunch of random stuff I did for debugging/testing purposes, but you may find it useful for seeing how to 
 // use certain functions from the modding API (it is very messy though). Many of the mods/keybinds in here are debug/proof of concepts
 // which have no error handling or are unstable so keep that in mind. 
 
-typedef void(__thiscall* currFunc)(void* this_ptr, char* text, int x, int y, int shadowOffsetX, int shadowOffsetY, DWORD vtable, Color c1, DWORD vtable2, Color c2);
+typedef void(__thiscall* currFunc)(int param_1);
 currFunc Original_currFunc = nullptr;
 
 typedef void(__fastcall* renderFunc)(void* this_ptr);
@@ -42,13 +42,13 @@ public:
         api->CreateSlider(sizeSlider, this);
         // playsound3d
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
-        //api->RegisterCustomHook(baseAddr + 0x09C60, &Hooked_currFunc, (void**)&Original_currFunc);
-        //api->RegisterCustomHook(baseAddr + 0x6C250, &Hooked_renderFunc, (void**)&original_renderFunc); 
+        //api->RegisterCustomHook(baseAddr + 0x37130, &Hooked_currFunc, (void**)&Original_currFunc);
+       // api->RegisterCustomHook(baseAddr + 0x6C250, &Hooked_renderFunc, (void**)&original_renderFunc); 
     }
 
-    static void __fastcall Hooked_currFunc(void* this_ptr, void* edx_dummy, char* text, int x, int y, int shadowOffsetX, int shadowOffsetY, DWORD vtable, Color c1, DWORD vtable2, Color c2) {
-        printf("this_ptr: %x, text: %s, x: %d, y: %d, shadowX: %d, shadowY: %d, vtable1: %x, c1: (%f, %f, %f, %f), vtable2: %x, c2: (%f, %f, %f, %f)\n", this_ptr, text, x, y, shadowOffsetX, shadowOffsetY, vtable, c1.r, c1.g, c1.b, c1.a, vtable2, c2.r, c2.g, c2.b, c2.a);
-        Original_currFunc(this_ptr, text, x, y, shadowOffsetX, shadowOffsetY, vtable, c1, vtable2, c2);
+    static void __fastcall Hooked_currFunc(int param_1) {
+        printf("param_1: %d\n", param_1); 
+        Original_currFunc(param_1);
     }
 
     static void __fastcall Hooked_renderFunc(void* this_ptr) {
@@ -91,7 +91,7 @@ public:
         }
     }
 
-    //void onPlayerUpdate(Ball* ball) override {
+    //void onBallUpdate(Ball* ball) override {
     //    int playerId = ball->playerID;
     //    if (!playerIds.count(ball)) {
     //        playerIds.insert(ball);
@@ -106,7 +106,7 @@ public:
     //    }
     //}
 
-    // for anyone reading this, note that it is better to do player related keybinds in onPlayerUpdate(). If you do something to the player from this
+    // for anyone reading this, note that it is better to do player related keybinds in onBallUpdate(). If you do something to the player from this
     // function, you need to make sure the player exists in the first place (it won't during the menu which can cause crashes)
     void onGameUpdate() override {
         // p for print
@@ -139,6 +139,7 @@ public:
                 logFile << "-----------------------------------------\n";
                 logFile.close();
             }*/
+            printf("TEST\n");
             Ball* player = api->GetPlayer();
             PhysicsObject* physics = api->GetPhysicsObj(); 
             printf("base addr: %x\n", api->GetGameBaseAddress());
@@ -146,11 +147,20 @@ public:
             printf("scene: %x\n", api->GetScene());
             printf("player 1: %x\n", player);
             printf("player 1 physics: %x\n", api->GetPhysicsObj()); 
+            printf("player 2: %x\n", api->GetPlayer2());
+            if (api->GetPlayer2() != nullptr) 
+                printf("player 2 physics: %x\n", api->GetPlayer2()->physics_object);
             printf("gravity x: %f\n", physics->gravity_x);
             printf("gravity y: %f\n", physics->gravity_y);
             printf("gravity z: %f\n", physics->gravity_z);
             printf("gravity vec: [%f, %f, %f]\n", player->gravity_vec[0], player->gravity_vec[1], player->gravity_vec[2]);
             printf("gravity type: %d\n", player->gravity_type); 
+            size_t numEnemies;
+            Ball** badballs = api->GetEnemies(&numEnemies);
+            printf("NUM ENEMIES: %d\n", numEnemies);
+            for (int i = 0; i < numEnemies; i++) {
+                printf("badball: %x, physics: %x\n", badballs[i], badballs[i]->physics_object);
+            }
         }
         
         // q for quit 
@@ -412,7 +422,7 @@ public:
     }
 
     void onBallBump(Ball* ball1, Ball* ball2) override {
-        printf("COLLISION, ball1: %x, ball2: %x, ", ball1, ball2);
+        printf("COLLISION, ball1: %x (%d), ball2: %x (%d), ", ball1, ball1->playerID, ball2, ball2->playerID);
         Scene* scene = api->GetScene();
         if (scene != nullptr)
             printf("time: %d\n-----------------------------\n", scene->frame_counter);

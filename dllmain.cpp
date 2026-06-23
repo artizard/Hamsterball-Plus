@@ -27,7 +27,7 @@ Ball* g_Player4 = nullptr;
 int* g_Timer = nullptr;
 
 FindRespawnPointFunc Original_FindRespawn = nullptr;
-PlayerUpdateFunc Original_PlayerUpdate = nullptr;
+BallUpdateFunc Original_BallUpdate = nullptr;
 OptionsMenuFunc Original_OptionsMenu = nullptr;
 AddMenuButtonFunc Original_AddMenuButton = nullptr;
 AddSpacerFunc Original_AddSpacer = nullptr;
@@ -110,7 +110,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID saveConfigAddr = (LPVOID)(baseAddr + 0x284c0);
     LPVOID renderTextLoopAddr = (LPVOID)(baseAddr + 0x6C250);
 
-    MH_CreateHook(updateFuncAddr, &Hooked_PlayerUpdate, (LPVOID*)&Original_PlayerUpdate);
+    MH_CreateHook(updateFuncAddr, &Hooked_BallUpdate, (LPVOID*)&Original_BallUpdate);
     MH_EnableHook(updateFuncAddr);
 
     MH_CreateHook(optionsFuncAddr, &Hooked_OptionsMenu, (LPVOID*)&Original_OptionsMenu);

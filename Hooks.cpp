@@ -122,55 +122,31 @@ const int GetLevelIdFromHUDText(const char* text, bool& isArena) {
 // --- HOOK IMPLEMENTATIONS ---
 
 // Hooked Player Update Loop (for getting player object pointer)
-void __fastcall Hooked_PlayerUpdate(Ball* ecx_player, void* edx_dummy) {
-
-    // check for ball to ball collisions 
-    Scene* scene = ecx_player->scene;
-    int ball_count = scene->ball_list_count;
-    PhysicsObject* player_physics = ecx_player->physics_object;
-    for (int i = 0; i < ball_count; i++) {
-        Ball* other_ball = scene->ball_array[i];
-        if (other_ball == ecx_player) continue; // don't check collisions between a ball and itself
-        PhysicsObject* other_physics = other_ball->physics_object; 
-        /*float dx = (ecx_player->pos_x + player_physics->velocity_x) - (other_ball->pos_x + other_physics->velocity_x);
-        float dy = (ecx_player->pos_y + player_physics->velocity_y) - (other_ball->pos_y + other_physics->velocity_y);
-        float dz = (ecx_player->pos_z + player_physics->velocity_z) - (other_ball->pos_z + other_physics->velocity_z);*/
-        float dx = ecx_player->pos_x - other_ball->pos_x;
-        float dy = ecx_player->pos_y - other_ball->pos_y;
-        float dz = ecx_player->pos_z - other_ball->pos_z;
-        float distance = dx * dx + dy * dy + dz * dz; // not squaring the magnitude for optimization
-        float collision_radius = ecx_player->radius + other_ball->radius;
-        collision_radius *= collision_radius; // square to match distance 
-
-        if (distance < collision_radius + 500) printf("PLAYER %d, distance: %f, radius check: %f, distanceToCollide: %f\n", ecx_player->playerID,distance, collision_radius, distance-collision_radius);
-        if (distance < collision_radius) { // if collided 
-
-            /*if (ecx_player->radius != )
-            float this_speed = GetBallSpeed(ecx_player);
-            float other_speed = GetBallSpeed(other_ball);
-            bool bumpedOther = this_speed > other_speed;*/
-            for (HamsterballAPI* mod : g_Mods) {
-                mod->onBallBump((Ball*)ecx_player, (Ball*)other_ball);
-            }
-        }
-    }
-
-
+void __fastcall Hooked_BallUpdate(Ball* ball, void* edx_dummy) {
     for (HamsterballAPI* mod : g_Mods) {
-        mod->onPlayerUpdate((Ball*)ecx_player);
+        mod->onBallUpdate(ball);
     }
-    if (ecx_player->playerID == 0) {
-        g_Player = ecx_player; 
+
+    if (ball->playerID == 0) {
+        g_Player = ball;
         UpdateBallReferences();
     }
 
-    Original_PlayerUpdate(ecx_player, edx_dummy);
+    Original_BallUpdate(ball, edx_dummy);
 
-    
-    //PhysicsObject* physics = ecx_player->physics_object; 
-    ////int count = (int)((char*)physics + 0x1c);
-    //int count = *reinterpret_cast<int*>(reinterpret_cast<char*>(physics) + 0x1c);
-    //printf("count: %d\n", count); 
+    PhysicsObject* ball_physics = ball->physics_object;
+    int collisionCount = ball_physics->collision_count;
+    void** collisions = (void**)ball_physics->collision_arr; 
+
+    for (int i = 0; i < collisionCount; i++) {
+        DWORD* currCollision = (DWORD*)collisions[i]; 
+        if (currCollision[0] == 1 && currCollision[1] == 4) {
+            Ball* other_ball = (Ball*)currCollision[3]; 
+            for (HamsterballAPI* mod : g_Mods) {
+                mod->onBallBump(ball, other_ball);
+            }
+        }
+    }
 }
 
 // Adding custom option
@@ -492,10 +468,26 @@ void __fastcall Hooked_GameUpdate(App* app) {
 
 void UpdateBallReferences() {
     if (g_Player) {
-        g_Enemies.clear(); // clear list so you don't keep adding to it 
+        // this first logic is to skip repopulating the vector if the balls haven't changed. I don't know if there would be any noticeable performance impact
+        // if I repopulated it every call, but for good measure I'm using a checksum to check whether or not the balls have changed. 
+        static int last_ball_count = -1; 
+        static uintptr_t last_checksum = 0;
+
         Scene* scene = g_Player->scene;
+        if (scene == nullptr) return;
         int ball_count = scene->ball_list_count;
-        
+        uintptr_t current_checksum = 0;
+        for (int i = 0; i < ball_count; i++) {
+            current_checksum += (uintptr_t)scene->ball_array[i]; 
+        }
+
+        // don't repopulate vector if the balls haven't changed 
+        if (scene->ball_list_count == last_ball_count && current_checksum == last_checksum) return; 
+
+        last_ball_count = ball_count;
+        last_checksum = current_checksum; 
+
+        g_Enemies.clear(); // clear list so you don't keep adding to it 
         for (int i = 0; i < ball_count; i++) {
             Ball* curr_ball = scene->ball_array[i];
             int curr_id = curr_ball->playerID;

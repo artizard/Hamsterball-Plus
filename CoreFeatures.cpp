@@ -19,7 +19,7 @@ void CoreFeatures::Initialize(IModAPI* modApi) {
     api->CreateToggleButton(respawnButton, this);
 }
 
-void CoreFeatures::onPlayerUpdate(Ball* playerObject) {
+void CoreFeatures::onBallUpdate(Ball* playerObject) {
     if (playerObject->playerID != 0) return; // only affect player 1
     if (api->GetButtonState("RESPAWN_PLAYER_STATE_ML")) { // if cheat_jump is enabled
         if (api->WasControlPressed("RESPAWN_PLAYER_ML")) { // if the jump control was pressed 

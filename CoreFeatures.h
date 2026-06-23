@@ -10,5 +10,5 @@ public:
     const char* GetAuthorName() override;
     int GetApiVersion() override;
     void Initialize(IModAPI* modApi) override;
-    void onPlayerUpdate(Ball* playerObject) override;
+    void onBallUpdate(Ball* playerObject) override;
 };
