@@ -3,9 +3,9 @@
 #include <math.h>
 #include <cstdint>
 #include <cstddef>
-#define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 #include <cstdio>
+#define DIRECTINPUT_VERSION 0x0800
 
 #define HAMSTERBALL_API_VERSION 1
 
@@ -85,6 +85,7 @@ struct CustomControl {
 };
 #pragma pack(pop)
 
+// forward declarations
 struct PhysicsObject;
 struct App;
 struct Ball;
@@ -327,13 +328,25 @@ public:
 	/// @param The player you want to respawn. This technically works on badballs, but breaks their AIs and collision.
 	virtual void RespawnPlayer(Ball* player) = 0;
 
+	/// @brief Draws text onto the screen. This only applies to the current frame, so this needs to be used in onTextRenderLoop. Use this for more complex logic such
+	/// as moving/changing text. For simple messages, just use DrawTimedMessage(). 
+	/// @param text The text you want to display
+	/// @param params Options for the text: font, color, etc.
 	virtual void DrawCustomText(const char* text, const CustomText& params) = 0;
 
-
+	/// @brief Draws text onto the screen for a specific amount of time. You can call this from wherever you want unlike DrawCustomText(). 
+	/// @param text The text you want to display
+	/// @param params Options for the text: font, color, etc.
+	/// @param messageDuration How long you want the message to last on screen, in seconds. 
 	virtual void DrawTimedMessage(const char* text, const CustomText& params, float messageDuration) = 0;
 
+	/// @brief Returns the speed of a ball. This is just the magnitude of the velocity. 
+	/// @param ball The ball you want the speed of
+	/// @return The speed of the ball
 	virtual float GetBallSpeed(Ball* ball) = 0;
 
+	/// @brief Shatters (breaks) the given ball. This will not work if the nobreak mod is on. 
+	/// @param ball The ball you want to shatter
 	virtual void ShatterBall(Ball* ball) = 0;
 };
 
@@ -396,12 +409,23 @@ public:
 	/// @param eventPlaneID The ID of event plane that was hit ("N:GOAL", "E:LIMIT", etc.)
 	virtual void onEventPlaneCollide(Ball* colliding_ball, char* eventPlaneID) {}
 
+	/// @brief Use DrawCustomText() within this loop. This is just a place where you put the text logic that should run every frame. 
 	virtual void onTextRenderLoop() {}
 
-	/// @brief Runs when two balls collide with each other
+	/// @brief Runs when two balls collide with each other. Keep in mind that the collisions are asymmetric; if the player and a badball collides, you will either get 
+	/// a call to this like (player, badball) or (badball, player). You will not get it both ways, so you will have to check both ways. 
 	/// @param ball1 The first ball involved in the collision
 	/// @param ball2 The first ball involved in the collision
 	virtual void onBallBump(Ball* ball1, Ball* ball2) {}
+
+	/// @brief Runs when a scene ends, which is when a level ends (when the level entirely ends such as leaving the level or after the results menu). 
+	/// (this is a hook of the Scene deconstructor) nThis could be good for freeing up memory at the end of a level, or just general logic when the level
+	/// ends. Keep in mind this will also run if the player leaves the level early. If you want logic only for if the player finishes the level, you can use
+	/// onEventPlaneCollide() to check if N:GOAL was hit. 
+	virtual void onSceneEnd() {}
+
+	/// @brief This runs logic when the level starts. This is when the level is loading in and the objects are initiated, before the countdown starts. 
+	virtual void onLevelStart() {}
 };
 
 typedef HamsterballAPI* (*CreateModFunct)();
@@ -458,6 +482,9 @@ inline void BuildCustomViewMatrix(float* outMatrix, Vec3 eye, Vec3 target, Vec3 
 	outMatrix[12] = -Dot(xaxis, eye); outMatrix[13] = -Dot(yaxis, eye); outMatrix[14] = -Dot(zaxis, eye); outMatrix[15] = 1.0f;
 }
 
+// I'm not confident that it matters too much if you use the right one here, but I generally just try to match the game's function declaration
+// to the best of my ability. 
+
 /// @brief A generic function to call game functions that use "__cdecl" by their memory addresses. 
 /// @tparam ReturnType The data type of the value returned by the game's function.
 /// @tparam ...Args The data types of the arguments called with the game's function. 
@@ -471,7 +498,6 @@ ReturnType Call(DWORD offset, Args... args) {
 	GameFunc func = (GameFunc)realAddress;
 	return func(args...);
 }
-
 /// @brief A generic function to call game methods that use "__thiscall" by their memory addresses. 
 /// @tparam ReturnType The data type of the value returned by the game's method.
 /// @tparam ...Args The data types of the arguments called with the game's method. 
@@ -485,7 +511,6 @@ ReturnType CallMethod(DWORD offset, ObjectType* objPointer, Args... args) {
 	GameFunc func = (GameFunc)realAddress;
 	return func(objPointer, args...);
 }
-
 /// @brief A generic function to call game functions that use "__fastcall" by their memory addresses. 
 /// @tparam ReturnType The data type of the value returned by the game's function.
 /// @tparam ...Args The data types of the arguments called with the game's function. 
@@ -689,6 +714,7 @@ struct PhysicsObject {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+/// @brief These are pointers to the sounds you can use in PlaySoundEffect() and Play3dSoundEffect(). 
 struct Sounds {
 	void* collide;          // +0x000  (App+0x43C)
 	void* roll;             // +0x004

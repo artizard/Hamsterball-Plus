@@ -10,11 +10,12 @@
 // use certain functions from the modding API (it is very messy though). Many of the mods/keybinds in here are debug/proof of concepts
 // which have no error handling or are unstable so keep that in mind. 
 
-typedef void(__thiscall* currFunc)(int param_1);
+typedef void(__fastcall* currFunc)(void* param_1);
 currFunc Original_currFunc = nullptr;
 
-typedef void(__fastcall* renderFunc)(void* this_ptr);
-renderFunc original_renderFunc; 
+typedef void(__fastcall* sceneDtor)(void* param_1);
+sceneDtor Original_sceneDtor = nullptr;
+
 
 class PrintArgs : public HamsterballAPI {
 private:
@@ -22,6 +23,7 @@ private:
     inline static bool hasPrinted = false;
     inline static bool showText = false;
     inline static int y = 200;
+    inline static float radius = 26.0f;
 public:
 
     const char* GetModName() override { return "Print Args"; }
@@ -43,26 +45,21 @@ public:
         api->CreateSlider(sizeSlider, this);
         // playsound3d
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
-        //api->RegisterCustomHook(baseAddr + 0x37130, &Hooked_currFunc, (void**)&Original_currFunc);
-       // api->RegisterCustomHook(baseAddr + 0x6C250, &Hooked_renderFunc, (void**)&original_renderFunc); 
+        //api->RegisterCustomHook(baseAddr + 0x19770, &Hooked_sceneDtor, (void**)&Original_sceneDtor);
     }
 
-    static void __fastcall Hooked_currFunc(int param_1) {
-        printf("param_1: %d\n", param_1); 
+    static void __fastcall Hooked_currFunc(void* param_1) {
+        printf("param_1: %x\n", param_1); 
+        printf("before player: %x\n\n", (api->GetPlayer() != nullptr) ? api->GetPlayer() : 0x0);
         Original_currFunc(param_1);
+        printf("after player: %x\n\n", (api->GetPlayer() != nullptr) ? api->GetPlayer() : 0x0);
     }
 
-    static void __fastcall Hooked_renderFunc(void* this_ptr) {
-        original_renderFunc(this_ptr);
-        if (showText) {
-            void* font = *(void**)((char*)api->GetApp() + 0x318);
-            Color tc = Color(.5f, .5f, .9f, 1.0f);
-            Color sc = Color(0.0f, 0.0f, 0.2f, 1.0f);
-            if (font) {
-                CallMethod(0x09C60, font, "Test 123", 300, 50, 5, 5, 0, tc.r, tc.g, tc.b, tc.a, 0, sc.r, sc.g, sc.b, sc.a);
-            }
-
-        }
+    static void __fastcall Hooked_sceneDtor(void* param_1) {
+        printf("SCENE DECONSTRUCTOR\n");
+        printf("param_1: %x\n", param_1);
+        printf("global scene: %x\n", api->GetScene()); 
+        Original_sceneDtor(param_1); 
     }
 
     void onTextRenderLoop() override {
@@ -70,6 +67,18 @@ public:
             CustomText text(api->GetApp()->fonts.arialNarrow12bold, 500, 500, Color(.8f, .2f, .2f, 1.0f), true);
             api->DrawCustomText("TESTING TESTING", text);
         }
+    }
+
+    void onSceneEnd() override {
+        printf("SCENE DECONSTRUCTOR\n");
+        radius = api->GetPlayer()->radius;
+        printf("new radius: %f\n", radius); 
+    }
+
+    void onLevelStart() override {
+        printf("player: %x\n", api->GetPlayer());
+        printf("scene: %x\n", api->GetScene()); 
+        api->GetPlayer()->radius = radius; 
     }
 
 

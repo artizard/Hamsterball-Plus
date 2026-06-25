@@ -18,3 +18,4 @@ void __fastcall Hooked_CollisionCheck(void* this_ptr, void* edx_dummy, Ball* col
 void __fastcall Hooked_SliderOptionHandler(void* this_ptr, void* edx_dummy, char* sliderID, int inputDirection);
 void __fastcall Hooked_SaveConfig(App* app);
 void __fastcall Hooked_RenderTextLoop(void* this_ptr); 
+void __fastcall Hooked_SceneDtor(Scene* scene);

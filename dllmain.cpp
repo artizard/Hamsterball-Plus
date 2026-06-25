@@ -24,6 +24,7 @@ Ball* g_Player = nullptr;
 Ball* g_Player2 = nullptr;
 Ball* g_Player3 = nullptr;
 Ball* g_Player4 = nullptr;
+Scene* g_Scene = nullptr;
 int* g_Timer = nullptr;
 
 FindRespawnPointFunc Original_FindRespawn = nullptr;
@@ -55,6 +56,7 @@ ShowBallMessageFunc ShowBallMessage = nullptr;
 RenderTextLoopFunc Original_RenderTextLoop = nullptr;
 DrawTextNoShadowFunc DrawTextNoShadow = nullptr;
 DrawGameTextFunc DrawGameText = nullptr;
+SceneDtorFunc Original_SceneDtor = nullptr;
 
 App* g_App = nullptr;
 PhysicsConstants* g_PhysicsConstants = nullptr;
@@ -109,6 +111,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     LPVOID sliderOptionHandlerAddr = (LPVOID)(baseAddr + 0x42680);
     LPVOID saveConfigAddr = (LPVOID)(baseAddr + 0x284c0);
     LPVOID renderTextLoopAddr = (LPVOID)(baseAddr + 0x6C250);
+    LPVOID sceneDtorAddr = (LPVOID)(baseAddr + 0x19770);
 
     MH_CreateHook(updateFuncAddr, &Hooked_BallUpdate, (LPVOID*)&Original_BallUpdate);
     MH_EnableHook(updateFuncAddr);
@@ -164,6 +167,8 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     MH_CreateHook(renderTextLoopAddr, &Hooked_RenderTextLoop, (LPVOID*)&Original_RenderTextLoop);
     MH_EnableHook(renderTextLoopAddr);
 
+    MH_CreateHook(sceneDtorAddr, &Hooked_SceneDtor, (LPVOID*)&Original_SceneDtor);
+    MH_EnableHook(sceneDtorAddr); 
 
     return 0;
 }

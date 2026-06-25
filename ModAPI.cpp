@@ -203,9 +203,7 @@ void ModAPI::SetSpeed(Ball* player, float mult) {
 }
 
 Scene* ModAPI::GetScene() {
-	if (g_Player) {
-		return g_Player->scene;
-	}
+	return g_Scene; 
 }
 
 Ball* ModAPI::GetPlayer2() {

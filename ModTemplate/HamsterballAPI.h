@@ -85,36 +85,36 @@ public:
 	virtual int GetCustomControlKey(const char* controlID) = 0;
 
 	/// @brief USE IsControlDown INSTEAD IN MOST CASES - Checks if a key is currently being pressed down. 
-	/// Use this within onGameUpdate() or onPlayerUpdate()
+	/// Use this within onGameUpdate() or onBallUpdate()
 	/// @param dik DirectInput keycode to check
 	/// @return Whether the key was pressed down or not
 	virtual bool IsKeyDown(int dik) = 0;
 
 	/// @brief USE WasControlPressed INSTEAD IN MOST CASES - Checks if a key was pressed. This will trigger once per press;
-	/// if the user holds a key down, then this will only return true once. Use this within onGameUpdate() or onPlayerUpdate()
+	/// if the user holds a key down, then this will only return true once. Use this within onGameUpdate() or onBallUpdate()
 	/// @param dik DirectInput keycode to check
 	/// @return Whether the key was pressed or not
 	virtual bool WasKeyPressed(int dik) = 0;
 
 	/// @brief USE WasControlReleased IN MOST CASES - Checks if a key was released. This is in the case that the key was
-	/// being held down before, but has now been released. Use this within onGameUpdate() or onPlayerUpdate()
+	/// being held down before, but has now been released. Use this within onGameUpdate() or onBallUpdate()
 	/// @param dik DirectInput keycode to check
 	/// @return Whether the key was release or not
 	virtual bool WasKeyReleased(int dik) = 0;
 
-	/// @brief Checks if a control is currently being pressed down. Use this within onGameUpdate() or onPlayerUpdate()
+	/// @brief Checks if a control is currently being pressed down. Use this within onGameUpdate() or onBallUpdate()
 	/// @param controlID The control id to check
 	/// @return Whether the control was pressed down or not. Defaults to false if the control ID is invalid
 	virtual bool IsControlDown(const char* controlID) = 0;
 
 	/// @brief Checks if a control was pressed. This will trigger once per press; if the user holds a control down, then this 
-	/// will only return true once. Use this within onGameUpdate() or onPlayerUpdate()
+	/// will only return true once. Use this within onGameUpdate() or onBallUpdate()
 	/// @param controlID The control id to check
 	/// @return Whether the control was pressed or not. Defaults to false if the control ID is invalid
 	virtual bool WasControlPressed(const char* controlID) = 0;
 
 	/// @brief Checks if a control was released. This is in the case that the control was being held down before, but has 
-	/// now been released. Use this within onGameUpdate() or onPlayerUpdate()
+	/// now been released. Use this within onGameUpdate() or onBallUpdate()
 	/// @param controlID The control id to check
 	/// @return Whether the control was released or not. Defaults to false if the control ID is invalid
 	virtual bool WasControlReleased(const char* controlID) = 0;
@@ -288,7 +288,7 @@ public:
 	virtual void RespawnPlayer(Ball* player) = 0;
 };
 
-/// This includes functions that you can override in order to add logic on certain events such as onPlayerUpdate,
+/// This includes functions that you can override in order to add logic on certain events such as onBallUpdate,
 /// onButtonToggle, onGameUpdate(), etc. 
 class HamsterballAPI {
 public:
@@ -319,7 +319,7 @@ public:
 	/// other player related stuff that needs to be done every tick. This does not run while you are in the main menu. 
 	/// This corresponds to the function at 0x405E00
 	/// @param PlayerObject The player that is being updated
-	virtual void onPlayerUpdate(Ball* PlayerObject) {}
+	virtual void onBallUpdate(Ball* PlayerObject) {}
 
 	/// @brief Hook for the onRenderApply function (0x454830). 
 	/// @param this_ptr Not exactly sure what this is (came from the original function) 
@@ -335,7 +335,7 @@ public:
 	virtual void onSliderChange(const char* sliderId, float newValue) {}
 
 	/// @brief Put logic here that you want to run every tick. This is good for controls that you want to work whenever,
-	/// not just in levels like with onPlayerUpdate(). The corresponding hooked function is 0x46C170
+	/// not just in levels like with onBallUpdate(). The corresponding hooked function is 0x46C170
 	virtual void onGameUpdate() {}
 
 	/// @brief You can put logic for event plane collisions here. This allows you to put logic for different types of event planes.

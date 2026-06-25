@@ -57,6 +57,7 @@ typedef void(__thiscall* ShowBallMessageFunc)(Ball* ball, char* message);
 typedef void(__fastcall* RenderTextLoopFunc)(void* this_ptr); 
 typedef void(__thiscall* DrawTextNoShadowFunc)(void* font, char* text, int x, int y, void* vtable, float r, float g, float b, float a);
 typedef void(__thiscall* DrawGameTextFunc)(void* font, char* text, int x, int y, int shadow_x, int shadow_y, void* vtable1, float t_r, float t_g, float t_b, float t_a, void* vtable2, float s_r, float s_g, float s_b, float s_a);
+typedef void(__fastcall* SceneDtorFunc)(Scene* scene);
 
 // --- EXTERN GLOBALS ---
 extern Ball* g_Player;
@@ -65,10 +66,12 @@ extern Ball* g_Player3;
 extern Ball* g_Player4;
 inline std::vector<Ball*> g_Enemies; // 8 ball or ball on sky race 
 extern App* g_App; 
+extern Scene* g_Scene; 
 extern PhysicsConstants* g_PhysicsConstants; 
 inline std::vector<HamsterballAPI*> g_Mods; 
 extern int* g_Timer; 
 inline std::vector<Resolution> g_AvailableResolutions; 
+
 
 struct ThemeConfig {
     float MenuBodyR, MenuBodyG, MenuBodyB, MenuBodyA;
@@ -90,7 +93,6 @@ struct TimedMessage {
 inline std::map<std::string, CustomControl, std::less<>> g_CustomControls; // <controlID, CustomControl struct> 
 extern ThemeConfig g_Theme;
 extern std::vector<LevelConfig> g_LevelConfigs;
-extern bool g_ShowCheats;
 extern bool g_ShowConsole;
 
 // So theres a function that modders can use that displays a message for x amount of time. I need to store this between renders so I'm using this data structure.
@@ -129,5 +131,6 @@ extern ShowBallMessageFunc ShowBallMessage;
 extern RenderTextLoopFunc Original_RenderTextLoop; 
 extern DrawTextNoShadowFunc DrawTextNoShadow;
 extern DrawGameTextFunc DrawGameText; 
+extern SceneDtorFunc Original_SceneDtor; 
 
 void UpdateBallReferences(); 

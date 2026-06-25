@@ -157,10 +157,12 @@ void ReloadINI() {
     g_Theme.MenuHeaderB = ReadIniFloat("Theme", "MenuHeaderB", 1.0f, path);
     g_Theme.MenuHeaderA = ReadIniFloat("Theme", "MenuHeaderA", 0.75f, path);
 
-    g_ShowCheats = GetPrivateProfileIntA("Config", "ShowCheats", 1, path) != 0;
+    // ShowConsole was moved to InitDevConsole() 
 
     ControlsINI(path);
     CleanCustomOptions(); 
+
+
 
     g_LevelConfigs.clear();
     for (int i = 0; i < 15; i++) {
@@ -176,12 +178,10 @@ void ReloadINI() {
         config.BlotG = ReadIniFloat(iStr, "BlotG", -1.f, path);
         config.BlotB = ReadIniFloat(iStr, "BlotB", -1.f, path);
 
-        // Use temporary local buffers, let std::string safely copy the data
         char tempRace[256], tempArena[256];
         GetPrivateProfileStringA(iStr, "RaceName", "", tempRace, sizeof(tempRace), path);
         GetPrivateProfileStringA(iStr, "ArenaName", "", tempArena, sizeof(tempArena), path);
 
-        // This makes a permanent, safe copy of the string in memory
         config.RaceName = tempRace;
         config.ArenaName = tempArena;
 

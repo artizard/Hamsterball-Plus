@@ -16,7 +16,6 @@
 
 ThemeConfig g_Theme;
 std::vector<LevelConfig> g_LevelConfigs = {};
-bool g_ShowCheats = true;
 bool g_ShowConsole = false;
 
 const std::string sliderToDisplayText(const SliderData& data) {
@@ -123,13 +122,21 @@ const int GetLevelIdFromHUDText(const char* text, bool& isArena) {
 
 // Hooked Player Update Loop (for getting player object pointer)
 void __fastcall Hooked_BallUpdate(Ball* ball, void* edx_dummy) {
-    for (HamsterballAPI* mod : g_Mods) {
-        mod->onBallUpdate(ball);
-    }
-
     if (ball->playerID == 0) {
         g_Player = ball;
         UpdateBallReferences();
+    }
+    
+    if (g_Scene == nullptr) {
+        g_Scene = ball->scene;
+        printf("g_Scene: %x\n", g_Scene); 
+        for (HamsterballAPI* mod : g_Mods) {
+            mod->onLevelStart(); 
+        }
+    }
+    
+    for (HamsterballAPI* mod : g_Mods) {
+        mod->onBallUpdate(ball);
     }
 
     Original_BallUpdate(ball, edx_dummy);
@@ -155,31 +162,29 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
     // Call the original function, save the pointer that it returns
     void* menuPointer = Original_OptionsMenu(this_ptr, edx_dummy, param_1, param_2);
 
-    if (g_ShowCheats) {
-        DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
+    DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
         
-        // Add spacer
-        Original_AddSpacer(this_ptr, nullptr, 10);
+    // Add spacer
+    Original_AddSpacer(this_ptr, nullptr, 10);
 
-        // Color Object vtable pointer
-        DWORD vtableAddr = baseAddr + 0xCF300;
+    // Color Object vtable pointer
+    DWORD vtableAddr = baseAddr + 0xCF300;
 
-        for (const auto& [id, data] : g_ModApiInstance.optionButtons) {
-            std::string displayText = data.displayText + ": " + (data.isOn ? data.trueText : data.falseText);
-            float r = data.color.r;
-            float g = data.color.g;
-            float b = data.color.b;
-            float a = data.color.a;
-            Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
-        }
-        for (const auto& [id, data] : g_ModApiInstance.optionSliders) {
-            std::string displayText = sliderToDisplayText(data); 
-            float r = data.color.r;
-            float g = data.color.g;
-            float b = data.color.b;
-            float a = data.color.a;
-            Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
-        }
+    for (const auto& [id, data] : g_ModApiInstance.optionButtons) {
+        std::string displayText = data.displayText + ": " + (data.isOn ? data.trueText : data.falseText);
+        float r = data.color.r;
+        float g = data.color.g;
+        float b = data.color.b;
+        float a = data.color.a;
+        Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
+    }
+    for (const auto& [id, data] : g_ModApiInstance.optionSliders) {
+        std::string displayText = sliderToDisplayText(data); 
+        float r = data.color.r;
+        float g = data.color.g;
+        float b = data.color.b;
+        float a = data.color.a;
+        Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
     }
 
     // Return the saved pointer
@@ -569,4 +574,18 @@ void __fastcall Hooked_RenderTextLoop(void* this_ptr) {
             g_ModApiInstance.DrawCustomText(text, params);
         }
     }
+}
+
+void __fastcall Hooked_SceneDtor(Scene* scene) {
+    
+    for (HamsterballAPI* mod : g_Mods) {
+        mod->onSceneEnd(); 
+    }
+    g_Scene = nullptr;
+    g_Player = nullptr;
+    g_Player2 = nullptr;
+    g_Player3 = nullptr;
+    g_Player4 = nullptr;
+    g_Enemies.clear(); 
+    Original_SceneDtor(scene); 
 }
