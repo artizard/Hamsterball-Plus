@@ -129,7 +129,6 @@ void __fastcall Hooked_BallUpdate(Ball* ball, void* edx_dummy) {
     
     if (g_Scene == nullptr) {
         g_Scene = ball->scene;
-        printf("g_Scene: %x\n", g_Scene); 
         for (HamsterballAPI* mod : g_Mods) {
             mod->onLevelStart(); 
         }

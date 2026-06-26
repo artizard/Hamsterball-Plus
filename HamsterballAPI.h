@@ -701,7 +701,7 @@ struct PhysicsObject {
 	float speed_scalar; // +0x0C64 You can't manually change this 
 	float friction; // +0x0C68
 	std::uint8_t pad_0C6C[0x0C7C - 0x0C6C];
-	bool noclip; // +0x0C7C requires no break mod otherwise
+	bool noclip; // +0x0C7C requires no break mod otherwise the ball will break.
 	std::uint8_t pad_0C7D[0x0C8C - 0x0C7D];
 	float gravity_x; // +0x0C8C I would use this as opposed to the vector in Ball
 	float gravity_y; // +0x0C90 I would use this as opposed to the vector in Ball

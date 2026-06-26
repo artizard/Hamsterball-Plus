@@ -321,7 +321,6 @@ bool ModAPI::LevelRaycastHit(Vec3 position, Vec3 direction, float radius, float 
 	float magnitude = sqrtf(dist_x*dist_x + dist_y*dist_y + dist_z*dist_z);
 
 	const char* resultString = (max_dist == -1.0f) ? (magnitude >= 994.0f) ? "False" : "True" : (magnitude < max_dist) ? "True" : "False";
-	printf("Result vector: %f, %f, %f, Dist: %f, %f, %f, Result: %s\n", result.x, result.y, result.z, dist_x, dist_y, dist_z, resultString);
 	if (max_dist == -1.0f) {
 		// based on testing, it seems like if the ray doesn't hit anything, then the distance is roughly 994.45
 		if (magnitude >= 994.0f) return false;
