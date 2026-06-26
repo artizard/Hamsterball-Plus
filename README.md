@@ -17,11 +17,16 @@ Hamsterball Plus is a C++ modding framework for the retro video game _Hamsterbal
 
 ## How to install
 
-1. Download the hbPlusMod.dll, ModConfig.ini, and Mods folder from releases.
-2. Drop all three into your Hamsterball folder. (Your path is likely something like this: C:\Program Files (x86)\Raptisoft\Hamsterball\\)
-3. Right click on the Hamsterball.exe and go to properties.
-4. On the compatibility tab, check off "Run this program as an administrator". (This is needed in order to modify the .ini file as well as to run custom maps)
-5. That's it! From here, you can simply place mods within the \Mods folder. To uninstall mods just delete the .dll file from the \Mods folder.
+1. Download the HamsterBallPlus.zip from the [latest release](https://github.com/artizard/Hamsterball-Plus/releases)
+2. Extract HamsterBallPlus.zip
+3. Go to your Hamsterball folder (Your path is likely something like this: C:\Program Files (x86)\Raptisoft\Hamsterball\\) and rename `bass.dll` to `bass_real.dll`
+4. Drop the contents of the extracted folder into your Hamsterball folder.
+5. Right click on the Hamsterball.exe and go to properties.
+6. On the compatibility tab, check off "Run this program as an administrator". (This is needed in order to modify the .ini file as well as to run custom maps)
+7. You've installed Hamsterball Plus, and everything should be working. From here, you can simply place new mods within the \Mods folder. To uninstall mods just delete the .dll file from the \Mods folder.
+
+Your file structure should now look something like this:
+![Your file structure should look like this](assets/installedFileStructure.png)
 
 ## Editing Custom Controls
 
@@ -287,7 +292,7 @@ In the future there will be a proper mod loader where people can post their mods
 ## Credits
 
 - Made by arti
-- Forked from BookwormKevins original MinHook Hamsterball mod
+- Forked from BookwormKevins original [MinHook Hamsterball mod](https://github.com/kkuhn317/hb-mod)
 - Credit to XRow for the No Break mod's byte patch, and credit to BookwormKevin for some of the Jump Mod and No Break mod's logic.
 
 ## Contacts
