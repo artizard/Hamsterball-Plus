@@ -86,7 +86,7 @@ These entries store the float values of the custom sliders. Just like the contro
 
 ## How To Make Mods
 
-1. Download the HBmodTemplate.zip file, and place it in your Visual Studio template folder. The path of that is typically `C:\Users\[YourName]\Documents\Visual Studio\Templates\`. DO NOT EXTRACT THE ZIP FILE
+1. Download the HBmodTemplate.zip file, and place it in your Visual Studio template folder. The path of that is typically `C:\Users\[YourName]\Documents\Visual Studio\Templates\ProjectTemplates`. DO NOT EXTRACT THE ZIP FILE
 2. Create a Visual Studio project using that template.
 3. Rename the fields that are labeled for renaming in MainModFile.cpp. This includes the class name (which needs to be renamed at the top and bottom of the file), the string within GetModName(), and the string within GetAuthorName(). Additionally, you can rename MainModFile.cpp but that is optional.
 4. This project will be for a single DLL mod that will eventually go in the \Mods folder. Use the functions and structs from HamsterballAPI.h. The following sections go over the major topics, but there are many topics that are not covered here, and are instead covered by the comments for each function/struct/field.
