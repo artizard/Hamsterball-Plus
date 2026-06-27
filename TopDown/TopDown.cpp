@@ -17,22 +17,32 @@ public:
 
         CustomButton topdownButton("CHEAT_TOPDOWN", "TOP-DOWN");
         api->CreateToggleButton(topdownButton, this);
+
+        CustomSlider heightSlider("TOPDOWN_CAM_HEIGHT", "TOP-DOWN CAMERA HEIGHT", 8);
+        heightSlider.stepSize = .5;
+        heightSlider.decimalPlaces = 1;
+        heightSlider.lowerBound = .5;
+        api->CreateSlider(heightSlider, this);
     }
 
     void onRenderApply(void* this_ptr, float* viewMatrix) override {
-        void* player = api->GetPlayer();
+        Ball* player = api->GetPlayer();
         if (player != nullptr && api->GetButtonState("CHEAT_TOPDOWN")) {
             // Get Hamster pos
-            float pX = *(float*)((DWORD)player + 0x158);
-            float pY = *(float*)((DWORD)player + 0x15c);
-            float pZ = *(float*)((DWORD)player + 0x160);
+            float pX = player->pos_x;
+            float pY = player->pos_y;
+            float pZ = player->pos_z;
+            PhysicsObject* physics = player->physics_object;
+            float height = api->GetSliderState("TOPDOWN_CAM_HEIGHT") * 100.0f; 
 
-            // Build top-down camera angle
+            // building view matrix
             Vec3 target(pX, pY, pZ);
-            Vec3 eye(pX, pY + 800.0f, pZ);
-            Vec3 up(0.0f, 0.0f, 1.0f);
+            Vec3 eye(pX + height * -physics->gravity_x, pY + height * -physics->gravity_y, pZ + height * -physics->gravity_z);
+            // up has to be different than gravity, otherwise when it does the vector math it does the cross product of two parallel vectors which
+            // gives 0, which breaks the camera.
+            Vec3 up(-physics->gravity_z, -physics->gravity_x, -physics->gravity_y);
 
-            // Create a custom 16-float array and do the math
+            // actually build the matrix 
             float customMatrix[16];
             BuildCustomViewMatrix(customMatrix, eye, target, up);
 
