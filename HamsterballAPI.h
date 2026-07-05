@@ -175,6 +175,9 @@ public:
 	virtual int GetConfigInt(const char* configID) = 0;
 	virtual float GetConfigFloat(const char* configID) = 0;
 	virtual bool GetConfigBool(const char* configID) = 0;
+	/// @brief WARNING: Do not store the returned pointer, if ReloadINI() is called again, the pointer will become garbage data. 
+	/// @param configID 
+	/// @return 
 	virtual const char* GetConfigString(const char* configID) = 0;
 
 	/// @brief Patches memory within Hamsterball.exe. This is temporary, as it does not alter the actual .exe, it just modifies the 

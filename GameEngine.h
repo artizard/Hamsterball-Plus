@@ -89,7 +89,6 @@ struct TimedMessage {
     CustomText params;
 };
 
-
 extern ThemeConfig g_Theme;
 extern std::vector<LevelConfig> g_LevelConfigs;
 extern bool g_ShowConsole;

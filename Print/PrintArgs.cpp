@@ -46,6 +46,7 @@ public:
         // playsound3d
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
         //api->RegisterCustomHook(baseAddr + 0x19770, &Hooked_sceneDtor, (void**)&Original_sceneDtor);
+        api->RegisterConfigString("PA_MESSAGE_TEXT", "test");
     }
 
     static void __fastcall Hooked_currFunc(void* param_1) {
@@ -346,7 +347,7 @@ public:
 
         if (api->WasKeyPressed(DIK_T)) {
             CustomText text(api->GetApp()->fonts.arialNarrow12bold, 300, y, Color(.35f, .35f, .8f, 1.0f), true);
-            api->DrawTimedMessage("TIMED MESSAGE", text, 3);
+            api->DrawTimedMessage(api->GetConfigString("PA_MESSAGE_TEXT"), text, 3);
             y += 30;
             if (y > 500) {
                 y = 10;

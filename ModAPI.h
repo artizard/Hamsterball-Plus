@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <variant>
+#include "GameEngine.h"
 
 struct ButtonData {
 	std::string displayText;
@@ -23,6 +24,7 @@ struct SliderData {
 	Color color;
 	HamsterballAPI* owner;
 };
+
 using ConfigValue = std::variant<int, float, bool, std::string>;
 
 class ModAPI : public IModAPI {

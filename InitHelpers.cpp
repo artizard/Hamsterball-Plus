@@ -1,9 +1,10 @@
 #include "pch.h"
 #include "InitHelpers.h"
 #include <string>
-#include "GameEngine.h"
 #include <algorithm>
 #include <set>
+#include <variant>
+#include "HamsterballAPI.h"
 
 const char* GetModIniPath() {
     static std::string iniPath = "";
@@ -92,9 +93,89 @@ void ControlsINI(const char* path) {
                 std::string key = entry.substr(0, eqPos);
                 std::string value = entry.substr(eqPos + 1);
                 // if control is in section, but not actually used, then move to unused section
-                if (g_CustomControls.find(key) == g_CustomControls.end()) {
+                if (g_ModApiInstance.customControls.find(key) == g_ModApiInstance.customControls.end()) {
                     WritePrivateProfileStringA("Unused Controls", key.c_str(), value.c_str(), path); // add to unused
                     WritePrivateProfileStringA("Custom Controls", key.c_str(), NULL, path); // remove from custom controls
+                }
+            }
+            currentString += entry.length() + 1;
+        }
+    }
+}
+
+std::string FormatConfigForIni(const ConfigValue& value) {
+    if (std::holds_alternative<int>(value)) {
+        return std::to_string(std::get<int>(value));
+    }
+    else if (std::holds_alternative<float>(value)) {
+        return std::to_string(std::get<float>(value));
+    }
+    else if (std::holds_alternative<bool>(value)) {
+        return std::get<bool>(value) ? "1" : "0";
+    }
+    else if (std::holds_alternative<std::string>(value)) {
+        return std::get<std::string>(value);
+    }
+    return "";
+}
+
+void ParseStringToConfig(const std::string& value, ConfigValue& config) {
+    try {
+        if (std::holds_alternative<int>(config)) {
+            config = std::stoi(value); 
+        }
+        else if (std::holds_alternative<float>(config)) {
+            config = std::stof(value);
+        }
+        else if (std::holds_alternative<bool>(config)) {
+            config = (value == "1" || value == "true" || value == "True"); 
+        }
+        else if (std::holds_alternative<std::string>(config)) {
+            config = value;
+        }
+    }
+    catch (...) {
+        printf("ERROR: COULD NOT PARSE INI CONFIG"); 
+    }
+}
+
+void ConfigINI(const char* path) {
+    char controlBuffer[256];
+    for (auto& [key, value] : g_ModApiInstance.modConfig) {
+        DWORD bytesRead = GetPrivateProfileStringA("Custom Configs", key.c_str(), "", controlBuffer, sizeof(controlBuffer), path);
+        if (bytesRead == 0) { // not in main config
+            bytesRead = GetPrivateProfileStringA("Unused Configs", key.c_str(), "", controlBuffer, sizeof(controlBuffer), path);
+            if (bytesRead == 0) { // not in backup either, so write to config 
+                std::string formatted = FormatConfigForIni(value);
+                WritePrivateProfileStringA("Custom Configs", key.c_str(), formatted.c_str(), path);
+            }
+            else { // in backup so we move to custom config
+                ParseStringToConfig(controlBuffer, value); 
+
+                std::string formatted = FormatConfigForIni(value);
+                WritePrivateProfileStringA("Custom Configs", key.c_str(), formatted.c_str(), path);
+                WritePrivateProfileStringA("Unused Configs", key.c_str(), NULL, path); // remove from unused 
+            }
+        }
+        else { // found, so just read in value
+            ParseStringToConfig(controlBuffer, value);
+        }
+    }
+    // move unused to unused section
+    std::vector<char> sectionBuffer(32768);
+    DWORD bytesRead = GetPrivateProfileSectionA("Custom Configs", sectionBuffer.data(), 32768, path);
+    if (bytesRead > 0) {
+        char* currentString = sectionBuffer.data();
+        while (*currentString != '\0') {
+            std::string entry(currentString);
+            size_t eqPos = entry.find('=');
+            if (eqPos != std::string::npos) {
+                std::string key = entry.substr(0, eqPos);
+                std::string value = entry.substr(eqPos + 1);
+                // if control is in section, but not actually used, then move to unused section
+                if (g_ModApiInstance.modConfig.find(key) == g_ModApiInstance.modConfig.end()) {
+                    WritePrivateProfileStringA("Unused Configs", key.c_str(), value.c_str(), path); // add to unused
+                    WritePrivateProfileStringA("Custom Configs", key.c_str(), NULL, path); // remove from custom controls
                 }
             }
             currentString += entry.length() + 1;
@@ -161,7 +242,7 @@ void ReloadINI() {
 
     ControlsINI(path);
     CleanCustomOptions(); 
-
+    ConfigINI(path);
 
 
     g_LevelConfigs.clear();
@@ -197,7 +278,7 @@ void InitDevConsole() {
         AllocConsole();
         FILE* f;
         freopen_s(&f, "CONOUT$", "w", stdout);
-        printf("Hamsterball Mod Debug Console\n");
+        printf("Hamsterball Plus Version %d\n", HAMSTERBALL_API_VERSION);
     }
 }
 

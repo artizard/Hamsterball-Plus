@@ -114,6 +114,7 @@ void ModAPI::RegisterConfigBool(const char* configID, bool defaultValue) {
 void ModAPI::RegisterConfigString(const char* configID, const char* defaultValue) {
 	modConfig[configID] = defaultValue;
 }
+
 int ModAPI::GetConfigInt(const char* configID) {
 	auto it = modConfig.find(configID); 
 	if (it != modConfig.end() && std::holds_alternative<int>(it->second)) {
