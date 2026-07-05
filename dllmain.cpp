@@ -204,9 +204,14 @@ void loadMods() {
                 if (factory) {
                     HamsterballAPI* newMod = factory();
                     if (newMod) {
-                        if (g_ShowConsole) printf("Mod Loaded: %s, Author: %s, API Version: %d\n", newMod->GetModName(), newMod->GetAuthorName(), newMod->GetApiVersion());
-                        newMod->Initialize(&g_ModApiInstance); 
-                        g_Mods.push_back(newMod);
+                        if (newMod->GetApiVersion() != HAMSTERBALL_API_VERSION) {
+                            if (g_ShowConsole) printf("ERROR: \"%s\" mod not loaded, Mod's API Version (%d) does not match Hamsterball Plus' version(% d)\n", newMod->GetModName(), newMod->GetApiVersion(), HAMSTERBALL_API_VERSION);
+                        }
+                        else {
+                            if (g_ShowConsole) printf("Mod Loaded: %s, Author: %s, API Version: %d\n", newMod->GetModName(), newMod->GetAuthorName(), newMod->GetApiVersion());
+                            newMod->Initialize(&g_ModApiInstance);
+                            g_Mods.push_back(newMod);
+                        }
                     }
                 }
             }

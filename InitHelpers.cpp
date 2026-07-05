@@ -122,7 +122,7 @@ std::string FormatConfigForIni(const ConfigValue& value) {
 void ParseStringToConfig(const std::string& value, ConfigValue& config) {
     try {
         if (std::holds_alternative<int>(config)) {
-            config = std::stoi(value); 
+            config = std::stoi(value, nullptr, 0);
         }
         else if (std::holds_alternative<float>(config)) {
             config = std::stof(value);

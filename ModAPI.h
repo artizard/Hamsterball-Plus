@@ -24,6 +24,13 @@ struct SliderData {
 	Color color;
 	HamsterballAPI* owner;
 };
+struct CycleData {
+	std::string displayText;
+	int currOption = 0;
+	std::vector<std::string> options;
+	Color color;
+	HamsterballAPI* owner;
+};
 
 using ConfigValue = std::variant<int, float, bool, std::string>;
 
@@ -31,6 +38,7 @@ class ModAPI : public IModAPI {
 public:
 	std::map<std::string, ButtonData, std::less<>> optionButtons;
 	std::map<std::string, SliderData, std::less<>> optionSliders;
+	std::map<std::string, CycleData, std::less<>> optionCycles;
 	// using std::less<> here to be able to look up controls from the map without converting char* to string, which requires memory allocation (optimization thing)
 	std::map<std::string, CustomControl, std::less<>> customControls; // <controlID, CustomControl struct> 
 	std::map<std::string, ConfigValue, std::less<>> modConfig;
@@ -89,6 +97,8 @@ public:
 	float GetConfigFloat(const char* configID) override;
 	bool GetConfigBool(const char* configID) override;
 	const char* GetConfigString(const char* configID) override;
+	void CreateCycleOption(const CustomCycleOption& cycle, HamsterballAPI* modInstance) override;
+	int GetCycleOptionState(const char* id) override;
 private:
 	void setUnlocks(bool isUnlock);
 };

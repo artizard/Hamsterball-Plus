@@ -56,6 +56,19 @@ struct CustomSlider {
 	}
 };
 
+/// @brief The struct used for creating custom cycle options. These are option buttons that allow you to cycle through a list of options (like resolution in the vanilla game). 
+struct CustomCycleOption {
+	const char* id; // The internal ID for the cycle option. Use a unique name to avoid conflicts with other mods. (ex. JM_JUMP_HEIGHT)
+	const char* displayText = ""; // The text that goes before the actual option value. If you don't want this, just leave it blank.
+	const char** options; // An array of the options the user can cycle through. The first option will be the one selected by default. 
+	size_t optionCount; // The number of options in your options array
+	Color color; // The color of the option text
+
+	CustomCycleOption() = default;
+
+	CustomCycleOption(const char* id, const char** options, size_t optionCount) : id(id), options(options), optionCount(optionCount) {}
+};
+
 /// @brief A struct used when calling the text drawing functions. This is just how you input the parameters. 
 struct CustomText {
 	void* font; // use a value from the Fonts struct
@@ -168,16 +181,54 @@ public:
 	/// @param this Just pass in 'this' as the parameter
 	virtual void CreateSlider(const CustomSlider& slider, HamsterballAPI* modInstance) = 0;
 
+	/// @brief Creates a cycle option. These are buttons (such as resolution in the vanilla game) that allow the user to cycle through a list of options. 
+	/// @param cycle The option struct that defines all of the parameters. Read those comments for more information.
+	/// @param modInstance Just pass in 'this' as the parameter. 
+	virtual void CreateCycleOption(const CustomCycleOption& cycle, HamsterballAPI* modInstance) = 0; 
+
+	/// @brief Creates a custom integer config that will be stored in the .ini file. This is for settings that you want the user to be able to be changed, but you don't want 
+	/// an in-game option for. 
+	/// @param configID The id for the config. Use something unique, I recommend adding an abbreviation of your mod to the start like so: JUMP -> PA_JUMP
+	/// @param defaultValue The starting value before the user changes the setting
 	virtual void RegisterConfigInt(const char* configID, int defaultValue) = 0;
+
+	/// @brief Creates a custom float config that will be stored in the .ini file. This is for settings that you want the user to be able to be changed, but you don't want 
+	/// an in-game option for. 
+	/// @param configID The id for the config. Use something unique, I recommend adding an abbreviation of your mod to the start like so: JUMP -> PA_JUMP
+	/// @param defaultValue The starting value before the user changes the setting
 	virtual void RegisterConfigFloat(const char* configID, float defaultValue) = 0;
+
+	/// @brief Creates a custom boolean config that will be stored in the .ini file. This is for settings that you want the user to be able to be changed, but you don't want 
+	/// an in-game option for. 
+	/// @param configID The id for the config. Use something unique, I recommend adding an abbreviation of your mod to the start like so: JUMP -> PA_JUMP
+	/// @param defaultValue The starting value before the user changes the setting
 	virtual void RegisterConfigBool(const char* configID, bool defaultValue) = 0;
+
+	/// @brief Creates a custom string config that will be stored in the .ini file. This is for settings that you want the user to be able to be changed, but you don't want 
+	/// an in-game option for. 
+	/// @param configID The id for the config. Use something unique, I recommend adding an abbreviation of your mod to the start like so: JUMP -> PA_JUMP
+	/// @param defaultValue The starting value before the user changes the setting
 	virtual void RegisterConfigString(const char* configID, const char* defaultValue) = 0;
+
+	/// @brief Retrieves the value of an integer config. This is how you actually use the configs. 
+	/// @param configID The ID of the config
+	/// @return The integer value of the config
 	virtual int GetConfigInt(const char* configID) = 0;
+
+	/// @brief Retrieves the value of a float config. This is how you actually use the configs. 
+	/// @param configID The ID of the config
+	/// @return The float value of the config
 	virtual float GetConfigFloat(const char* configID) = 0;
+
+	/// @brief Retrieves the value of a boolean config. This is how you actually use the configs. 
+	/// @param configID The ID of the config
+	/// @return The boolean value of the config
 	virtual bool GetConfigBool(const char* configID) = 0;
-	/// @brief WARNING: Do not store the returned pointer, if ReloadINI() is called again, the pointer will become garbage data. 
-	/// @param configID 
-	/// @return 
+
+	/// @brief Retrieves the value of a string config. This is how you actually use the configs. 
+	/// WARNING: Do not store the returned pointer, if ReloadINI() is called again, the pointer will become garbage data. 
+	/// @param configID The ID of the config
+	/// @return The string value of the config
 	virtual const char* GetConfigString(const char* configID) = 0;
 
 	/// @brief Patches memory within Hamsterball.exe. This is temporary, as it does not alter the actual .exe, it just modifies the 
@@ -225,6 +276,11 @@ public:
 	/// @param id ID of the slider
 	/// @return The value of the chosen slider. Returns -1 for invalid slider IDs. 
 	virtual float GetSliderState(const char* id) = 0;
+
+	/// @brief Gets the current option selected in a given cycle option. 
+	/// @param id The ID of the cycle option
+	/// @return The index of the current option. (index of the options array) Returns 0 if invalid id. 
+	virtual int GetCycleOptionState(const char* id) = 0;
 
 	/// @brief Gets player 1. Will be a nullptr if the player doesn't exist (not in level)
 	/// @return The Ball* to player 1
@@ -406,7 +462,17 @@ public:
 	/// @param newState The new state of that button
 	virtual void onButtonToggle(const char* buttonId, bool newState) {}
 
+	/// @brief Put logic here that you want to run when a slider changes. From there you can use if statements to see if the sliderId matches one of your
+	/// custom ones, and then carry out logic from there. 
+	/// @param sliderId The ID of the slider that was changed
+	/// @param newValue The new value of the slider
 	virtual void onSliderChange(const char* sliderId, float newValue) {}
+
+	/// @brief Put logic here that you want to run when a cycle option is clicked. From there you can use if statements to see if the cycleId matches 
+	/// one of your custom ones, and then carry out logic from there. 
+	/// @param cycleId The ID of the cycle option that was clicked
+	/// @param newOption The new option selected
+	virtual void onCycleOptionChange(const char* cycleId, const char* newOption) {}
 
 	/// @brief Put logic here that you want to run every tick. This is good for controls that you want to work whenever,
 	/// not just in levels like with onBallUpdate(). The corresponding hooked function is 0x46C170

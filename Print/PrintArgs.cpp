@@ -24,6 +24,7 @@ private:
     inline static bool showText = false;
     inline static int y = 200;
     inline static float radius = 26.0f;
+    inline static const char* options[] = { "test 1", "TEST 2", "Test 3", "tEsT 4", "TeSt 5" };
 public:
 
     const char* GetModName() override { return "Print Args"; }
@@ -47,6 +48,10 @@ public:
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
         //api->RegisterCustomHook(baseAddr + 0x19770, &Hooked_sceneDtor, (void**)&Original_sceneDtor);
         api->RegisterConfigString("PA_MESSAGE_TEXT", "test");
+
+        CustomCycleOption messageCycle("PA_MESSAGE_TEXT2", options, 5);
+        messageCycle.displayText = "Message text";
+        api->CreateCycleOption(messageCycle, this); 
     }
 
     static void __fastcall Hooked_currFunc(void* param_1) {
@@ -65,8 +70,9 @@ public:
 
     void onTextRenderLoop() override {
         if (showText) {
-            CustomText text(api->GetApp()->fonts.arialNarrow12bold, 500, 500, Color(.8f, .2f, .2f, 1.0f), true);
-            api->DrawCustomText("TESTING TESTING", text);
+            CustomText text(api->GetApp()->fonts.arialNarrow12bold, 400, 500, Color(.8f, .2f, .2f, 1.0f), true);
+            const char* message = options[api->GetCycleOptionState("PA_MESSAGE_TEXT2")];
+            api->DrawCustomText(message, text);
         }
     }
 

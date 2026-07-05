@@ -185,6 +185,14 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
         float a = data.color.a;
         Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
     }
+    for (const auto& [id, data] : g_ModApiInstance.optionCycles) {
+        std::string displayText = data.displayText + ": " + data.options[data.currOption];
+        float r = data.color.r;
+        float g = data.color.g;
+        float b = data.color.b;
+        float a = data.color.a;
+        Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
+    }
 
     // Return the saved pointer
     return menuPointer;
@@ -200,7 +208,16 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
         data.isOn = newState;
         std::string displayText = data.displayText + ": " + (newState ? data.trueText : data.falseText);
         Game_UpdateButtonText(this_ptr, nullptr, displayText.c_str(), clicked_id);
-        data.owner->onButtonToggle(id.c_str(), newState);
+        data.owner->onButtonToggle(clicked_id, newState);
+        return;
+    }
+    auto cycle = g_ModApiInstance.optionCycles.find(id);
+    if (cycle != g_ModApiInstance.optionCycles.end()) {
+        auto& data = cycle->second;
+        data.currOption = (data.currOption += 1) % data.options.size(); 
+        std::string displayText = data.displayText + ": " + data.options[data.currOption];
+        Game_UpdateButtonText(this_ptr, nullptr, displayText.c_str(), clicked_id);
+        data.owner->onButtonToggle(clicked_id, data.options[data.currOption].c_str());
         return;
     }
 

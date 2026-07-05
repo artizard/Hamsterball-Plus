@@ -88,6 +88,26 @@ void ModAPI::CreateSlider(const CustomSlider& slider, HamsterballAPI* modInstanc
 	modInstance->onSliderChange(slider.id, data.value); 
 }
 
+void ModAPI::CreateCycleOption(const CustomCycleOption& cycle, HamsterballAPI* modInstance) {
+	CycleData data;
+	data.displayText = cycle.displayText;
+	data.color = cycle.color;
+	data.owner = modInstance;
+
+	for (size_t i = 0; i < cycle.optionCount; i++) {
+		data.options.push_back(cycle.options[i]); 
+	}
+	optionCycles[std::string(cycle.id)] = data;
+	modInstance->onCycleOptionChange(cycle.id, data.options[data.currOption].c_str());
+}
+
+int ModAPI::GetCycleOptionState(const char* id) {
+	if (optionCycles.find(id) != optionCycles.end()) {
+		return optionCycles[id].currOption; 
+	}
+	return 0; 
+}
+
 bool ModAPI::GetButtonState(const char* id) {
 	if (optionButtons.find(id) != optionButtons.end()) {
 		return optionButtons[id].isOn; 
@@ -421,3 +441,4 @@ void ModAPI::DrawTimedMessage(const char* text, const CustomText& params, float 
 	message.text = text;
 	g_TimedMessages.push_back(message); 
 }
+
