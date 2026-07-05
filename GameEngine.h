@@ -89,8 +89,7 @@ struct TimedMessage {
     CustomText params;
 };
 
-// using std::less<> here to be able to look up controls from the map without converting char* to string, which requires memory allocation (optimization thing)
-inline std::map<std::string, CustomControl, std::less<>> g_CustomControls; // <controlID, CustomControl struct> 
+
 extern ThemeConfig g_Theme;
 extern std::vector<LevelConfig> g_LevelConfigs;
 extern bool g_ShowConsole;

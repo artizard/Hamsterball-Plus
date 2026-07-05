@@ -89,19 +89,58 @@ void ModAPI::CreateSlider(const CustomSlider& slider, HamsterballAPI* modInstanc
 }
 
 bool ModAPI::GetButtonState(const char* id) {
-	std::string idString(id);
-	if (optionButtons.find(idString) != optionButtons.end()) {
-		return optionButtons[idString].isOn; 
+	if (optionButtons.find(id) != optionButtons.end()) {
+		return optionButtons[id].isOn; 
 	}
 	return false; // failsafe 
 }
 
 float ModAPI::GetSliderState(const char* id) {
-	std::string idString(id);
-	if (optionSliders.find(idString) != optionSliders.end()) {
-		return optionSliders[idString].value;
+	if (optionSliders.find(id) != optionSliders.end()) {
+		return optionSliders[id].value;
 	}
 	return -1.0; 
+}
+
+void ModAPI::RegisterConfigInt(const char* configID, int defaultValue) {
+	modConfig[configID] = defaultValue;
+}
+void ModAPI::RegisterConfigFloat(const char* configID, float defaultValue) {
+	modConfig[configID] = defaultValue;
+}
+void ModAPI::RegisterConfigBool(const char* configID, bool defaultValue) {
+	modConfig[configID] = defaultValue;
+}
+void ModAPI::RegisterConfigString(const char* configID, const char* defaultValue) {
+	modConfig[configID] = defaultValue;
+}
+int ModAPI::GetConfigInt(const char* configID) {
+	auto it = modConfig.find(configID); 
+	if (it != modConfig.end() && std::holds_alternative<int>(it->second)) {
+		return std::get<int>(it->second); 
+	}
+	return -1;
+}
+float ModAPI::GetConfigFloat(const char* configID) {
+	auto it = modConfig.find(configID);
+	if (it != modConfig.end() && std::holds_alternative<float>(it->second)) {
+		return std::get<float>(it->second);
+	}
+	return -1.0f;
+}
+bool ModAPI::GetConfigBool(const char* configID) {
+	auto it = modConfig.find(configID);
+	if (it != modConfig.end() && std::holds_alternative<bool>(it->second)) {
+		return std::get<bool>(it->second);
+	}
+	return false;
+}
+const char* ModAPI::GetConfigString(const char* configID) {
+	auto it = modConfig.find(configID);
+	if (it != modConfig.end() && std::holds_alternative<std::string>(it->second)) {
+		return std::get<std::string>(it->second).c_str();
+	}
+	return "";
 }
 
 Ball* ModAPI::GetPlayer() {
@@ -270,13 +309,12 @@ void ModAPI::CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance, f
 }
 
 void ModAPI::RegisterCustomControl(const char* controlID, CustomControl defaultControl) {
-	std::string controlString(controlID); 
-	g_CustomControls[controlString] = defaultControl; 
+	customControls[controlID] = defaultControl; 
 }
 
 CustomControl ModAPI::GetCustomControlKey(const char* controlID) {
-	auto val = g_CustomControls.find(controlID);
-	if (val != g_CustomControls.end()) {
+	auto val = customControls.find(controlID);
+	if (val != customControls.end()) {
 		return val->second; 
 	}
 	else {

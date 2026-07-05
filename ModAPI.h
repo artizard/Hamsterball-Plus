@@ -2,6 +2,7 @@
 #include "HamsterballAPI.h"
 #include <string>
 #include <map>
+#include <variant>
 
 struct ButtonData {
 	std::string displayText;
@@ -22,11 +23,15 @@ struct SliderData {
 	Color color;
 	HamsterballAPI* owner;
 };
+using ConfigValue = std::variant<int, float, bool, std::string>;
 
 class ModAPI : public IModAPI {
 public:
-	std::map<std::string, ButtonData> optionButtons; 
-	std::map<std::string, SliderData> optionSliders;
+	std::map<std::string, ButtonData, std::less<>> optionButtons;
+	std::map<std::string, SliderData, std::less<>> optionSliders;
+	// using std::less<> here to be able to look up controls from the map without converting char* to string, which requires memory allocation (optimization thing)
+	std::map<std::string, CustomControl, std::less<>> customControls; // <controlID, CustomControl struct> 
+	std::map<std::string, ConfigValue, std::less<>> modConfig;
 
 	void RegisterCustomHook(DWORD targetAddress, void* hookFunction, void** original) override;
 	void RegisterCustomControl(const char* controlID, CustomControl defaultControl) override;
@@ -74,6 +79,14 @@ public:
 	float GetBallSpeed(Ball* ball) override;
 	void ShatterBall(Ball* ball) override;
 	void DrawTimedMessage(const char* text, const CustomText& params, float messageDuration) override;
+	void RegisterConfigInt(const char* configID, int defaultValue) override;
+	void RegisterConfigFloat(const char* configID, float defaultValue) override;
+	void RegisterConfigBool(const char* configID, bool defaultValue) override;
+	void RegisterConfigString(const char* configID, const char* defaultValue) override;
+	int GetConfigInt(const char* configID) override;
+	float GetConfigFloat(const char* configID) override;
+	bool GetConfigBool(const char* configID) override;
+	const char* GetConfigString(const char* configID) override;
 private:
 	void setUnlocks(bool isUnlock);
 };

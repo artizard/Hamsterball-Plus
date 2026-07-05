@@ -57,7 +57,7 @@ std::string FormatControlForIni(CustomControl control) {
 void ControlsINI(const char* path) {
     // load/store custom controls
     char controlBuffer[16];
-    for (auto& [key, value] : g_CustomControls) {
+    for (auto& [key, value] : g_ModApiInstance.customControls) {
         DWORD bytesRead = GetPrivateProfileStringA("Custom Controls", key.c_str(), "", controlBuffer, sizeof(controlBuffer), path);
         if (bytesRead == 0) { // not in main controls
             bytesRead = GetPrivateProfileStringA("Unused Controls", key.c_str(), "", controlBuffer, sizeof(controlBuffer), path);

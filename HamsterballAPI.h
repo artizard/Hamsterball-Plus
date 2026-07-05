@@ -7,7 +7,7 @@
 #include <cstdio>
 #define DIRECTINPUT_VERSION 0x0800
 
-#define HAMSTERBALL_API_VERSION 1
+#define HAMSTERBALL_API_VERSION 2
 
 struct Collision;
 class HamsterballAPI;
@@ -167,6 +167,15 @@ public:
 	/// @param slider The slider struct that defines all of the parameters of the slider. Read those comments for more information.
 	/// @param this Just pass in 'this' as the parameter
 	virtual void CreateSlider(const CustomSlider& slider, HamsterballAPI* modInstance) = 0;
+
+	virtual void RegisterConfigInt(const char* configID, int defaultValue) = 0;
+	virtual void RegisterConfigFloat(const char* configID, float defaultValue) = 0;
+	virtual void RegisterConfigBool(const char* configID, bool defaultValue) = 0;
+	virtual void RegisterConfigString(const char* configID, const char* defaultValue) = 0;
+	virtual int GetConfigInt(const char* configID) = 0;
+	virtual float GetConfigFloat(const char* configID) = 0;
+	virtual bool GetConfigBool(const char* configID) = 0;
+	virtual const char* GetConfigString(const char* configID) = 0;
 
 	/// @brief Patches memory within Hamsterball.exe. This is temporary, as it does not alter the actual .exe, it just modifies the 
 	/// current instance of the game in memory. I'd recommend using this within Initialize() or onButtonToggle(). 
