@@ -61,12 +61,12 @@ struct CustomCycleOption {
 	const char* id; // The internal ID for the cycle option. Use a unique name to avoid conflicts with other mods. (ex. JM_JUMP_HEIGHT)
 	const char* displayText = ""; // The text that goes before the actual option value. If you don't want this, just leave it blank.
 	const char** options; // An array of the options the user can cycle through. The first option will be the one selected by default. 
-	size_t optionCount; // The number of options in your options array
+	int optionCount; // The number of options in your options array
 	Color color; // The color of the option text
 
 	CustomCycleOption() = default;
 
-	CustomCycleOption(const char* id, const char** options, size_t optionCount) : id(id), options(options), optionCount(optionCount) {}
+	CustomCycleOption(const char* id, const char** options, int optionCount) : id(id), options(options), optionCount(optionCount) {}
 };
 
 /// @brief A struct used when calling the text drawing functions. This is just how you input the parameters. 

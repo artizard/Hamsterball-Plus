@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "InitHelpers.h"
 #include <string>
-#include <algorithm>
 #include <set>
 #include <variant>
 #include "HamsterballAPI.h"
+#include <algorithm>
 
 const char* GetModIniPath() {
     static std::string iniPath = "";
@@ -55,6 +55,32 @@ std::string FormatControlForIni(CustomControl control) {
     return std::string(hexBuffer);
 }
 
+// moves unused controls/config/options to the unused section; I decided on doing this, that way the sections don't get overly
+// bloated if the user installs and uninstalls a bunch of mods. This way, if they uninstall and reinstall a mod, they will not 
+// lose their custom keybinds/configs/etc.
+template <typename MapType, typename CompareType>
+void CleanSection(const char* mainSection, const char* unusedSection, std::map<std::string, MapType, CompareType>& sectionMap) {
+    const char* path = GetModIniPath();
+    std::vector<char> sectionBuffer(32768);
+    DWORD bytesRead = GetPrivateProfileSectionA(mainSection, sectionBuffer.data(), 32768, path);
+    if (bytesRead > 0) {
+        char* currentString = sectionBuffer.data();
+        while (*currentString != '\0') {
+            std::string entry(currentString);
+            size_t eqPos = entry.find('=');
+            if (eqPos != std::string::npos) {
+                std::string key = entry.substr(0, eqPos);
+                std::string value = entry.substr(eqPos + 1);
+                if (sectionMap.find(key) == sectionMap.end()) {
+                    WritePrivateProfileStringA(unusedSection, key.c_str(), value.c_str(), path);
+                    WritePrivateProfileStringA(mainSection, key.c_str(), NULL, path);
+                }
+            }
+            currentString += entry.length() + 1;
+        }
+    }
+}
+
 void ControlsINI(const char* path) {
     // load/store custom controls
     char controlBuffer[16];
@@ -79,28 +105,7 @@ void ControlsINI(const char* path) {
             if (control.dikCode != -1) value = control;
         }
     }
-    // move unused controls to the unused section; I decided on doing this, that way the main controls section doesn't get overly
-    // bloated if the user installs and uninstalls a bunch of mods. This way, if they uninstall and reinstall a mod, they will not 
-    // lose their custom keybinds.
-    std::vector<char> sectionBuffer(32768);
-    DWORD bytesRead = GetPrivateProfileSectionA("Custom Controls", sectionBuffer.data(), 32768, path);
-    if (bytesRead > 0) {
-        char* currentString = sectionBuffer.data();
-        while (*currentString != '\0') {
-            std::string entry(currentString);
-            size_t eqPos = entry.find('=');
-            if (eqPos != std::string::npos) {
-                std::string key = entry.substr(0, eqPos);
-                std::string value = entry.substr(eqPos + 1);
-                // if control is in section, but not actually used, then move to unused section
-                if (g_ModApiInstance.customControls.find(key) == g_ModApiInstance.customControls.end()) {
-                    WritePrivateProfileStringA("Unused Controls", key.c_str(), value.c_str(), path); // add to unused
-                    WritePrivateProfileStringA("Custom Controls", key.c_str(), NULL, path); // remove from custom controls
-                }
-            }
-            currentString += entry.length() + 1;
-        }
-    }
+    CleanSection("Custom Controls", "Unused Controls", g_ModApiInstance.customControls);
 }
 
 std::string FormatConfigForIni(const ConfigValue& value) {
@@ -161,67 +166,16 @@ void ConfigINI(const char* path) {
             ParseStringToConfig(controlBuffer, value);
         }
     }
-    // move unused to unused section
-    std::vector<char> sectionBuffer(32768);
-    DWORD bytesRead = GetPrivateProfileSectionA("Custom Configs", sectionBuffer.data(), 32768, path);
-    if (bytesRead > 0) {
-        char* currentString = sectionBuffer.data();
-        while (*currentString != '\0') {
-            std::string entry(currentString);
-            size_t eqPos = entry.find('=');
-            if (eqPos != std::string::npos) {
-                std::string key = entry.substr(0, eqPos);
-                std::string value = entry.substr(eqPos + 1);
-                // if control is in section, but not actually used, then move to unused section
-                if (g_ModApiInstance.modConfig.find(key) == g_ModApiInstance.modConfig.end()) {
-                    WritePrivateProfileStringA("Unused Configs", key.c_str(), value.c_str(), path); // add to unused
-                    WritePrivateProfileStringA("Custom Configs", key.c_str(), NULL, path); // remove from custom controls
-                }
-            }
-            currentString += entry.length() + 1;
-        }
-    }
+    CleanSection("Custom Configs", "Unused Configs", g_ModApiInstance.modConfig);
 }
 
 void CleanCustomOptions() {
-    const char* path = GetModIniPath();
-    // toggle buttons
-    std::vector<char> sectionBuffer(32768);
-    DWORD bytesRead = GetPrivateProfileSectionA("Toggle Buttons", sectionBuffer.data(), 32768, path);
-    if (bytesRead > 0) {
-        char* currentString = sectionBuffer.data();
-        while (*currentString != '\0') {
-            std::string entry(currentString);
-            size_t eqPos = entry.find('=');
-            if (eqPos != std::string::npos) {
-                std::string key = entry.substr(0, eqPos);
-                std::string value = entry.substr(eqPos + 1);
-                if (g_ModApiInstance.optionButtons.find(key) == g_ModApiInstance.optionButtons.end()) {
-                    WritePrivateProfileStringA("Unused Toggle Buttons", key.c_str(), value.c_str(), path); 
-                    WritePrivateProfileStringA("Toggle Buttons", key.c_str(), NULL, path); 
-                }
-            }
-            currentString += entry.length() + 1;
-        }
-    }
-    // sliders
-    bytesRead = GetPrivateProfileSectionA("Sliders", sectionBuffer.data(), 32768, path);
-    if (bytesRead > 0) {
-        char* currentString = sectionBuffer.data();
-        while (*currentString != '\0') {
-            std::string entry(currentString);
-            size_t eqPos = entry.find('=');
-            if (eqPos != std::string::npos) {
-                std::string key = entry.substr(0, eqPos);
-                std::string value = entry.substr(eqPos + 1);
-                if (g_ModApiInstance.optionSliders.find(key) == g_ModApiInstance.optionSliders.end()) {
-                    WritePrivateProfileStringA("Unused Sliders", key.c_str(), value.c_str(), path); 
-                    WritePrivateProfileStringA("Sliders", key.c_str(), NULL, path); 
-                }
-            }
-            currentString += entry.length() + 1;
-        }
-    }
+    
+    
+
+    CleanSection("Toggle Buttons", "Unused Toggle Buttons", g_ModApiInstance.optionButtons);
+    CleanSection("Sliders", "Unused Sliders", g_ModApiInstance.optionSliders);
+    CleanSection("Cycle Options", "Unused Cycle Options", g_ModApiInstance.optionCycles);
 }
 
 void ReloadINI() {
@@ -338,6 +292,29 @@ float ReadSliderIni(const char* id, float defaultValue) {
     }
 }
 
+int ReadCycleIni(const char* id, int defaultValue) {
+    const char* path = GetModIniPath();
+    UINT iniValue = GetPrivateProfileIntA("Cycle Options", id, 0xFFFFFFFF, path);
+    if (iniValue == 0xFFFFFFFF) { // not in main section
+        UINT backup = GetPrivateProfileIntA("Unused Cycle Options", id, 0xFFFFFFFF, path);
+        if (backup == 0xFFFFFFFF) { // not in backup either, so write to main section
+            std::string val = std::to_string(defaultValue); 
+            WritePrivateProfileStringA("Cycle Options", id, val.c_str(), path);
+            return defaultValue;
+        }
+        else { // in backup so we move to main section
+            int value = backup;
+            std::string backupStr = std::to_string(backup);
+            WritePrivateProfileStringA("Cycle Options", id, backupStr.c_str(), path);
+            WritePrivateProfileStringA("Unused Cycle Options", id, NULL, path); // remove from unused 
+            return value;
+        }
+    }
+    else { // found, so just read in value
+        return iniValue;
+    }
+}
+
 void SaveCustomOptions() {
     const char* path = GetModIniPath();
     for (const auto& [key, val] : g_ModApiInstance.optionButtons) {
@@ -345,6 +322,9 @@ void SaveCustomOptions() {
     }
     for (const auto& [key, val] : g_ModApiInstance.optionSliders) {
         WritePrivateProfileStringA("Sliders", key.c_str(), std::to_string(val.value).c_str(), path);
+    }
+    for (const auto& [key, val] : g_ModApiInstance.optionCycles) {
+        WritePrivateProfileStringA("Cycle Options", key.c_str(), std::to_string(val.currOption).c_str(), path);
     }
 }
 

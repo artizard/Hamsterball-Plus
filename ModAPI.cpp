@@ -5,6 +5,7 @@
 #include "GameEngine.h"
 #include "Hooks.h"
 #include "InitHelpers.h"
+#include <algorithm>
 
 DWORD ModAPI::GetGameBaseAddress() {
 	return (DWORD)GetModuleHandle(NULL);
@@ -97,13 +98,16 @@ void ModAPI::CreateCycleOption(const CustomCycleOption& cycle, HamsterballAPI* m
 	for (size_t i = 0; i < cycle.optionCount; i++) {
 		data.options.push_back(cycle.options[i]); 
 	}
+	data.currOption = (std::min)(ReadCycleIni(cycle.id), cycle.optionCount - 1);
 	optionCycles[std::string(cycle.id)] = data;
 	modInstance->onCycleOptionChange(cycle.id, data.options[data.currOption].c_str());
 }
 
 int ModAPI::GetCycleOptionState(const char* id) {
 	if (optionCycles.find(id) != optionCycles.end()) {
-		return optionCycles[id].currOption; 
+		if (optionCycles[id].currOption < optionCycles[id].options.size()) {
+			return optionCycles[id].currOption;
+		}
 	}
 	return 0; 
 }
