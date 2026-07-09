@@ -673,11 +673,32 @@ void __fastcall Hooked_CollisionCheck(void* this_ptr, void* edx_dummy, Ball* col
 }
 
 void __fastcall Hooked_SliderOptionHandler(void* this_ptr, void* edx_dummy, char* sliderID, int inputDirection) {
+    static ULONGLONG lastTime = 0;
+    static int lastDirection = 0;
+    static int heldCombo = 0;
+    static int shiftMult = 1; 
+
+    printf("last time: %llu, lastDirection: %d, heldCombo: %d, shiftMult: %d\n", lastTime, lastDirection, heldCombo, shiftMult);
+    ULONGLONG currTime = GetTickCount64();
+    if (currTime - lastTime > 145 || inputDirection != lastDirection) {
+        printf("COMBO RESET\n"); 
+        heldCombo = 0;
+        shiftMult = 1;
+    }
+    else {
+        heldCombo += 1;
+        if (heldCombo % 5 == 0) {
+            shiftMult = min(shiftMult*2, 10); 
+        }
+    }
+    lastTime = currTime;
+    lastDirection = inputDirection; 
+
     std::string currID(sliderID);
     auto it = g_ModApiInstance.optionSliders.find(currID);
     if (it != g_ModApiInstance.optionSliders.end()) {
         auto& data = it->second; 
-        data.value += data.stepSize * inputDirection;
+        data.value += data.stepSize * inputDirection * shiftMult;
 
         // clamps
         if (data.value < data.lowerBound) {
