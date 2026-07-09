@@ -18,6 +18,10 @@ ThemeConfig g_Theme;
 std::vector<LevelConfig> g_LevelConfigs = {};
 bool g_ShowConsole = false;
 
+void* submenuVtable[22]; 
+typedef void(__fastcall* SubmenuClickFunc)(void* this_ptr, void* edx_dummy, const char* clicked_id);
+SubmenuClickFunc Original_SubmenuClick = nullptr;
+
 const std::string sliderToDisplayText(const SliderData& data) {
     std::stringstream ss;
     ss << data.displayText << ": " << std::fixed << std::setprecision(data.decimalPlaces) << data.value << " " << data.unitName;
@@ -155,6 +159,113 @@ void __fastcall Hooked_BallUpdate(Ball* ball, void* edx_dummy) {
     }
 }
 
+void __fastcall SubmenuClick(void* this_ptr, void* edx_dummy, const char* clicked_id) {
+    // handle back like normal, using the one from OptionsMenuClick will break
+    if (strcmp(clicked_id, "BACK") == 0) {
+        void* meshworld = *(void**)((uintptr_t)g_App + 0x184);
+        void* parent = *(void**)((uintptr_t)this_ptr + 0xCDC);
+        *(void**)((uintptr_t)meshworld + 0x424) = parent;
+
+        Original_SubmenuClick(this_ptr, edx_dummy, clicked_id); 
+    }
+    else {
+        Hooked_OptionsClick(this_ptr, edx_dummy, clicked_id); 
+    }
+}
+
+void __fastcall SubmenuKeys(void* this_ptr) {
+    static int sliderCooldown = 0;
+    DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
+    ((void(__fastcall*)(void*))(baseAddr + 0x43430))(this_ptr);
+    if (sliderCooldown > 0) {
+        sliderCooldown--;
+        return; 
+    }
+    if (IsKeyDown(DIK_UP) || IsKeyDown(DIK_DOWN)) return;
+    if (IsKeyDown(DIK_LEFT)) {
+        CallMethod(0x42AD0, this_ptr, 0x40D);
+        sliderCooldown = 10;
+    }
+    else if (IsKeyDown(DIK_RIGHT)) {
+        CallMethod(0x42AD0, this_ptr, 0x40F);
+        sliderCooldown = 10;
+    }
+}
+
+void InitSubmenuVtable() { // makes new vtable that handles clicks like OptionsMenuClick
+    DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
+    memcpy(submenuVtable, (void*)(baseAddr + 0xD5F50), 22 * 4);
+    Original_SubmenuClick = (SubmenuClickFunc) submenuVtable[18]; 
+    submenuVtable[18] = &SubmenuClick; 
+    void** optionVtable = (void**)(baseAddr + 0xD5E30);
+    submenuVtable[19] = optionVtable[19]; 
+    submenuVtable[1] = &SubmenuKeys; 
+}
+
+void handleSubMenu(void* this_ptr, const char* submenuID) {
+    DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
+    DWORD vtableAddr = baseAddr + 0xCF300;
+
+    void* menu = g_ModApiInstance.AllocateMem(0xCEC); 
+    memset(menu, 0, 0xCEC);
+
+    CallMethod(0x48f20, menu, g_App);
+    *(void**)((uintptr_t)menu) = submenuVtable; 
+
+    *(void**)((uintptr_t)menu + 0xcdc) = this_ptr;
+    *(const char**)((uintptr_t)menu + 0x888) = "TEST MENU 1";
+    *(int*)((uintptr_t)menu + 0xcac) = 0x15e;
+    *(const char**)((uintptr_t)menu + 0x868) = "TEST MENU 2";
+    *(void**)((uintptr_t)menu + 0x87C) = *(void**)((uintptr_t)g_App + 0x320);
+    *(int*)((uintptr_t)menu + 0x884) = 1;
+
+    for (const auto& [id, data] : g_ModApiInstance.optionButtons) {
+        if (data.submenuID != submenuID) { // only render the ones that should be in this submenu 
+            continue;
+        }
+        std::string displayText = data.displayText + ": " + (data.isOn ? data.trueText : data.falseText);
+        float r = data.color.r;
+        float g = data.color.g;
+        float b = data.color.b;
+        float a = data.color.a;
+        Original_AddMenuButton(menu, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
+    }
+    for (const auto& [id, data] : g_ModApiInstance.optionSliders) {
+        if (data.submenuID != submenuID) { 
+            continue;
+        }
+        std::string displayText = sliderToDisplayText(data);
+        float r = data.color.r;
+        float g = data.color.g;
+        float b = data.color.b;
+        float a = data.color.a;
+        Original_AddMenuButton(menu, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
+    }
+    for (const auto& [id, data] : g_ModApiInstance.optionCycles) {
+        if (data.submenuID != submenuID) {
+            continue;
+        }
+        std::string displayText = data.displayText + ": " + data.options[data.currOption];
+        float r = data.color.r;
+        float g = data.color.g;
+        float b = data.color.b;
+        float a = data.color.a;
+        Original_AddMenuButton(menu, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
+    }
+    Original_AddSpacer(menu, nullptr, 10);
+    Original_AddMenuButton(menu, nullptr, "BACK", "BACK", vtableAddr, 0.75f, 1.0f, 0.75f, 1.0f, nullptr);
+
+    *(uint8_t*)((uintptr_t)menu + 0xce0) = 0;
+    *(uint8_t*)((uintptr_t)menu + 0xce4) = 0;
+    *(uint8_t*)((uintptr_t)menu + 0xce8) = 0;
+
+    void* param_1 = *(void**)((uintptr_t)g_App + 0x184);
+    CallMethod(0x69990, param_1, menu);
+    *(void**)((uintptr_t)param_1 + 0x424) = menu; 
+
+    *(uint8_t*)((uintptr_t) this_ptr + 0xe09) = 1;
+}
+
 // Adding custom option
 void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1, int param_2) {
 
@@ -169,7 +280,17 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
     // Color Object vtable pointer
     DWORD vtableAddr = baseAddr + 0xCF300;
 
+    for (const auto& submenu : g_ModApiInstance.submenus) {
+        float r = submenu.color.r;
+        float g = submenu.color.g;
+        float b = submenu.color.b;
+        float a = submenu.color.a;
+        Original_AddMenuButton(this_ptr, nullptr, submenu.displayText.c_str(), submenu.id.c_str(), vtableAddr, r, g, b, a, nullptr);
+    }
     for (const auto& [id, data] : g_ModApiInstance.optionButtons) {
+        if (data.submenuID != "MAIN") { // ignore ones that should go in a submenu 
+            continue;
+        }
         std::string displayText = data.displayText + ": " + (data.isOn ? data.trueText : data.falseText);
         float r = data.color.r;
         float g = data.color.g;
@@ -178,6 +299,9 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
         Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
     }
     for (const auto& [id, data] : g_ModApiInstance.optionSliders) {
+        if (data.submenuID != "MAIN") {
+            continue;
+        }
         std::string displayText = sliderToDisplayText(data); 
         float r = data.color.r;
         float g = data.color.g;
@@ -186,6 +310,9 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
         Original_AddMenuButton(this_ptr, nullptr, displayText.c_str(), id.c_str(), vtableAddr, r, g, b, a, nullptr);
     }
     for (const auto& [id, data] : g_ModApiInstance.optionCycles) {
+        if (data.submenuID != "MAIN") {
+            continue;
+        }
         std::string displayText = data.displayText + ": " + data.options[data.currOption];
         float r = data.color.r;
         float g = data.color.g;
@@ -252,6 +379,12 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
         Game_UpdateButtonText(this_ptr, nullptr, newResText, "REZ");
 
         // Return immediately
+        return;
+    }
+    const auto& vec = g_ModApiInstance.submenus;
+    auto submenu = std::find_if(vec.begin(), vec.end(), [clicked_id](const auto& item) {return item.id == clicked_id;});
+    if (submenu != vec.end()) {
+        handleSubMenu(this_ptr, submenu->id.c_str());
         return;
     }
 
@@ -541,7 +674,6 @@ void __fastcall Hooked_CollisionCheck(void* this_ptr, void* edx_dummy, Ball* col
 
 void __fastcall Hooked_SliderOptionHandler(void* this_ptr, void* edx_dummy, char* sliderID, int inputDirection) {
     std::string currID(sliderID);
-
     auto it = g_ModApiInstance.optionSliders.find(currID);
     if (it != g_ModApiInstance.optionSliders.end()) {
         auto& data = it->second; 
@@ -560,7 +692,6 @@ void __fastcall Hooked_SliderOptionHandler(void* this_ptr, void* edx_dummy, char
         // apply logic to mod
         data.owner->onSliderChange(sliderID, data.value);
     }
-
     Original_SliderOptionHandler(this_ptr, sliderID, inputDirection);
 }
 

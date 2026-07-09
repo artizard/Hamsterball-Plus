@@ -35,14 +35,17 @@ public:
         api = modApi;
         DWORD baseAddr = api->GetGameBaseAddress();
         //api->PatchMemory(baseAddr + 0x65447, "\x00", 1); // show event planes 
+        api->CreateSubmenu(CustomSubmenu("PA_MODOPTIONS", "Debug options", Color()));
         
         //api->RegisterCustomHook((baseAddr + 0x0C5D0), &Hooked_currFunc, (void**)&Original_currFunc);
         //api->PatchMemory(baseAddr + 0x29d23, "\x01", 1);
         //api->PatchMemory(baseAddr + 0x29d0a, "\x01", 1);
         api->RegisterCustomControl("fly", DIK_W);
         api->RegisterCustomControl("PRINT_ARGS_R_TEST", DIK_R); 
+
         CustomSlider sizeSlider("HAMSTER_SIZE", "Hamster Size", .037); 
         sizeSlider.stepSize = .01;
+        sizeSlider.submenuID = "PA_MODOPTIONS";
         api->CreateSlider(sizeSlider, this);
         // playsound3d
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
@@ -50,8 +53,10 @@ public:
         api->RegisterConfigString("PA_MESSAGE_TEXT", "test");
 
         CustomCycleOption messageCycle("PA_MESSAGE_TEXT2", options, 5);
+        messageCycle.submenuID = "PA_MODOPTIONS";
         messageCycle.displayText = "Message text";
         api->CreateCycleOption(messageCycle, this); 
+        
     }
 
     static void __fastcall Hooked_currFunc(void* param_1) {

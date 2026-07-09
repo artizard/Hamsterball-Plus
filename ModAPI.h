@@ -9,6 +9,7 @@ struct ButtonData {
 	std::string displayText;
 	std::string trueText;
 	std::string falseText;
+	std::string submenuID;
 	Color color;
 	bool isOn;
 	HamsterballAPI* owner;
@@ -21,6 +22,7 @@ struct SliderData {
 	float lowerBound;
 	float upperBound;
 	std::string unitName; 
+	std::string submenuID;
 	Color color;
 	HamsterballAPI* owner;
 };
@@ -28,8 +30,14 @@ struct CycleData {
 	std::string displayText;
 	int currOption = 0;
 	std::vector<std::string> options;
+	std::string submenuID;
 	Color color;
 	HamsterballAPI* owner;
+};
+struct SubmenuData {
+	std::string id;
+	std::string displayText;
+	Color color;
 };
 
 using ConfigValue = std::variant<int, float, bool, std::string>;
@@ -39,6 +47,7 @@ public:
 	std::map<std::string, ButtonData, std::less<>> optionButtons;
 	std::map<std::string, SliderData, std::less<>> optionSliders;
 	std::map<std::string, CycleData, std::less<>> optionCycles;
+	std::vector<SubmenuData> submenus;
 	// using std::less<> here to be able to look up controls from the map without converting char* to string, which requires memory allocation (optimization thing)
 	std::map<std::string, CustomControl, std::less<>> customControls; // <controlID, CustomControl struct> 
 	std::map<std::string, ConfigValue, std::less<>> modConfig;
@@ -99,6 +108,7 @@ public:
 	const char* GetConfigString(const char* configID) override;
 	void CreateCycleOption(const CustomCycleOption& cycle, HamsterballAPI* modInstance) override;
 	int GetCycleOptionState(const char* id) override;
+	void CreateSubmenu(const CustomSubmenu& submenu) override;
 private:
 	void setUnlocks(bool isUnlock);
 };

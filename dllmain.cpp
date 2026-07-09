@@ -79,6 +79,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
     ShowBallMessage = (ShowBallMessageFunc)(baseAddr + 0x01660); 
     DrawTextNoShadow = (DrawTextNoShadowFunc)(baseAddr + 0x2C870);
     DrawGameText = (DrawGameTextFunc)(baseAddr + 0x09C60);
+    InitSubmenuVtable(); 
     DWORD oldProtect; // unlock memory for constants (causes crashes without if you try to edit the physics constants)
     if (!VirtualProtect(g_PhysicsConstants, sizeof(PhysicsConstants), PAGE_EXECUTE_READWRITE, &oldProtect)) {
         printf("ERROR: FAILED TO UNLOCK PHYSICS CONSTANT MEMORY");
@@ -205,7 +206,7 @@ void loadMods() {
                     HamsterballAPI* newMod = factory();
                     if (newMod) {
                         if (newMod->GetApiVersion() != HAMSTERBALL_API_VERSION) {
-                            if (g_ShowConsole) printf("ERROR: \"%s\" mod not loaded, Mod's API Version (%d) does not match Hamsterball Plus' version(% d)\n", newMod->GetModName(), newMod->GetApiVersion(), HAMSTERBALL_API_VERSION);
+                            if (g_ShowConsole) printf("ERROR: \"%s\" mod not loaded, Mod's API Version (%d) does not match Hamsterball Plus' version(%d)\n", newMod->GetModName(), newMod->GetApiVersion(), HAMSTERBALL_API_VERSION);
                         }
                         else {
                             if (g_ShowConsole) printf("Mod Loaded: %s, Author: %s, API Version: %d\n", newMod->GetModName(), newMod->GetAuthorName(), newMod->GetApiVersion());

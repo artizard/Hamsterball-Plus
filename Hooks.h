@@ -19,3 +19,4 @@ void __fastcall Hooked_SliderOptionHandler(void* this_ptr, void* edx_dummy, char
 void __fastcall Hooked_SaveConfig(App* app);
 void __fastcall Hooked_RenderTextLoop(void* this_ptr); 
 void __fastcall Hooked_SceneDtor(Scene* scene);
+void InitSubmenuVtable(); 

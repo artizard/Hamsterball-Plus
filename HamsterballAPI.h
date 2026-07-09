@@ -30,8 +30,8 @@ struct CustomButton {
 	const char* trueText = "YES"; // The text that will be displayed for the on/true state 
 	const char* falseText = "NO"; // The text that will be displayed for the off/false state 
 	Color color = Color(); // The color of the button text (Will be white if you don't change this)
-
 	CustomButton() = default;
+	const char* submenuID = "MAIN"; // The submenu you want this to be under. Leave default if you want it to be in the main options menu, outside of a submenu. 
 
 	CustomButton(const char* id, const char* displayText) : id(id), displayText(displayText) {}
 };
@@ -48,6 +48,7 @@ struct CustomSlider {
 	float upperBound = INFINITY; // The highest that the slider can go (defaults to no upper bound)
 	const char* unitName = ""; // The unit shown after the number. Leave default for no unit. 
 	Color color; // The color of the slider text
+	const char* submenuID = "MAIN"; // The submenu you want this to be under. Leave default if you want it to be in the main options menu, outside of a submenu. 
 
 	CustomSlider() = default;
 
@@ -63,10 +64,23 @@ struct CustomCycleOption {
 	const char** options; // An array of the options the user can cycle through. The first option will be the one selected by default. 
 	int optionCount; // The number of options in your options array
 	Color color; // The color of the option text
+	const char* submenuID = "MAIN"; // The submenu you want this to be under. Leave default if you want it to be in the main options menu, outside of a submenu. 
 
 	CustomCycleOption() = default;
 
 	CustomCycleOption(const char* id, const char** options, int optionCount) : id(id), options(options), optionCount(optionCount) {}
+};
+
+/// @brief The struct used when creating custom submenus. This contains info about the submenu button, as well as the ID of the menu. 
+struct CustomSubmenu {
+	// The ID of the submenu. Do not name this "main". If the ID of this submenu matches with another mod's submenu, they will merge into one submenu using the displayText of one of them. 
+	// Use a unique name to avoid this, but this can also be used to your advantage to group different but similar options between mods. (ex. "MOVEMENT" submenu for a jump mod and a speed mod)
+	const char* id; 
+	const char* displayText = "Unnamed Submenu"; // The title of the submenu
+	Color color; // The color of the submenu button's text 
+
+	CustomSubmenu() = default;
+	CustomSubmenu(const char* id, const char* displayText, Color color) : id(id), displayText(displayText), color(color) {}
 };
 
 /// @brief A struct used when calling the text drawing functions. This is just how you input the parameters. 
@@ -185,6 +199,10 @@ public:
 	/// @param cycle The option struct that defines all of the parameters. Read those comments for more information.
 	/// @param modInstance Just pass in 'this' as the parameter. 
 	virtual void CreateCycleOption(const CustomCycleOption& cycle, HamsterballAPI* modInstance) = 0; 
+
+	/// @brief Creates a submenu option. You can put buttons, sliders, and cycle buttons within the submenu by using this menu's ID when you create the widgets within. 
+	/// @param submenu Use this struct to configure the submenu. 
+	virtual void CreateSubmenu(const CustomSubmenu& submenu) = 0;
 
 	/// @brief Creates a custom integer config that will be stored in the .ini file. This is for settings that you want the user to be able to be changed, but you don't want 
 	/// an in-game option for. 

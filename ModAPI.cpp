@@ -70,6 +70,7 @@ void ModAPI::CreateToggleButton(const CustomButton& button, HamsterballAPI* modI
 	data.trueText = button.trueText;
 	data.falseText = button.falseText; 
 	data.owner = modInstance; 
+	data.submenuID = button.submenuID; 
 	optionButtons[std::string(button.id)] = data;
 	modInstance->onButtonToggle(button.id, data.isOn); // update state 
 }
@@ -85,6 +86,7 @@ void ModAPI::CreateSlider(const CustomSlider& slider, HamsterballAPI* modInstanc
 	data.upperBound = slider.upperBound;
 	data.unitName = slider.unitName; 
 	data.owner = modInstance; 
+	data.submenuID = slider.submenuID;
 	optionSliders[std::string(slider.id)] = data; 
 	modInstance->onSliderChange(slider.id, data.value); 
 }
@@ -94,7 +96,7 @@ void ModAPI::CreateCycleOption(const CustomCycleOption& cycle, HamsterballAPI* m
 	data.displayText = cycle.displayText;
 	data.color = cycle.color;
 	data.owner = modInstance;
-
+	data.submenuID = cycle.submenuID;
 	for (size_t i = 0; i < cycle.optionCount; i++) {
 		data.options.push_back(cycle.options[i]); 
 	}
@@ -446,3 +448,14 @@ void ModAPI::DrawTimedMessage(const char* text, const CustomText& params, float 
 	g_TimedMessages.push_back(message); 
 }
 
+void ModAPI::CreateSubmenu(const CustomSubmenu& submenu) {
+	auto it = std::find_if(submenus.begin(), submenus.end(), [submenu](const auto& item) {return item.id == submenu.id; });
+	if (it != submenus.end()) { 
+		return; // submenu already exists, so return 
+	}
+	SubmenuData data;
+	data.id = submenu.id;
+	data.displayText = submenu.displayText;
+	data.color = submenu.color; 
+	submenus.push_back(data); 
+}
