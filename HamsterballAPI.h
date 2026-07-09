@@ -686,7 +686,7 @@ struct Ball {
 	float radius; // +0x284 the player is 26 by default
 	std::uint8_t pad_288[0x290 - 0x288];
 	std::uint8_t rumble_timer2[0x14]; // +0x290 unverified
-	float spin_rate; // +0x2A4 very janky
+	float gravity_magnitude; // +0x2A4 The magnitude of gravity
 	std::uint8_t pad_2A8[0x2BC - 0x2A8];
 	float force_x; // +0x2BC
 	float force_y; // +0x2C0
@@ -799,9 +799,9 @@ struct PhysicsObject {
 	std::uint8_t pad_0C6C[0x0C7C - 0x0C6C];
 	bool noclip; // +0x0C7C requires no break mod otherwise the ball will break.
 	std::uint8_t pad_0C7D[0x0C8C - 0x0C7D];
-	float gravity_x; // +0x0C8C I would use this as opposed to the vector in Ball
-	float gravity_y; // +0x0C90 I would use this as opposed to the vector in Ball
-	float gravity_z; // +0x0C94 I would use this as opposed to the vector in Ball
+	float gravity_x; // +0x0C8C I would use this as opposed to the vector in Ball. -1 to 1 represents the direction as opposed to magnitude
+	float gravity_y; // +0x0C90 I would use this as opposed to the vector in Ball. -1 to 1 represents the direction as opposed to magnitude
+	float gravity_z; // +0x0C94 I would use this as opposed to the vector in Ball. -1 to 1 represents the direction as opposed to magnitude
 	std::uint8_t pad_0C98[0x0CA4 - 0x0C98];
 	float velocity_x; // +0x0CA4
 	float velocity_y; // +0x0CA8
@@ -1000,7 +1000,7 @@ static_assert(offsetof(Ball, rumble_timer1) == 0x264);
 static_assert(offsetof(Ball, bounciness) == 0x278);
 static_assert(offsetof(Ball, radius) == 0x284);
 static_assert(offsetof(Ball, rumble_timer2) == 0x290);
-static_assert(offsetof(Ball, spin_rate) == 0x2A4);
+static_assert(offsetof(Ball, gravity_magnitude) == 0x2A4);
 static_assert(offsetof(Ball, force_x) == 0x2BC);
 static_assert(offsetof(Ball, force_y) == 0x2C0);
 static_assert(offsetof(Ball, force_z) == 0x2C4);
