@@ -3,7 +3,7 @@
 ![C++](https://img.shields.io/badge/C++-14-blue.svg)
 ![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)  
-Hamsterball Plus is a C++ modding framework for the retro video game _Hamsterball_ using DLL proxying and MinHook. This project creates a modding standard for the community; allowing players to easily install mods, while allowing modders to easily create mods that can coexist.
+Hamsterball Plus is a C++ modding framework for the retro video game _Hamsterball_ using DLL proxying and MinHook. This project creates a modding standard for the community, allowing players to easily install mods, while allowing modders to easily create mods that can coexist.
 
 ![Demo video of mods](assets/hbPlusGif.gif)
 
@@ -65,7 +65,7 @@ Leave these sections blank in `ModConfig.ini` to use the game's default values.
 **[Theme] Section**  
 Leave this section blank if you want to use the game defaults.  
 `MenuBodyR`, `MenuBodyG`, `MenuBodyB`, `MenuBodyA` Control the color of the options and time trial menu using float values from 0.0-1.0  
-`MenuHeaderR`, `MenuHeaderG`, `MenuHeaderB`, `MenuHeaderA` Control the color of the the header to many menus using float values from 0.0-1.0
+`MenuHeaderR`, `MenuHeaderG`, `MenuHeaderB`, `MenuHeaderA` Control the color of the header to many menus using float values from 0.0-1.0
 
 **[#] (Level) Section**  
 Leave this section blank if you want to use the game defaults.
@@ -73,7 +73,7 @@ The number in the section corresponds to the level, [0] is warmup race, [1] is b
 `RaceName` The name of the race  
 `ArenaName` The name of the corresponding arena  
 `ColorR`, `ColorG`, `ColorB` The color of the level's text in the time trial menus.
-`BlotR`, `BlotG`, `BlotB` The color of the the time blot (the shape around the timer) for this specific level
+`BlotR`, `BlotG`, `BlotB` The color of the time blot (the shape around the timer) for this specific level
 
 **[Custom Controls] and [Unused Controls] Section**  
 This stores the keybind for all of the custom controls that mods use. The entries are created and handled by the modding API itself, so you will not ever need to create new entries. As shown in the "Editing Custom Controls" section, you can change the keybinds. If the keybind has "ctrl+" before the hex code, then the keybind requires ctrl to also be pressed. The unused controls section is used for storing controls for mods that are not currently loaded in. If a user uninstalls a mod, their keybinds will be saved for in case they reinstall the mod. The controls will automatically be moved to their correct section.
@@ -97,16 +97,16 @@ To use this modding API, I recommend having experience with c++. If you want to 
 
 ### Base files overview
 
-To create mods, there are two main files you will use: HamsterballAPI.h and MainModFile.cpp. MainModFile.cpp is the file where you will write your code, you should NEVER change anything in HamsterballAPI.h. Additionally, ensure that your version of HamsterballAPI.h is the most up to date version that has been released (Should be version 1). MainModFile.cpp is the main file for the mod, however you can still create more files for helper functions, etc. You should not remove any of the original code from this file, you should just build off of it. I will now go each relevant thing within the base MainModFile.cpp
+To create mods, there are two main files you will use: HamsterballAPI.h and MainModFile.cpp. MainModFile.cpp is the file where you will write your code, you should NEVER change anything in HamsterballAPI.h. Additionally, ensure that your version of HamsterballAPI.h is the most up to date version that has been released (Should be version 1). MainModFile.cpp is the main file for the mod, however you can still create more files for helper functions, etc. You should not remove any of the original code from this file, you should just build off of it. I will now go over each relevant thing within the base MainModFile.cpp
 
 #### MainModFile.cpp
 
 - `const char* GetModName() override { return "PUT YOUR MOD NAME HERE"; }` This is a required function which returns the name of your mod. Make sure to rename the string in the return.
 - `const char* GetAuthorName() override { return "PUT YOUR NAME HERE"; }` Similarly, this is a required function which returns your name. Make sure to rename it. In the header file, you will notice a function called GetContributors(). Add this one as well if there are any other people who helped you with the mod, but that function is not required to compile.
-- `int GetApiVersion() override { return HAMSTERBALL_API_VERSION; }` DO NOT EDIT THIS. Future versions of mod (the bass.dll) will not be compatible with DLLs that were originally compiled with an older version. (They will need to be recompiled with the new HamsterballAPI.h). This function helps with tracking the versions that a DLL was built with.
+- `int GetApiVersion() override { return HAMSTERBALL_API_VERSION; }` DO NOT EDIT THIS. Future versions of the mod (the bass.dll) will not be compatible with DLLs that were originally compiled with an older version. (They will need to be recompiled with the new HamsterballAPI.h). This function helps with tracking the versions that a DLL was built with.
 - `void Initialize(IModAPI* modApi) override {}` This is the function that will run when the mod is initially loaded. Put the code that you want to run at the start here.
-- `private: IModAPI* api = nullptr;` and `api = modApi;` This initalizes the `api` field, which is an instance of the IModAPI class, which is how you will do most interactions with the game.
-- `extern "C" __declspec(dllexport) HamsterballAPI* CreateModInstance() { return new REPLACE_WITH_YOUR_MOD_NAME();}` This is boiler plate code related to loading DLL files that you need to keep here. Do not change this code, just leave it at the bottom of your file.
+- `private: IModAPI* api = nullptr;` and `api = modApi;` This initializes the `api` field, which is an instance of the IModAPI class, which is how you will do most interactions with the game.
+- `extern "C" __declspec(dllexport) HamsterballAPI* CreateModInstance() { return new REPLACE_WITH_YOUR_MOD_NAME();}` This is boilerplate code related to loading DLL files that you need to keep here. Do not change this code, just leave it at the bottom of your file.
 
 #### HamsterballAPI.h
 
@@ -130,7 +130,7 @@ The following section goes over many of the important things to know for modding
 
 ### Creating and using custom controls
 
-The game handles inputs through DirectInput 8 keycodes. Instead of hardcoding the keycode for hotkeys, I've created a system for custom controls which can be rebinded. You create a control with its own ID and a default value, and then it can be rebound through the ModConfig.ini file. To create these, use `RegisterCustomControl()` within the Initialize() function in your mod. For the ID, make sure to choose something that clearly tells the user what it does, while also making it unique enough that other mods are unlikely to use it. If another mod uses the same ID then there can be conflicts, so choose carefully. For setting the default keycode, you will use the CustomControl struct. This allows you to configure whether or not it is a ctrl+ keybind (such as ctrl+v). For non ctrl keybinds, you can also just pass in the keycode directly. For the keycode you can use the constants such as DIK_R, DIK_LSHIFT, etc., or the hex values from [here](https://gist.github.com/tracend/912308). To use these in your mod, you'll use the `WasControlPressed()`, `WasControlReleased()`, or `IsControlDown()` function. Put this in an if statement in either onBallUpdate() or onGameUpdate(). If the control is for something that should be able to be called while in level or in menu, use onGameUpdate(). onBallUpdate() only polls while you are in the level, but it is good for player/ball specific things. Just keep in mind that onBallUpdate() polls for each ball, not just the player. You can also use `GetCustomControlKey(id)` in order to see what the control is bound to. Here is an example of creating and using custom controls:
+The game handles inputs through DirectInput 8 keycodes. Instead of hardcoding the keycode for hotkeys, I've created a system for custom controls which can be rebinded. You create a control with its own ID and a default value, and then it can be rebound through the ModConfig.ini file. To create these, use `RegisterCustomControl()` within the Initialize() function in your mod. For the ID, make sure to choose something that clearly tells the user what it does, while also making it unique enough that other mods are unlikely to use it. If another mod uses the same ID then there can be conflicts, so choose carefully. I recommend adding an abbreviation of your mod name to the start such as "JM_JUMP" instead of "JUMP". For setting the default keycode, you will use the CustomControl struct. This allows you to configure whether or not it is a ctrl+ keybind (such as ctrl+v). For non ctrl keybinds, you can also just pass in the keycode directly. For the keycode you can use the constants such as DIK_R, DIK_LSHIFT, etc., or the hex values from [here](https://gist.github.com/tracend/912308). To use these in your mod, you'll use the `WasControlPressed()`, `WasControlReleased()`, or `IsControlDown()` function. Put this in an if statement in either onBallUpdate() or onGameUpdate(). If the control is for something that should be able to be called while in level or in menu, use onGameUpdate(). onBallUpdate() only polls while you are in the level, but it is good for player/ball specific things. Just keep in mind that onBallUpdate() polls for each ball, not just the player. You can also use `GetCustomControlKey(id)` in order to see what the control is bound to. Here is an example of creating and using custom controls:
 
 ```cpp
 void Initialize(IModAPI* modApi) override {
@@ -158,35 +158,52 @@ void onGameUpdate() override {
 
 The modding API allows you to add new options to the game's option menu. They come in two types: Toggle Buttons and Sliders.
 
+#### Submenus
+
+For each of the following option types, you can either have them appear on the main options screen, or within submenus, which are accessed similar to the "REMAP KEYBOARD CONTROLS" button. To create a submenu, you will use `CreateSubmenu()` within the Initialize() function of your mod. This will create a submenu button on the home options page according to the ID, display name, and color that you selected. To put option types within this submenu, simply add that ID that you used to create the submenu to submenuID field of the appropriate option struct (CustomSlider, CustomButton, CustomCycleOption). If you want the option to be in the main menu, just leave that field default. If two mods use the same ID for a submenu, then the submenus will be merged into one, using only one of the display names. If you want to avoid this happening, use a unique ID, but you can also intentionally do this. For instance, you could have a "MOVEMENT" submenu which both a jump mod and a speed mod both use despite being separate mods.
+
 #### Toggle buttons
 
-Toggle buttons are binary (on/off) buttons. These are great for allowing the user to toggle certain mods (no break is a good example). To create these, use `CreateToggleButton()` within the Initialize() function of your mod. To call this, you will create a `CustomButton` struct. Many of the fields are optional, so consult the comments to determine what you want to change. When calling CreateToggleButton(), you will have to pass in 'this' as the second argument. To check whether or no the button is toggled, use `GetButtonState(id)`. If you want some logic to run when a button is toggled (such as a byte patch), put that logic inside of `onButtonToggle()`, and handle the logic there for each button that could be clicked.
+Toggle buttons are binary (on/off) buttons. These are great for allowing the user to toggle certain mods (no break is a good example). To create these, use `CreateToggleButton()` within the Initialize() function of your mod. To call this, you will create a `CustomButton` struct. Many of the fields are optional, so consult the comments to determine what you want to change. When calling CreateToggleButton(), you will have to pass in 'this' as the second argument. To check whether or not the button is toggled, use `GetButtonState(id)`. If you want some logic to run when a button is toggled (such as a byte patch), put that logic inside of `onButtonToggle()`, and handle the logic there for each button that could be clicked.
 
 #### Sliders
 
 Sliders are options that allow you to select a specific decimal number. These are controlled by the arrow keys. To create these, use `CreateSlider()` within the Initialize() function of your mod. Just like the toggle buttons, you will create a struct to call it with; `CustomSlider`. You will also have to pass in 'this' as the second argument for CreateSlider(). To check the value of the slider, use `GetSliderState(id)`. For running logic when a slider is changed, use `onSliderChange()` similarly to onButtonToggle().
+
+#### Cycle Options
+
+Cycle options are options that allow you to cycle through a list of options. A good example of this is the resolution option; you cycle from 640x480 -> 800x600 -> ... -> 1920x1080 -> 640x480. To create these, use `CreateCycleOption()` within the Initialize() function of your mod. You will call this a `CustomCycleOption` struct and 'this' similar to toggle buttons and sliders. You will pass in the list of options using the `const char** options` and `int optionCount` field. The first option of the list will be the default option for your mod. Ensure your optionCount properly matches the char\*\* array. To run logic when a cycle option is clicked, use `onCycleOptionChange()` just like for the other option types. In order to retrieve the current selected option, call `GetCycleOptionState()` with the cycle option's ID. This will return an index to an option in the options list as opposed to the option itself. This means that you will want to keep a reference to that original options list.
 
 #### Code Example (simplified version of jump mod)
 
 ```cpp
 void Initialize(IModAPI* modApi) override {
     api = modApi;
-    api->RegisterCustomControl("jump", DIK_LSHIFT);
+    api->RegisterCustomControl("EX_JUMP", DIK_LSHIFT);
+
+    api->CreateSubmenu(CustomSubmenu("EX_JUMPMENU", "Jump Options", Color()));
 
     CustomButton jumpButton("CHEAT_JUMP", "JUMPING");
     jumpButton.trueText = "ON";
     jumpButton.falseText = "OFF";
+    jumpButton.submenuID = "EX_JUMPMENU"; // put it into the jump submenu
     api->CreateToggleButton(jumpButton, this);
 
     CustomSlider jumpHeightSlider("JUMP_HEIGHT", "JUMP HEIGHT", 10.0f);
     jumpHeightSlider.stepSize = .25;
     jumpHeightSlider.lowerBound = 0;
+    jumpHeightSlider.submenuID = "EX_JUMPMENU";
     api->CreateSlider(jumpHeightSlider, this);
+
+    // assume exOptions was declared as a private const char** field
+    exOptions = ["Option 1", "Option 2", "Option 3", "Option 4"];
+    CustomCycleOption exCycle("EX_CYCLEOPTION", exOptions, 4);
+    api->CreateCycleOption(exCycle, this); // this will be in the main options menu
 }
 
 void onBallUpdate(Ball* playerObject) override {
     if (api->GetButtonState("CHEAT_JUMP")) {
-        if (api->WasControlPressed("jump")) {
+        if (api->WasControlPressed("EX_JUMP")) {
             float jumpHeight = api->GetSliderState("JUMP_HEIGHT");
             playerObject->physics_object->velocity_y = jumpHeight;
         }
@@ -194,11 +211,15 @@ void onBallUpdate(Ball* playerObject) override {
 }
 
 void onButtonToggle(const char* buttonId, bool newState) override {
-  if (strcmp(buttonId, "jump") == 0) {
-    printf("Jumping mode toggled.\n");
-  }
+    if (strcmp(buttonId, "jump") == 0) {
+        printf("Jumping mode toggled.\n");
+    }
 }
 ```
+
+### Custom Config
+
+If you want to add options that the player can change, but you don't want them to be seen in-game, you can use custom configs. These will go into the .ini file similarly to the options, but cannot be changed from in-game. To create configs like this, use the following functions: `RegisterConfigInt()`, `RegisterConfigFloat()`, `RegisterConfigBool()`, `RegisterConfigString()`. To retrieve them use the function corresponding to the config's type: `GetConfigInt()`, `GetConfigFloat()`, `GetConfigBool()`, `GetConfigString()`. If you try to retrieve with the wrong type, it will cause crashes. Make sure your ID's are unique, you cannot have duplicate ID's, even if they have different types.
 
 ### Custom UI Text
 
@@ -249,7 +270,7 @@ This modding API uses MinHook in order to inject logic into the game's various f
 Next, you need to create the 'Original function'. This is how you will call the original hook from your hooked logic.
 At the top of your file, initialize the function as nullptr like this: `exampleFunc Original_exampleFunc = nullptr;`.  
 Next you need to create a function which will be the extra logic that the hook runs. For this, create a static function within your class, matching the parameters and calling convention of the typedef from before. If the typedef's calling convention was **thiscall, then change the calling convention here to **fastcall and add a new second parameter as `void* edx_dummy`. An example: `static void __fastcall Hooked_exampleFunc(void* this_ptr, void* edx_dummy, int param_1) {}`.  
-Finally, within your Initialize function, we'll use RegisterCustomHook. Call it with the arguments as followed: the address of the game's function, &yourHookedFunction, (void\*\*)&yourOriginalFunction.  
+Finally, within your Initialize function, we'll use RegisterCustomHook. Call it with the arguments as follows: the address of the game's function, &yourHookedFunction, (void\*\*)&yourOriginalFunction.  
 Within your hooked function, call your original function to call the game's original function's logic.
 
 _The following sections are more advanced, c++ and reverse engineering knowledge is expected_
@@ -266,7 +287,7 @@ MinHook only allows you to hook a function once, so there will be conflicts if y
 
 ### Calling game functions
 
-If you find a game function that you want to call, there are two ways: the typedef, and the `Call()`/`CallMethod()`/`CallFast()` functions. The prior is the better option especially when you are reusing that game function, but the functions I've made are better for prototyping and one off calls.
+If you find a game function that you want to call, there are two ways: the typedef, and the `Call()`/`CallMethod()`/`CallFast()` functions. The former is the better option especially when you are reusing that game function, but the functions I've made are better for prototyping and one off calls.
 
 #### Typedef method
 

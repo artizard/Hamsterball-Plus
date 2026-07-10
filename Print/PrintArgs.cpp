@@ -46,6 +46,7 @@ public:
         CustomSlider sizeSlider("HAMSTER_SIZE", "Hamster Size", .037); 
         sizeSlider.stepSize = .01;
         sizeSlider.submenuID = "PA_MODOPTIONS";
+        sizeSlider.maxShiftMult = 100;
         api->CreateSlider(sizeSlider, this);
         // playsound3d
         //api->RegisterCustomHook(baseAddr + 0x59860, &Hooked_currFunc, (void**)&Original_currFunc);
@@ -57,6 +58,7 @@ public:
         messageCycle.displayText = "Message text";
         api->CreateCycleOption(messageCycle, this); 
         
+        api->PatchMemory(baseAddr + 0x2d601, "\x00", 1);
     }
 
     static void __fastcall Hooked_currFunc(void* param_1) {
@@ -111,6 +113,10 @@ public:
         if (strcmp(sliderId, "HAMSTER_SIZE") == 0) {
             api->GetPhysicsConstants()->hamsterSize = newValue; 
         }
+    }
+
+    void onCycleOptionChange(const char* cycleId, const char* newOption) {
+        printf("%s, new option: %s\n", cycleId, newOption); 
     }
 
     //void onBallUpdate(Ball* ball) override {

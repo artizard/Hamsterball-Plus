@@ -344,7 +344,7 @@ void __fastcall Hooked_OptionsClick(void* this_ptr, void* edx_dummy, const char*
         data.currOption = (data.currOption += 1) % data.options.size(); 
         std::string displayText = data.displayText + ": " + data.options[data.currOption];
         Game_UpdateButtonText(this_ptr, nullptr, displayText.c_str(), clicked_id);
-        data.owner->onButtonToggle(clicked_id, data.options[data.currOption].c_str());
+        data.owner->onCycleOptionChange(clicked_id, data.options[data.currOption].c_str());
         return;
     }
 
@@ -676,28 +676,27 @@ void __fastcall Hooked_SliderOptionHandler(void* this_ptr, void* edx_dummy, char
     static ULONGLONG lastTime = 0;
     static int lastDirection = 0;
     static int heldCombo = 0;
-    static int shiftMult = 1; 
-
-    printf("last time: %llu, lastDirection: %d, heldCombo: %d, shiftMult: %d\n", lastTime, lastDirection, heldCombo, shiftMult);
-    ULONGLONG currTime = GetTickCount64();
-    if (currTime - lastTime > 145 || inputDirection != lastDirection) {
-        printf("COMBO RESET\n"); 
-        heldCombo = 0;
-        shiftMult = 1;
-    }
-    else {
-        heldCombo += 1;
-        if (heldCombo % 5 == 0) {
-            shiftMult = min(shiftMult*2, 10); 
-        }
-    }
-    lastTime = currTime;
-    lastDirection = inputDirection; 
+    static int shiftMult = 1;  
 
     std::string currID(sliderID);
     auto it = g_ModApiInstance.optionSliders.find(currID);
     if (it != g_ModApiInstance.optionSliders.end()) {
         auto& data = it->second; 
+
+        ULONGLONG currTime = GetTickCount64();
+        if (currTime - lastTime > 145 || inputDirection != lastDirection) {
+            heldCombo = 0;
+            shiftMult = 1;
+        }
+        else {
+            heldCombo += 1;
+            if (heldCombo % 5 == 0) {
+                shiftMult = min(shiftMult * 2, data.maxShiftMult);
+            }
+        }
+        lastTime = currTime;
+        lastDirection = inputDirection;
+
         data.value += data.stepSize * inputDirection * shiftMult;
 
         // clamps

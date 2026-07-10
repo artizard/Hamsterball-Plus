@@ -85,6 +85,7 @@ void ModAPI::CreateSlider(const CustomSlider& slider, HamsterballAPI* modInstanc
 	data.lowerBound = slider.lowerBound;
 	data.upperBound = slider.upperBound;
 	data.unitName = slider.unitName; 
+	data.maxShiftMult = slider.maxShiftMult; 
 	data.owner = modInstance; 
 	data.submenuID = slider.submenuID;
 	optionSliders[std::string(slider.id)] = data; 

@@ -49,6 +49,7 @@ struct CustomSlider {
 	const char* unitName = ""; // The unit shown after the number. Leave default for no unit. 
 	Color color; // The color of the slider text
 	const char* submenuID = "MAIN"; // The submenu you want this to be under. Leave default if you want it to be in the main options menu, outside of a submenu. 
+	int maxShiftMult = 10; // How fast the slider will ramp up to when holding down left/right arrow. This is good to change for small step sizes. 
 
 	CustomSlider() = default;
 

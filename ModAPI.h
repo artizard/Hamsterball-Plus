@@ -21,6 +21,7 @@ struct SliderData {
 	int decimalPlaces;
 	float lowerBound;
 	float upperBound;
+	int maxShiftMult;
 	std::string unitName; 
 	std::string submenuID;
 	Color color;
