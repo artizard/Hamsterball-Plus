@@ -201,7 +201,7 @@ void __fastcall SubmenuKeys(void* this_ptr) {
 
 void __fastcall SubmenuRender(void* this_ptr, void* edx_dummy, void* param_1) {
     if (activeSubmenus.empty()) {
-        printf("EMPTY SUBMENUS\n");
+        printf("ERROR: EMPTY SUBMENUS\n");
         return;
     }
     if (activeSubmenus.top() == this_ptr) {

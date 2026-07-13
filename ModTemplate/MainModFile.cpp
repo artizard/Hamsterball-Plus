@@ -11,7 +11,6 @@ public:
 
     void Initialize(IModAPI* modApi) override {
         api = modApi;
-        api->CreateSubmenu(CustomSubmenu("MT_TEST", "TEST SUBMENU ABI", Color()));
     }
 
 };

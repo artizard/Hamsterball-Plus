@@ -9,7 +9,7 @@ Hamsterball Plus is a C++ modding framework for the retro video game _Hamsterbal
 
 ## Technical Overview
 
-- **Function Hooking**: Uses x86 API hooking via MinHook to inject additional code into the game.
+- **Function Hooking**: Uses x86 API hooking via MinHook to inject additional code into the game. Additionally, vtable modifications are used to extend the use of the game's objects.
 - **Data Structure Mapping**: Reverse engineered the game's objects (App, Ball, Scene, etc.) to expose them to modders.
 - **Polling Optimizations**: Uses a checksum based caching system to update references to the players and enemies in order to avoid expensive array repopulation logic.
 - **Efficient Memory Management**: Uses "swap and pop" system for the `Hooked_RenderTextLoop` in order to discard expired UI messages in O(1) time complexity.
@@ -160,7 +160,7 @@ The modding API allows you to add new options to the game's option menu. They co
 
 #### Submenus
 
-For each of the following option types, you can either have them appear on the main options screen, or within submenus, which are accessed similar to the "REMAP KEYBOARD CONTROLS" button. To create a submenu, you will use `CreateSubmenu()` within the Initialize() function of your mod. This will create a submenu button on the home options page according to the ID, display name, and color that you selected. To put option types within this submenu, simply add that ID that you used to create the submenu to submenuID field of the appropriate option struct (CustomSlider, CustomButton, CustomCycleOption). If you want the option to be in the main menu, just leave that field default. If two mods use the same ID for a submenu, then the submenus will be merged into one, using only one of the display names. If you want to avoid this happening, use a unique ID, but you can also intentionally do this. For instance, you could have a "MOVEMENT" submenu which both a jump mod and a speed mod both use despite being separate mods.
+For each of the following option types, you can either have them appear on the main options screen, or within submenus, which are accessed similar to the "REMAP KEYBOARD CONTROLS" button. To create a submenu, you will use `CreateSubmenu()` within the Initialize() function of your mod. This will create a submenu button according to the ID, display name, and color that you selected. To put option types within this submenu, simply add that ID that you used to create the submenu to submenuID field of the appropriate option struct (CustomSlider, CustomButton, CustomCycleOption). If you want the option to be in the main menu, just leave that field default. The submenu button by defualt will be in the main modding options section, but you can change this by changing the parentID field. If two mods use the same ID for a submenu, then the submenus will be merged into one, using the settings from one of the submenus. This can cause weird behavior, so I recommend using a unique ID to avoid this. Alternatively, this can be used to group mods together. For instance, you could have a "MOVEMENT" submenu which both a jump mod and a speed mod both use despite being separate mods.
 
 #### Toggle buttons
 
