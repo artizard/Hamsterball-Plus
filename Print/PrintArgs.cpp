@@ -36,6 +36,18 @@ public:
         DWORD baseAddr = api->GetGameBaseAddress();
         //api->PatchMemory(baseAddr + 0x65447, "\x00", 1); // show event planes 
         api->CreateSubmenu(CustomSubmenu("PA_MODOPTIONS", "Debug options", Color()));
+
+        CustomSubmenu nested1("PA_NESTED1", "Nested 1");
+        nested1.parentID = "PA_MODOPTIONS"; 
+        api->CreateSubmenu(nested1); 
+
+        CustomSubmenu nested2("PA_NESTED2", "Nested 2");
+        nested2.parentID = "PA_NESTED1";
+        api->CreateSubmenu(nested2);
+
+        CustomSubmenu nested3("PA_NESTED3", "Nested 3");
+        nested3.parentID = "PA_NESTED2";
+        api->CreateSubmenu(nested3);
         
         //api->RegisterCustomHook((baseAddr + 0x0C5D0), &Hooked_currFunc, (void**)&Original_currFunc);
         //api->PatchMemory(baseAddr + 0x29d23, "\x01", 1);

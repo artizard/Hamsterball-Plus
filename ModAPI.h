@@ -39,6 +39,7 @@ struct SubmenuData {
 	std::string id;
 	std::string displayText;
 	Color color;
+	std::string parentID;
 };
 
 using ConfigValue = std::variant<int, float, bool, std::string>;

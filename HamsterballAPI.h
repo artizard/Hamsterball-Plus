@@ -80,7 +80,11 @@ struct CustomSubmenu {
 	const char* displayText = "Unnamed Submenu"; // The title of the submenu
 	Color color; // The color of the submenu button's text 
 
+	// Which submenu you want this submenu to be accessed from (where the submenu button will be). This allows for nested submenus. Leave blank for main mod options. 
+	const char* parentID = "MAIN";   
+
 	CustomSubmenu() = default;
+	CustomSubmenu(const char* id, const char* displayText) : id(id), displayText(displayText) {}
 	CustomSubmenu(const char* id, const char* displayText, Color color) : id(id), displayText(displayText), color(color) {}
 };
 

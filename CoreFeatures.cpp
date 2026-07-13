@@ -10,6 +10,10 @@ int CoreFeatures::GetApiVersion() { return HAMSTERBALL_API_VERSION; }
 
 void CoreFeatures::Initialize(IModAPI* modApi) {
     api = modApi;
+    
+    CustomSubmenu moddedOptions("MAIN", "Modded Options", Color());
+    moddedOptions.parentID = "MAIN_OPTIONS_ML";
+    api->CreateSubmenu(moddedOptions);
 
     api->RegisterCustomControl("RESPAWN_PLAYER_ML", DIK_X);
     api->RegisterCustomControl("RELOAD_INI_ML", { DIK_R, true });

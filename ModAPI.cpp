@@ -458,5 +458,6 @@ void ModAPI::CreateSubmenu(const CustomSubmenu& submenu) {
 	data.id = submenu.id;
 	data.displayText = submenu.displayText;
 	data.color = submenu.color; 
+	data.parentID = submenu.parentID; 
 	submenus.push_back(data); 
 }

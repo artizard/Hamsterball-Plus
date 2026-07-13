@@ -11,9 +11,6 @@ public:
 
     void Initialize(IModAPI* modApi) override {
         api = modApi;
-
-        CustomButton jumpButton("tEST", "TEST");
-        api->CreateToggleButton(jumpButton, this);
     }
 
 };
