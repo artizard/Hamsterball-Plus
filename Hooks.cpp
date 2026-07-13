@@ -225,8 +225,8 @@ void handleSubmenu(void* this_ptr, const SubmenuData& submenu) {
     DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
     DWORD vtableAddr = baseAddr + 0xCF300;
 
-    void* menu = g_ModApiInstance.AllocateMem(0xCEC); 
-    memset(menu, 0, 0xCEC);
+    void* menu = g_ModApiInstance.AllocateMem(0xE0C); 
+    memset(menu, 0, 0xE0C);
 
     activeSubmenus.push(menu);
 
@@ -241,7 +241,6 @@ void handleSubmenu(void* this_ptr, const SubmenuData& submenu) {
     *(int*)((uintptr_t)menu + 0x884) = 1;
 
     for (const auto& curr : g_ModApiInstance.submenus) {
-        printf("submenu id: %s, parent id: %s, curr: %s\n", submenu.id.c_str(), curr.parentID.c_str(), curr.id.c_str());
         if (submenu.id != curr.parentID) { // ignore ones that should go in a submenu 
             continue;
         }
@@ -323,6 +322,16 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
         float a = submenu.color.a;
         Original_AddMenuButton(this_ptr, nullptr, submenu.displayText.c_str(), submenu.id.c_str(), vtableAddr, r, g, b, a, nullptr);
     }
+
+
+    void** options = *(void***)((uintptr_t)menuPointer + 0xC98);
+    int optionCount = *(int*)((uintptr_t)menuPointer + 0x890);
+    if (optionCount >= 3) {
+        void* temp = options[optionCount - 1];
+        options[optionCount - 1] = options[optionCount - 3];
+        options[optionCount - 3] = temp; 
+    }
+    
     //for (const auto& [id, data] : g_ModApiInstance.optionButtons) {
     //    if (data.submenuID != "MAIN") { // ignore ones that should go in a submenu 
     //        continue;

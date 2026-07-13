@@ -7,7 +7,7 @@
 #include <cstdio>
 #define DIRECTINPUT_VERSION 0x0800
 
-#define HAMSTERBALL_API_VERSION 2
+#define HAMSTERBALL_API_VERSION 3
 
 struct Collision;
 class HamsterballAPI;
