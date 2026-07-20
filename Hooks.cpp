@@ -244,10 +244,11 @@ void handleSubmenu(void* this_ptr, const SubmenuData& submenu) {
         if (submenu.id != curr.parentID) { // ignore ones that should go in a submenu 
             continue;
         }
-        float r = submenu.color.r;
-        float g = submenu.color.g;
-        float b = submenu.color.b;
-        float a = submenu.color.a;
+        printf("id: %s, displayName: %s, parentID: %s, r: %f, g: %f, b: %f\n", submenu.id.c_str(), submenu.displayText.c_str(), submenu.parentID.c_str(), submenu.color.r, submenu.color.g, submenu.color.b);
+        float r = curr.color.r;
+        float g = curr.color.g;
+        float b = curr.color.b;
+        float a = curr.color.a;
         Original_AddMenuButton(menu, nullptr, curr.displayText.c_str(), curr.id.c_str(), vtableAddr, r, g, b, a, nullptr);
     }
 
@@ -316,6 +317,7 @@ void* __fastcall Hooked_OptionsMenu(void* this_ptr, void* edx_dummy, int param_1
         if (submenu.parentID != "MAIN_OPTIONS_ML") { // ignore ones that should go in a submenu 
             continue;
         }
+        printf("id: %s, displayName: %s, parentID: %s, r: %f, g: %f, b: %f\n", submenu.id.c_str(), submenu.displayText.c_str(), submenu.parentID.c_str(), submenu.color.r, submenu.color.g, submenu.color.b);
         float r = submenu.color.r;
         float g = submenu.color.g;
         float b = submenu.color.b;

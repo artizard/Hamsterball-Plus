@@ -35,9 +35,9 @@ public:
         api = modApi;
         DWORD baseAddr = api->GetGameBaseAddress();
         //api->PatchMemory(baseAddr + 0x65447, "\x00", 1); // show event planes 
-        api->CreateSubmenu(CustomSubmenu("PA_MODOPTIONS", "Debug options", Color()));
+        api->CreateSubmenu(CustomSubmenu("PA_MODOPTIONS", "Debug options", Color(0.5f, 0.5f, 1.0f, 1.0f)));
 
-        CustomSubmenu nested1("PA_NESTED1", "Nested 1");
+        CustomSubmenu nested1("PA_NESTED1", "Nested 1", Color(1.0f, .75f, .75f, 1.0f));
         nested1.parentID = "PA_MODOPTIONS"; 
         api->CreateSubmenu(nested1); 
 
@@ -473,3 +473,5 @@ public:
 extern "C" __declspec(dllexport) HamsterballAPI* CreateModInstance() {
     return new PrintArgs();
 }
+
+
