@@ -198,7 +198,6 @@ void ReloadINI() {
     CleanCustomOptions(); 
     ConfigINI(path);
 
-
     g_LevelConfigs.clear();
     for (int i = 0; i < 15; i++) {
         LevelConfig config;
@@ -365,4 +364,19 @@ void InitResolutions() {
     }
     std::sort(g_AvailableResolutions.begin(), g_AvailableResolutions.end()); 
     g_AvailableResolutions.erase(std::unique(g_AvailableResolutions.begin(), g_AvailableResolutions.end()), g_AvailableResolutions.end());
+}
+
+/// @brief This marks which mod owns this id in the ModConfig.ini file. This is for the mod loader to use. 
+/// @param id 
+void RegisterModOwner(const char* id) {
+    if (!g_CurrentlyInitializingMod.empty()) {
+        const char* path = GetModIniPath();
+        WritePrivateProfileStringA("Ownership", id, g_CurrentlyInitializingMod.c_str(), path);
+    }
+    
+}
+
+void ClearModOwnership() {
+    const char* path = GetModIniPath();
+    WritePrivateProfileSectionA("Ownership", nullptr, path);
 }

@@ -71,6 +71,7 @@ extern PhysicsConstants* g_PhysicsConstants;
 inline std::vector<HamsterballAPI*> g_Mods; 
 extern int* g_Timer; 
 inline std::vector<Resolution> g_AvailableResolutions; 
+extern std::string g_CurrentlyInitializingMod;
 
 
 struct ThemeConfig {

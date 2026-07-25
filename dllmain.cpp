@@ -26,6 +26,7 @@ Ball* g_Player3 = nullptr;
 Ball* g_Player4 = nullptr;
 Scene* g_Scene = nullptr;
 int* g_Timer = nullptr;
+std::string g_CurrentlyInitializingMod = "";
 
 FindRespawnPointFunc Original_FindRespawn = nullptr;
 BallUpdateFunc Original_BallUpdate = nullptr;
@@ -66,6 +67,7 @@ DWORD WINAPI ModThread(HMODULE hModule) {
 
     InitDevConsole(); 
     InitResolutions(); 
+    ClearModOwnership();
 
     DWORD baseAddr = (DWORD)GetModuleHandle(NULL);
 
@@ -210,6 +212,7 @@ void loadMods() {
                         }
                         else {
                             if (g_ShowConsole) printf("Mod Loaded: %s, Author: %s, API Version: %d\n", newMod->GetModName(), newMod->GetAuthorName(), newMod->GetApiVersion());
+                            g_CurrentlyInitializingMod = entry.path().filename().string(); 
                             newMod->Initialize(&g_ModApiInstance);
                             g_Mods.push_back(newMod);
                         }

@@ -11,3 +11,5 @@ bool ReadToggleButtonIni(const char* id, bool defaultValue);
 float ReadSliderIni(const char* id, float defaultValue);
 void InitResolutions();
 int ReadCycleIni(const char* id, int defaultValue = 0); 
+void RegisterModOwner(const char* id);
+void ClearModOwnership(); 

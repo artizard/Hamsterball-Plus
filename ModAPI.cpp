@@ -72,6 +72,7 @@ void ModAPI::CreateToggleButton(const CustomButton& button, HamsterballAPI* modI
 	data.owner = modInstance; 
 	data.submenuID = button.submenuID; 
 	optionButtons[std::string(button.id)] = data;
+	RegisterModOwner(button.id);
 	modInstance->onButtonToggle(button.id, data.isOn); // update state 
 }
 
@@ -89,6 +90,7 @@ void ModAPI::CreateSlider(const CustomSlider& slider, HamsterballAPI* modInstanc
 	data.owner = modInstance; 
 	data.submenuID = slider.submenuID;
 	optionSliders[std::string(slider.id)] = data; 
+	RegisterModOwner(slider.id);
 	modInstance->onSliderChange(slider.id, data.value); 
 }
 
@@ -103,6 +105,7 @@ void ModAPI::CreateCycleOption(const CustomCycleOption& cycle, HamsterballAPI* m
 	}
 	data.currOption = (std::min)(ReadCycleIni(cycle.id), cycle.optionCount - 1);
 	optionCycles[std::string(cycle.id)] = data;
+	RegisterModOwner(cycle.id);
 	modInstance->onCycleOptionChange(cycle.id, data.options[data.currOption].c_str());
 }
 
@@ -130,15 +133,19 @@ float ModAPI::GetSliderState(const char* id) {
 }
 
 void ModAPI::RegisterConfigInt(const char* configID, int defaultValue) {
+	RegisterModOwner(configID);
 	modConfig[configID] = defaultValue;
 }
 void ModAPI::RegisterConfigFloat(const char* configID, float defaultValue) {
+	RegisterModOwner(configID);
 	modConfig[configID] = defaultValue;
 }
 void ModAPI::RegisterConfigBool(const char* configID, bool defaultValue) {
+	RegisterModOwner(configID);
 	modConfig[configID] = defaultValue;
 }
 void ModAPI::RegisterConfigString(const char* configID, const char* defaultValue) {
+	RegisterModOwner(configID);
 	modConfig[configID] = defaultValue;
 }
 
@@ -337,6 +344,7 @@ void ModAPI::CreateBadBall(Vec3 spawn_pos, Vec3 home_pos, float home_distance, f
 }
 
 void ModAPI::RegisterCustomControl(const char* controlID, CustomControl defaultControl) {
+	RegisterModOwner(controlID);
 	customControls[controlID] = defaultControl; 
 }
 
@@ -459,5 +467,6 @@ void ModAPI::CreateSubmenu(const CustomSubmenu& submenu) {
 	data.displayText = submenu.displayText;
 	data.color = submenu.color; 
 	data.parentID = submenu.parentID; 
+	RegisterModOwner(submenu.id);
 	submenus.push_back(data); 
 }
